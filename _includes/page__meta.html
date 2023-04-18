@@ -26,6 +26,13 @@
           {{ words | divided_by: words_per_minute }} {{ site.data.ui-text[site.locale].minute_read | default: "minute read" }}
         {% endif %}
       </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-pencil-alt" aria-hidden="true"></i>
+        Posted on {{ document.date | date: "%Y-%m-%d" }}
+      </span>
     {% endif %}
   </p>
 {% endif %}
