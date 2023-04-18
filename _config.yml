@@ -228,6 +228,7 @@ plugins:
   - jekyll-feed
   - jekyll-include-cache
   - jekyll-toc
+  - jekyll-archives
 
 # mimic GitHub Pages with --safe
 whitelist:
@@ -255,16 +256,16 @@ tag_archive:
   type: liquid
   path: /tags/
 # https://github.com/jekyll/jekyll-archives
-# jekyll-archives:
-#   enabled:
-#     - categories
-#     - tags
-#   layouts:
-#     category: archive-taxonomy
-#     tag: archive-taxonomy
-#   permalinks:
-#     category: /categories/:name/
-#     tag: /tags/:name/
+jekyll-archives:
+  enabled:
+    - categories
+    - tags
+  layouts:
+    category: archive-taxonomy
+    tag: archive-taxonomy
+  permalinks:
+    category: /categories/:name/
+    tag: /tags/:name/
 
 
 # HTML Compression
@@ -290,3 +291,13 @@ defaults:
       related: true
       toc: true
       toc_sticky: true
+  - scope:
+      path: ""
+      type: tag
+    values:
+      author_profile: true
+  - scope:
+      path: ""
+      type: category
+    values:
+      author_profile: true
