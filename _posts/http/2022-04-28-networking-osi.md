@@ -45,7 +45,7 @@ OSI 七層模型是由 [國際電信聯盟電信標準化部門 - ITU-T](https:/
 後來我想到 grpc 的 message encoding\
 它實際上並不是一般的 encode, 他有自己的一套方法(ref: [Encoding](https://developers.google.com/protocol-buffers/docs/encoding))，而如果這些訊息沒有得到適當的 decode 是沒辦法讀出正確的資訊的\
 所以這就是 presentation layer 實際上在處理的事情
-> 有關 gRPC 的相關介紹，可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../website-grpc)
+> 有關 gRPC 的相關介紹，可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../../website/website-grpc)
 
 ## Session Layer - 5
 會議層主要的目的是維持溝通雙方的連線，確保資料交換的過程

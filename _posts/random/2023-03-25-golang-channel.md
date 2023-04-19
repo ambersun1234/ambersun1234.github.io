@@ -22,7 +22,7 @@ math: true
 # Buffer
 buffer 是用於暫存資料的一個空間，此時的資料是屬於 **尚未處理過的**
 
-> c.f. [資料庫 - Redis Cache - Cache vs. Buffer \| Shawn Hsu](../database-redis#cache-vs-buffer)
+> c.f. [資料庫 - Redis Cache - Cache vs. Buffer \| Shawn Hsu](../../database/database-redis#cache-vs-buffer)
 
 ## Zero Capacity Buffer
 亦即沒有一個暫存空間，這會導致在 receiver 處理完資料之前，sender 必須等待(也就是所謂的 `rendezvous`)\
@@ -284,7 +284,7 @@ make 一個 channel 相對的簡單\
 值得注意的是，如果是 unbuffered channel, 他的 buf pointer 會指向自己(跟 GC 有關，待補)\
 它並不會使用 buf pointer 存取資料，取而代之的是會將 data 存於 sudog 上面
 
-> sudog, 為 g 的封裝，有關 g 的部份，可以參考 [Goroutine 與 Golang Runtime Scheduler \| Shawn Hsu](../golang-goroutine)
+> sudog, 為 g 的封裝，有關 g 的部份，可以參考 [Goroutine 與 Golang Runtime Scheduler \| Shawn Hsu](../../random/golang-goroutine)
 
 > element size is zero 的情況會是，如果 array 或者是 structure 並未擁有任何 field 或 element 的情況下，其大小為 0\
 > 比如說 myStruct{} 的大小會是 0

@@ -152,7 +152,7 @@ pick d223bd6 Update README
 但是我們可以透過 git reset 先把 commit reset 回 staging 的狀態\
 然後分次 commit 部分 changes\
 如此一來就可以做到類似於 split commit 的作法了
-> 詳細的操作可以參考 [Git 進階使用 - Git Reset \| Shawn Hsu](../git-reset#split-commit)
+> 詳細的操作可以參考 [Git 進階使用 - Git Reset \| Shawn Hsu](../../git/git-reset#split-commit)
 
 在 rebase 的過程中可以執行上述操作\
 就是將要 split 的 commit 在 interactive mode 中改成 `edit command` 即可

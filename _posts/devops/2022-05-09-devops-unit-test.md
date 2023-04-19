@@ -214,7 +214,7 @@ mocking 可以替代原有的 function 或 object, 使其可以 **模擬原有�
 而開發途中產生的 test case 可以當作 unit test 或 integration test 放在 CI/CD pipeline 上面執行，確保每一次的修改都是符合預期的
 
 > 有關 integration test 的介紹可以參考 [DevOps - 整合測試 integration test \| Shawn Hsu](../)\
-> 有關 CI/CD pipeline 的介紹可以參考 [DevOps - 從 GitHub Actions 初探 CI/CD](../devops-github-action)
+> 有關 CI/CD pipeline 的介紹可以參考 [DevOps - 從 GitHub Actions 初探 CI/CD \| Shawn Hsu](../../devops/devops-github-action)
 
 ## Struggles to Run TDD
 通常如果跑不了 TDD 或者說寫不了測試會有幾個問題

@@ -183,7 +183,7 @@ Alice 以及 Bob 都不想值班，看到 on call 班表還有人\
 
 ### Atomic write
 看了這麼多系列文章，想必你各位對 atomic operation 已經有一定的認知了\
-可以參考 [關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) \| Shawn Hsu](../python-gil#atomic-operation)
+可以參考 [關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) \| Shawn Hsu](../../random/python-gil#atomic-operation)
 
 那麼為什麼 atomic write 可以避免 lost update?\
 read-modify-write 其實可以簡化成一段 sql statement, 沒有必要分成兩段以上撰寫

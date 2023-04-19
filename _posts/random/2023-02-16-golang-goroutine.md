@@ -84,7 +84,7 @@ hmm 效果不大\
 原因是 fiber 是建立在同一條 thread 之上(也在同一條 thread 上做切換)，因此 coroutine 是沒有辦法拿到更多的 cpu time 的
 
 # Concurrency vs. Parallelism
-可參考 [關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) \| Shawn Hsu - Concurrency vs. Parallelism](../python-gil#concurrency-vs-parallelism)
+可參考 [關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) \| Shawn Hsu - Concurrency vs. Parallelism](../../random/python-gil#concurrency-vs-parallelism)
 
 # Introduction to Goroutine
 根據 [Effective Go](https://go.dev/doc/effective_go#goroutines) 裡面所描述
@@ -494,7 +494,7 @@ go func() {
 那你說我要怎麼知道它跑完了沒？ 答案是你不會知道，因為他是以 concurrent 的形式下去跑的\
 那有沒有辦法等待它跑完？ 你可以使用 [WaitGroup](#waitgroup), [empty select](#empty-select) 或者是 [Channel](https://go.dev/doc/effective_go#channels)
 
-> 有關 channel 的介紹可以參考 [Goroutine 與 Channel 的共舞 \| Shawn Hsu](../golang-channel)
+> 有關 channel 的介紹可以參考 [Goroutine 與 Channel 的共舞 \| Shawn Hsu](../../random/golang-channel)
 
 ### WaitGroup
 來看個簡單的程式範例

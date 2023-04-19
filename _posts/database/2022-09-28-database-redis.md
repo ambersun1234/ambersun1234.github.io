@@ -152,7 +152,7 @@ QUEUED
 
 如此一來，透過 `MULTI` 以及 `WATCH` 的搭配，就可以避免 data race 了
 
-> 有關 transaction 更詳細的介紹，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../database-transaction)
+> 有關 transaction 更詳細的介紹，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction)
 
 ## Redis Persistence
 在上面我們討論到了，Redis 本身是 in-memory 的設計，而 memory 是屬於易揮發的(i.e. 只要斷電資料就會消失)\

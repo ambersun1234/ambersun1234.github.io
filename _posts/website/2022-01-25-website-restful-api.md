@@ -93,11 +93,9 @@ Server 並 **不會儲存任何 session, history**\
 
 既然不能儲存狀態在 server 端\
 client 端就勢必要儲存必要資訊(e.g. 使用者登入與否?)\
-其中一個做法就是使用 [JWT](https://jwt.io/) 帶入資訊，詳細可以參考 [網頁程式設計三兩事 - JWT \| Shawn Hsu](../)\
+其中一個做法就是使用 [JWT](https://jwt.io/) 帶入資訊，詳細可以參考 [網頁程式設計三兩事 - 不一樣的驗證思維 JWT(JSON Web Token) \| Shawn Hsu](../../website/website-jwt)\
 在每次發送 request 的時候帶上這些資訊提供 server 端做檢查\
 而這正好符合原本 HTTP stateless 的特性
-
-<!-- jwt -->
 
 > 這兩種做法並沒有好壞之分，單純是作法不同
 

@@ -314,7 +314,7 @@ Exit status: 0
 
 <hr>
 
-### 實驗環境
+### Prerequisite
 ```shell
 $ uname -a
 Linux station 5.13.0-30-generic #33~20.04.1-Ubuntu SMP Mon Feb 7 14:25:10 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
@@ -324,7 +324,7 @@ $ go version
 go versi9on go1.17.6 linux/amd64
 ```
 
-### 實驗概述
+### Description
 首先使用 Golang 分別架設 gRPC 與 RESTful server\
 client 端使用 Python 分別對其進行 十萬次的 benchmark testing
 
@@ -334,7 +334,7 @@ client 端使用 Python 分別對其進行 十萬次的 benchmark testing
 
 實驗相關程式碼可以在 [ambersun1234/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/RESTful-vs.-gRPC-benchmark) 中找到
 
-### 實驗結果
+### Result
 ![](https://github.com/ambersun1234/RESTful-vs.-gRPC-benchmark/blob/master/benchmark.png?raw=true)
 
 上述 benchmark 結果為 gRPC vs. RESTful API 的速度測試\
@@ -348,8 +348,7 @@ RESTful 平均呼叫時間 2000000 nanoseconds\
 
 會有這樣的結果其實是因為 gRPC 是基於於 HTTP2\
 所以在速度上與傳統 API call(i.e. HTTP) 有著本質上的差異
-> 有關 HTTP 的介紹，可以參考 [Networking - HTTP 協議 \| Shawn Hsu](../)
-<!-- networking-http -->
+> 有關 HTTP 的介紹，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../http/networking-http1)
 
 # References
 + [gRPC Concepts Overview](https://github.com/grpc/grpc/blob/master/CONCEPTS.md)

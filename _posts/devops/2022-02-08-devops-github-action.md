@@ -18,7 +18,7 @@ math: true
 通常 CI 裡面會搭配各種測試\
 這些測試方法就讓我們拉出來獨立探討
 > 可參考 \
-> [DevOps - 單元測試 unit test \| Shawn Hsu](../devops-unit-test)\
+> [DevOps - 單元測試 unit test \| Shawn Hsu](../../devops/devops-unit-test)\
 > [DevOps - 整合測試 integration test \| Shawn Hsu](../)
 
 <!-- devops-unit-test
