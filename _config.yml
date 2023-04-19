@@ -16,11 +16,11 @@ minimal_mistakes_skin    : "mint" # "air", "aqua", "contrast", "dark", "dirt", "
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Blog"
+title                    : "Shawn Hsu's Blog"
 title_separator          : "-"
-subtitle                 : "ambersun1234's personal study blog" # site tagline that appears below site title in masthead
+subtitle                 : "Personal study blog" # site tagline that appears below site title in masthead
 name                     : "Shawn Hsu"
-description              : "ambersun1234's personal study blog"
+description              : "Personal study blog"
 url                      : "https://ambersun1234.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "ambersun1234/ambersun1234.github.io" # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
