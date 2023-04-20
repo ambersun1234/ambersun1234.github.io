@@ -34,7 +34,7 @@ math: true
     + 較為人詬病的問題點是，由於 virtual machine 先天上的設計，他是從底層虛擬化上去的(亦即每個 vm 都擁有自己獨立的作業系統)，所以在效能上會是一大問題
 
 + Container Deployment
-    + 相比 virtual machine, container 解決了效能問題，主要是透過了 `share operating system` 的方式，詳細可以參考 [Container 技術 - 深入理解 Docker Container \| Shawn Hsu](../../container/container-docker)
+    + 相比 virtual machine, container 解決了效能問題，主要是透過了 `share operating system` 的方式，詳細可以參考 [Container 技術 - 理解 Docker Container \| Shawn Hsu](../../container/container-docker)
 
 # Kubernetes Cluster
 ![](https://d33wubrfki0l68.cloudfront.net/2475489eaf20163ec0f54ddc1d92aa8d4c87c96b/e7c81/images/docs/components-of-kubernetes.svg)
@@ -72,7 +72,7 @@ node 包含了以下的組成元件
     + 注意到一件事情，k8s 不單單只支援 docker, 事實上，它支援許多種的 container runtime 如 [docker](https://kubernetes.io/docs/concepts/workloads/pods/), [containerd](https://containerd.io/docs/), [kata-runtime](https://github.com/kata-containers/runtime) ... etc.
     + 為了支援各項平台，k8s 有自己的一套 [Kubernetes CRI (Container Runtime Interface)](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md) 界面，用以支援各種不同的 runtime
 
-    > 有關 container runtime 的介紹可以參考 [Container 技術 - runC, containerd 傻傻分不清 \| Shawn Hsu](../../container/container)
+    > 有關 container runtime 的介紹可以參考 [Container 技術 - runC, containerd 傻傻分不清 \| Shawn Hsu](../../container/container-runc)
 
 # Pod
 pod 是 k8s 中最小可部屬單元，注意到不是 container 哦\
