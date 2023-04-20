@@ -90,109 +90,14 @@ ignore 檔裡面的規則最好是包含那些可以被自動生成的\
 因此將這些規則一併寫入 ignore file 也有助於縮小 image
 
 ## Minimize Layer
-考慮以下 Dockerfile
-```dockerfile
-FROM ubuntu:18.04
-LABEL org.opencontainers.image.authors="org@example.com"
-COPY . /app
-RUN make /app
-RUN rm -r $HOME/.cache
-CMD python /app/app.py
-```
+Docker 是由多層 layer 所組成\
+每一筆 command(`RUN`, `COPY`, `ADD`) 都會增加一層 layer\
+進而導致佔用的空間變得更大
 
-Docker 的運作方式是，將每一行指令都疊加在先前的 layer 上面
-> 注意到只有 `RUN`, `COPY`, `ADD` 這三個指令會疊加
-聰明的你必然得出一個結論，每一次的疊加都會增加 image 大小
+因此，試著減少 layer 層數，也有助於縮小 image size
 
-所以以上的 Dockerfile 他的層數總共有 4 層
-![](https://docs.docker.com/storage/storagedriver/images/container-layers.jpg)
-
-那我就好奇了\
-單純的減少層數，能夠縮減多少？\
-考慮以下實做程式碼
-```dockerfile
-// origin version
-FROM ubuntu:22.04
-
-RUN apt update && apt upgrade -y
-RUN apt install vim -y
-RUN apt install curl -y
-RUN apt install wget -y
-RUN apt install build-essential -y
-RUN apt install make -y
-RUN apt install cmake -y
-```
-跟這種
-```dockerfile
-// optimized version
-FROM ubuntu:22.04
-
-RUN apt update && apt upgrade -y
-RUN apt install vim curl wget build-essential make cmake -y
-```
-
-他們究竟有沒有差別？\
-build 起來之後，他們的大小, 層數分別是
-
-||origin|optimized|
-|:--|:--|:--|
-|Size|527 MB|522 MB|
-|Layer|8|3|
-
-{% raw %}
-透過指令 `$ docker image inspect --format "{{json .RootFS.Layers}}" xxxxx` 分別查看 \
-他們的結果是
-```shell
-$ docker image inspect --format "{{json .RootFS.Layers}}" minimized-layer-origin
-[
-  "sha256:f4a670ac65b68f8757aea863ac0de19e627c0ea57165abad8094eae512ca7dad",
-  "sha256:ae52e443d3533afa7cdb2a56be73801a3fd82154e9b6d37ea9ca1b1a3f2fd6e1",
-  "sha256:469d1c4a0652e0da96c08c547cd8a2e398099e9428b9ebf90acaa0539c1d2b13",
-  "sha256:25e5cd9275c6c89686a96c5084ddc3038f3ae4fec68dc306ad3c2836a11b83e8",
-  "sha256:3ad9d501a659b754fb9ca008e00fc3e7378268958e606696b9a759540f6c421a",
-  "sha256:6dc9c5658e1222bc029ade98126ae5a6fb910c291a49db04c3396aff8abff2e0",
-  "sha256:7c586f24c4476990dbce13dbdbb18cc0ad204320fb0044e52e9c5243b11e74f3",
-  "sha256:2bb6f8743c914aa3c3f9afae740dbc654629b04f25242ea4143c319a76f24e16"
-]
-```
-```shell
-$ docker image inspect --format "{{json .RootFS.Layers}}" minimized-layer-optimized
-[
-  "sha256:f4a670ac65b68f8757aea863ac0de19e627c0ea57165abad8094eae512ca7dad",
-  "sha256:ae52e443d3533afa7cdb2a56be73801a3fd82154e9b6d37ea9ca1b1a3f2fd6e1",
-  "sha256:f9c2c95623fff836deba2495abd894325b8f804340e0c1f5f3e1829560c23307"
-]
-```
-{% endraw %}
-
-可以看到 確實阿\
-只用一行指令執行完所有 package install 的 image 他的層數比較少 只有 3 層\
-相對的一個 package 一行的就有 8 層
-
-仔細觀察你可以發現到\
-他們前兩個的 hash 是一樣的 不難可以想到因為他們跑得指令都相同(所以 docker 其實會共用 layer)\
-好比如說 `apt update && apt upgrade -y` 這行的 hash 是 **ae52e443d3533afa7cdb2a56be73801a3fd82154e9b6d37ea9ca1b1a3f2fd6e1**\
-那我是不是可以大膽的假設 **f4a670ac65b68f8757aea863ac0de19e627c0ea57165abad8094eae512ca7dad** 這串 hash 是 `ubuntu:22.04` 的 image hash 呢？
-
-用 docker inspect 檢查
-```shell
-$ docker inspect ubuntu:22.04
-
-        xxx
-
-        "RootFS": {
-            "Type": "layers",
-            "Layers": [
-                "sha256:f4a670ac65b68f8757aea863ac0de19e627c0ea57165abad8094eae512ca7dad"
-            ]
-        },
-
-        xxx
-```
-在 **RootFS** 那裡你可以看到 layers 那邊正好就是我們這裡第一層 layer sha256 的結果\
-得證
-
-實驗程式碼可以參考 [ambersun1234/minimized-docker-image-lab](https://github.com/ambersun1234/minimized-docker-image-lab)
+有關 docker container layer 的部份，我把它獨立出來一篇\
+詳細可以參考 [Container 技術 - 理解 Docker Container \| Shawn Hsu](../../container/container-docker)
 
 ## Multi-stage Build
 multi stage build 是終極大招，它很好的解決了上述 multiple layer 以及 application binary 的問題\

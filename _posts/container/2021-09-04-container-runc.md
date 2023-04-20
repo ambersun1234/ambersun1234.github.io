@@ -57,7 +57,7 @@ OCI 最主要制定了兩個規範
 
 # Reference
 - [What Is containerd, And How Does It Relate to Docker and Kubernetes?](https://www.cloudsavvyit.com/10075/what-is-containerd-and-how-does-it-relate-to-docker-and-kubernetes/)
-- [How containerd compares to runC](https://stackoverflow.com/questions/41645665/how-containerd-compares-to-runc)\
+- [How containerd compares to runC](https://stackoverflow.com/questions/41645665/how-containerd-compares-to-runc)
 - [The differences between Docker, containerd, CRI-O and runc](https://www.tutorialworks.com/difference-docker-containerd-runc-crio-oci/#open-container-initiative-oci)
 - [Introducing Container Runtime Interface (CRI) in Kubernetes](https://kubernetes.io/blog/2016/12/container-runtime-interface-cri-in-kubernetes/)
 - [Kubernetes 1.5: Supporting Production Workloads](https://kubernetes.io/blog/2016/12/kubernetes-1-5-supporting-production-workloads/)
