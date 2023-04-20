@@ -44,6 +44,12 @@ layout: default
               <header><h4 class="nav__title"><i class="fas fa-{{ page.toc_icon | default: 'file-alt' }}"></i> {{ page.toc_label | default: site.data.ui-text[site.locale].toc_label | default: "On this page" }}</h4></header>
               {% include toc.html sanitize=true html=content h_min=1 h_max=6 class="toc__menu" skip_no_ids=true %}
             </nav>
+
+            <br>
+
+            <nav class="sidebar__top">
+              <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+            </nav>
           </aside>
         {% endif %}
         {{ content }}

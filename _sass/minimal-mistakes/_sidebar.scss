@@ -71,6 +71,12 @@
   }
 }
 
+.sidebar__top {
+  bottom: 1.5em;
+  z-index: 10;
+  padding: 0 1.5em;
+}
+
 .sidebar__right {
   margin-bottom: 1em;
 
@@ -93,7 +99,7 @@
       .toc {
         .toc__menu {
           overflow-y: auto;
-          max-height: calc(100vh - 7em);
+          max-height: calc(90vh - 7em);
         }
       }
     }
