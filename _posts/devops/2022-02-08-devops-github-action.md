@@ -18,11 +18,8 @@ math: true
 通常 CI 裡面會搭配各種測試\
 這些測試方法就讓我們拉出來獨立探討
 > 可參考 \
-> [DevOps - 單元測試 unit test \| Shawn Hsu](../../devops/devops-unit-test)\
-> [DevOps - 整合測試 integration test \| Shawn Hsu](../)
-
-<!-- devops-unit-test
-devops-integration-test -->
+> [DevOps - 單元測試 unit test \| Shawn Hsu](../../devops/devops-unit-test)
+<!-- > [DevOps - 整合測試 integration test \| Shawn Hsu](../) -->
 
 而實務上來說 CI 就是負責執行以上的事物(包括但不限於 security check, code coverage, functional test and custom check)
 

@@ -534,7 +534,7 @@ If-Match 常用於
 + state-changing methods 例如 `PUT`, `DELETE`, `PATCH` :arrow_right: 用於避免 [lost update problem](https://www.geeksforgeeks.org/concurrency-problems-in-dbms-transactions/)
 + 驗證 cache 的 freshness :arrow_right: 如果 ETag 一樣代表 cache 的資料還可以使用
 
-<!-- > 有關 lost update problem，可以參考 [] -->
+> 有關 lost update problem，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu - Lost Update](../../database/database-transaction#lost-update)
 
 ### 2. If-None-Match
 跟 [If-Match](#1-if-match) 一樣 類似都是 conditional request\
