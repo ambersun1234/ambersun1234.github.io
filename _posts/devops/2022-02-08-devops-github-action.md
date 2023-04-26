@@ -146,6 +146,18 @@ ${{ secrets.<name> }}
 
 <hr>
 
+![](https://ithelp.ithome.com.tw/upload/images/20210914/20091494SJl4DjNiT4.png)
+![](https://ithelp.ithome.com.tw/upload/images/20210914/20091494UDTGg8kAKn.png)
+> ref: [GitHub Action YAML 撰寫技巧 - 環境變數(Environment Variables) 與 秘密 (Secrets)](https://ithelp.ithome.com.tw/articles/10263300)
+
+{% raw %}
+注意到 secrets 的名字的使用，從上圖你可以看到 GitHub web UI 呈現的會是 `全部大寫的`\
+但是在你使用的時候，請記得一律是遵照 `建立的時候的大小寫`\
+也就是使用 `${{ secrets.APISecret }}`
+{% endraw %}
+
+<hr>
+
 如果你在跑 action 發現了 `Unrecognized named-value: 'secrets'`\
 這邊要注意一件事\
 secrets 這個 context 只能在 workflow 存取\
@@ -372,6 +384,11 @@ const packageManagerCommandMap = new Map<string, string>([
     ["npm", "npm install"]
 ]);
 
+const packageManagerRunCommandMap = new Map<string, string>([
+    ["yarn", "yarn"],
+    ["npm", "npx"]
+]);
+
 const localNetwork = "hardhat";
 
 const fileExists = (lockFileName: string): boolean => {
@@ -387,11 +404,13 @@ const main = async () => {
     const networkArgs = ["--network", network];
 
     if (network !== localNetwork) {
-        if (privateKey !== "") {
+        if (privateKey === "") {
             core.setFailed("Private key not found");
+            return;
         }
-        if (rpcUrl !== "") {
+        if (rpcUrl === "") {
             core.setFailed("RPC url not found");
+            return;
         }
     }
 
@@ -404,10 +423,15 @@ const main = async () => {
     for (let [packageManager, file] of packageManagerFileMap) {
         if (fileExists(file)) {
             await cli.exec(packageManagerCommandMap.get(packageManager)!);
+            await cli.exec(
+                `${packageManagerRunCommandMap.get(
+                    packageManager
+                )} hardhat test`,
+                networkArgs
+            );
+            break;
         }
     }
-
-    await cli.exec("yarn hardhat test", networkArgs);
 };
 
 main().catch((e) => {
