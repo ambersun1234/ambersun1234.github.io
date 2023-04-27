@@ -299,6 +299,11 @@ defaults:
       author_profile: true
   - scope:
       path: ""
+    values:
+      layout: single
+      author_profile: true
+  - scope:
+      path: ""
       type: category
     values:
       author_profile: true
