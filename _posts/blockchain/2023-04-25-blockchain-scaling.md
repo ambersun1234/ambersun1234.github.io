@@ -25,7 +25,8 @@ Ethereum blockchain 仰賴著共識機制，同時也深受共識機制帶來的
 ## Merkle Proof
 驗證特定 transaction 是否屬於 block 或是 merkle tree 裡面
 
-> 可參考 [merkle proof](https://ethereum.org/en/developers/tutorials/merkle-proofs-for-offline-data-integrity/)
+> 有關 Merkle Tree 的介紹可以參考 [從 0 認識 Blockchain - Transaction 以及你該知道的一切 \| Shawn Hsu](../../blockchain/blockchain-transaction)\
+> 以及 [merkle proof](https://ethereum.org/en/developers/tutorials/merkle-proofs-for-offline-data-integrity/)
 
 ## Validity Proof
 一樣會將多筆 transaction 打包成一筆上鏈\

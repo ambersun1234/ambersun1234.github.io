@@ -65,6 +65,8 @@ transaction 會紀錄
 + 更改了誰的狀態
 + 更改的數值
 
+> 有關 transaction 的介紹，可以參考 [從 0 認識 Blockchain - Transaction 以及你該知道的一切 \| Shawn Hsu](../../blockchain/blockchain-transaction)
+
 # Anonymous Identity
 鏈上的資料完全透明！？ 那我的個資怎麼辦？
 
