@@ -609,6 +609,44 @@ gas price 被拆成兩個部份，base fee 與 priority fee\
 > 注意到 gas limit 依然存在，它並沒有被取代\
 > 你依舊可以手動設定一筆 Transaction 最多可以使用多少 unit
 
+## High Gas Price
+高昂的 Gas Price 往往會造成使用者不願意付錢進行交易\
+Cryptokitties 在某一版本的實做當中\
+為了要列出使用者的第 n 隻貓咪，他們選擇用一個 for-loop 逐一檢查貓咪陣列，拉出符合條件的資料
+
+```solidity
+function tokensOfOwnerByIndex(address _owner, uint256 _index)
+        external
+        view
+        returns (uint256 tokenId)
+    {
+        uint256 count = 0;
+        for (uint256 i = 1; i <= totalSupply(); i++) {
+            if (kittyIndexToOwner[i] == _owner) {
+                if (count == _index) {
+                    return i;
+                } else {
+                    count++;
+                }
+            }
+        }
+        revert();
+    }
+```
+> ref: [contracts/KittyOwnership.sol](https://github.com/dapperlabs/cryptokitties-bounty/blob/master/contracts/KittyOwnership.sol#L163)
+
+我們上面有提到，Gas Fee 是基於你耗費了多少的算力而決定的\
+而 Cryptokitties 的實做，其執行時間會隨者 totalSupply 的大小而增加\
+換言之，運算的次數會隨之增加，最終導致高昂的 Gas Fee
+
+那麼有人提出來一個改進的方法，我們可以紀錄一個 map\
+這樣就可以避免要逐一檢索全部的陣列資料
+
+因此設計合約的時候，實做中你應該要考慮到耗費的資源\
+並且善用 [hardhat gas reporter](https://github.com/cgewecke/hardhat-gas-reporter) 等工具試圖優化
+
+詳細可以參考原本的 bounty issue [Listing all kitties owned by a user is O(n^2)](https://github.com/dapperlabs/cryptokitties-bounty/issues/4)
+
 # References
 + [TRANSACTIONS](https://ethereum.org/en/developers/docs/transactions/)
 + [What is a function signature and function selector in solidity (and EVM languages)?](https://ethereum.stackexchange.com/questions/135205/what-is-a-function-signature-and-function-selector-in-solidity-and-evm-language)
