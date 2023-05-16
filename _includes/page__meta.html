@@ -1,4 +1,5 @@
 {% assign document = post | default: page %}
+{% assign date_format = "%Y-%m-%d" | default: "%B %-d, %Y" %}
 {% if document.read_time or document.show_date %}
   <p class="page__meta">
     {% if document.show_date and document.date %}
@@ -30,8 +31,21 @@
       &nbsp;&nbsp;&nbsp;
 
       <span class="page__meta-readtime">
-        <i class="fas fa-pencil-alt" aria-hidden="true"></i>
-        Posted on {{ document.date | date: "%Y-%m-%d" }}
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="{{ document.date | date: date_format }}">{{ document.date | date: date_format }}</time>
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+      
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+        <time class="dt-published" datetime="{{ last_modified_at | date: date_format }}">
+          {% if last_modified_at %}
+            {{ last_modified_at | date: date_format }}
+          {% else %}
+            {{ document.date | date: date_format }}
+          {% endif %}
+        </time>
       </span>
     {% endif %}
   </p>
