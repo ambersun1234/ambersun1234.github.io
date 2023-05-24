@@ -194,7 +194,7 @@ off-chain 的其中一個隱憂就是，當 node operator 不在線上的時候\
 > ref: [Rollup 與資料可用性](https://medium.com/taipei-ethereum-meetup/rollup-and-data-availability-227340f1dbd6)
 
 ## Volition
-violation 提供了一個可以 **選擇的方案**，你可以選擇上傳資料到第三方，稱為 [Data Availability Committee - DAC](#data-availability-committee---dac) 或者是使用 on-chain data availability 的解決方案如 [ZK Rollups](#zero-knowledge-rollups)
+Volition 提供了一個可以 **選擇的方案**，你可以選擇上傳資料到第三方，稱為 [Data Availability Committee - DAC](#data-availability-committee---dac) 或者是使用 on-chain data availability 的解決方案如 [ZK Rollups](#zero-knowledge-rollups)
 
 ![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*-x-7BeqBRMzBPZWePsJN9Q.png)
 > ref: [Rollup 與資料可用性](https://medium.com/taipei-ethereum-meetup/rollup-and-data-availability-227340f1dbd6)
