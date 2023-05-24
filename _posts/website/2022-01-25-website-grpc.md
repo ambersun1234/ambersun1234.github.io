@@ -133,7 +133,21 @@ $ protoc --go_out=. --go_opt=paths=source_relative \
 > ref: [Switch from --go_out=plugins to -go-grpc_out PATH problem [duplicate]](https://stackoverflow.com/questions/61044883/switch-from-go-out-plugins-to-go-grpc-out-path-problem)
 
 # How do I use gRPC on website
-很可惜的，因為如今大多數網頁都還是 HTTP1, 因此他們不能直接呼叫 gRPC 的 API\
+根據 [The state of gRPC in the browser](https://grpc.io/blog/state-of-grpc-web/) 所述\
+很可惜的，即使 web 已經走到 HTTP3, 但是由於瀏覽器的 API 並沒有提供可以直接操作 HTTP2, 因此他們不能直接呼叫 gRPC 的 API
+
+> It is currently impossible to implement the HTTP/2 gRPC spec3 in the browser, \
+> as there is simply no browser API with enough fine-grained control over the requests.\
+> For example: there is no way to force the use of HTTP/2, and even if there was, \
+> raw HTTP/2 frames are inaccessible in browsers. \
+> The gRPC-Web spec starts from the point of view of the HTTP/2 spec, \
+> and then defines the differences. These notably include:
+
+> + Supporting both HTTP/1.1 and HTTP/2.
+> + Sending of gRPC trailers at the very end of request/response bodies as indicated by a new bit in the gRPC message header4.
+> + A mandatory proxy for translating between gRPC-Web requests and gRPC HTTP/2 responses.
+
+
 那它沒用嗎？ 其實不然
 
 gRPC 在 microservices 的架構下擁有出眾的效能\
@@ -363,3 +377,4 @@ RESTful 平均呼叫時間 2000000 nanoseconds\
 + [How do I measure request and response times at once using cURL?](https://stackoverflow.com/questions/18215389/how-do-i-measure-request-and-response-times-at-once-using-curl)
 + [Why doesn't the `time` command work with any option?](https://askubuntu.com/questions/434289/why-doesnt-the-time-command-work-with-any-option)
 + [gnuplot 語法解說和示範](https://hackmd.io/@sysprog/Skwp-alOg)
++ [The state of gRPC in the browser](https://grpc.io/blog/state-of-grpc-web/)
