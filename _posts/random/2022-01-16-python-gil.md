@@ -75,14 +75,14 @@ if __name__ == "__main__":
 ## Concurrency
 
 ![](https://www.loginradius.com/blog/async/static/985e45ca5bbc05c69e2adbd7e98b5f00/e5715/concurrent-diagram.png)
-concurrency 是將 `單個 task` 分割給不同 worker, 每個 worker **_各司其職_**, 負責完成不同部分
+concurrency 是將 `一個切成不同的子部份`，將這些 `子部份` 給不同 worker, 每個 worker 各司其職, 負責完成 ***不同部分***
 
 ## Parallelism
 
 ![](https://www.loginradius.com/blog/async/static/08ab182d7686d7804387a0f4172f70af/e5715/parallel-diagram.png)
 parallelism 是將 n 個 task 分割給多個 worker, 每個 worker 都執行 **_完整的 task_** 內容
 
-# Why multicore slower than single core
+# Why Multicore Slower than Single Core
 
 接下來我們就做點實驗來驗證以及探詢為甚麼 python 多執行緒下反而會比較慢的情況\
 在這之前我們要準備點工具以及程式碼來幫助我們驗證
@@ -213,9 +213,9 @@ ProfiledThread(target=mysum, args=(int(start), int(end), ))
 取其中一個 thread 的 profiling 結果來看\
 我們可以很清楚的看到是 **_acquire lock_** 以及 **_wait_** 佔用了最多的時間
 
-## What does thread waiting for?
+## What does Thread Waiting for?
 
-讓我們來仔細看看 cython 實做程式碼是怎麼做的
+讓我們來仔細看看 Cython 實做程式碼是怎麼做的
 
 [Lib/threading.py#34](https://github.com/python/cpython/blob/3.8/Lib/threading.py#L34)
 
@@ -291,7 +291,7 @@ class Thread:
 
 當我們 start 一條新的 thread 的時候, 它會初始化一些東西(`self._bootstrap`)\
 而當所有事情完成了之後，它會等待 event object 的 `_flag`(:arrow_right: 當這個 flag 為 true 的時候意味著該條 thread 可以開始執行)\
-乍看之下每條 thread 都各自擁有 event object，既然如此為什麼還需要 acquire lock?/
+乍看之下每條 thread 都各自擁有 event object，既然如此為什麼還需要 acquire lock?\
 event object 的 condition lock 實際上是 low-level 的 threading lock [\_thread.allocate_lock](https://docs.python.org/3/library/_thread.html#thread.allocate_lock)\
 而官方文件指出，在單位時間內只有一條 thread 可以成功 acquire lock
 
@@ -340,7 +340,7 @@ typedef struct {
 
 > The Python interpreter is not fully thread-safe. In order to support multi-threaded Python programs, there’s a global lock, called the global interpreter lock or GIL - [Thread State and the Global Interpreter Lock](https://docs.python.org/3/c-api/init.html#thread-state-and-the-global-interpreter-lock)
 
-## When will GIL be released
+## When will GIL be Released
 
 最直覺的想法，當當前 thread 執行結束之後就會 release GIL\
 但如果你的計算要持續一段時間呢？
@@ -359,7 +359,7 @@ typedef struct {
       > [GIL implementation note](https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Python/ceval_gil.h#L33)
     - 因為如今 I/O 都有 buffering 的機制，即使 timeout 被 swap out，有了 buffer 的機制讓 I/O 的時間 **_短到可以再重新 acquire lock_**，造成其他 thread 等待 GIL 的時間越來越長(starving)
 
-# Why do we need threading.Lock if we have GIL
+# Why do we Need threading.Lock if we have GIL
 
 我在做實驗的時候，發現了一個很神奇的現象\
 就是如果我不把 result 這個變數用 `threading.Lock` 鎖起來 好像...也不會錯阿？
