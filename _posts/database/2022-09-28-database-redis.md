@@ -120,7 +120,7 @@ Redis 提供了一套完整且常見的資料結構，常見的有以下
 
 那為什麼我在上面說它還是會造成資料不正確？\
 Redis 不單純只提供 strings 的資料結構，還有 lists, sets 等等的資料結構\
-如果我的 server 同時對 Redis 的 lists 進行寫入操作，它最終還是會被寫兩次資料進去\
+如果不同人先後對 Redis 的 lists 進行寫入操作，同樣的資料，它最終還是會被寫兩次資料進去\
 **因為他的 atomic operation 是 command level 的，並不是針對 key**
 
 所以最終你需要的是\
@@ -163,7 +163,7 @@ QUEUED
 
 ### RDB - Redis Database
 RDB 的設計是會自動的對你的資料進行備份(可能是每個小時備份一次)\
-他的備份方法是由 parent process [fork](https://linux.die.net/man/2/fork) 出一份 child process\
+他的備份方法是由 parent process [fork](https://linux.die.net/man/2/fork) 出一個 child process\
 然後由 child process 進行資料備份(操作 disk io)，而 parent process 就繼續服務 server\
 ![](https://sumeetjainengineer.files.wordpress.com/2015/09/child_parent1.png)
 
@@ -175,7 +175,7 @@ RDB 的設計是會自動的對你的資料進行備份(可能是每個小時備
 
 ### AOF - Append Only File
 AOF 很直覺，就是紀錄下你所有的操作 command(這樣就可以最完整的重建你的 Redis 資料庫)\
-當然啦 當你的檔案太大，它就會寫一個新檔案(用最短的指令重建你的資料)，與此同時，它還是會繼續紀錄 log 在之前的檔案，當重建完成之後，它就會換到新的上面\
+當然啦 當你的檔案太大，它就會寫一個新檔案(用最短的指令重建你的資料，一模一樣的)，與此同時，它還是會繼續紀錄 log 在之前的檔案，當重建完成之後，它就會換到新的上面\
 整個 rewrite 的過程一樣由另一條 thread 執行，對主要服務不會有影響
 
 <hr>

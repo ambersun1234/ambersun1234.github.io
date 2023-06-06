@@ -48,14 +48,14 @@ transaction 只會有兩種狀態 - 成功或失敗
 # ACID
 ACID 是一系列描述 transaction 該滿足的屬性, 他是由 4 個屬性組合而成\
 一個提供資料一致、穩定的系統 他的條件必定符合 ACID 原則\
-比如說 MySQL, PostgreSQL, Oracle, SQLite 以及 Microsoft SQL Server
+常見的 RDBMS 比如說 MySQL, PostgreSQL, Oracle, SQLite 以及 Microsoft SQL Server
 
 ## Atomicity
 前面提到，transaction 將一系列操作視為 unit of work\
 亦即 transaction 的操作在外人看來是一個整體的
 
 Atomic 保證了這個操作是不能被中斷的(亦即不會有更新到一半的問題)\
-唯有這樣才不會造成更大的問題(e.g. dirty read, lost update)
+唯有這樣才不會造成更大的問題(e.g. [Dirty Read](#dirty-read), [Lost Update](#lost-update))
 
 ## Consistency
 Consistency 是一個第一次有點難理解的東西
@@ -112,7 +112,7 @@ Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然
 只是要花多久？ 不知道\
 就像臉書按讚數，不同的 replica 上面的讚數量可能不一樣，但最後一定會同步完成
 ![](https://ithelp.ithome.com.tw/upload/images/20220906/20151137CJmF7xjqpD.png)
-> [[Day 4] NoSQL Database 的 BASE 特性](https://ithelp.ithome.com.tw/articles/10287859)
+> ref: [[Day 4] NoSQL Database 的 BASE 特性](https://ithelp.ithome.com.tw/articles/10287859)
 
 # Database Read Write Phenomena
 以下將會介紹各種可能會遇到的 race condition 狀況
@@ -125,7 +125,7 @@ Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然
 另一個 `B transaction` 卻讀取到更新後的資料
 
 ![](https://miro.medium.com/max/786/1*ODCTiPWsmDTFdKNGAFM9cg.png)
-> [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
+> ref: [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
 
 ## Non-repeatable Read(Read Skew)
 > query 得到的相同 row, data 卻有不同結果，稱為 non-repeatable read
@@ -135,7 +135,7 @@ Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然
 另一個 `B transaction` 讀取到更新後的資料
 
 ![](https://miro.medium.com/max/786/1*jKDYsZgXp2WapUGf_UYWNQ.png)
-> [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
+> ref: [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
 
 ## Phantom Read
 > 相同 query 得到不同 row, 稱為 phantom read
@@ -146,7 +146,7 @@ Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然
 `A transaction` 再撈一次資料(相同條件) 相比第一次撈 卻多了一筆
 
 ![](https://miro.medium.com/max/786/1*CdcPhIaxK63I13szHM4TMg.png)
-> [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
+> ref: [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
 
 ## Write Skew
 > 兩個 transaction 對不同 data 更新，造成違反某些條件
@@ -155,7 +155,7 @@ Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然
 
 所以何謂 write skew?\
 ![](https://i.stack.imgur.com/FhcV9.png)
-> [Why write skew can happen in Repeatable reads?](https://stackoverflow.com/questions/48417632/why-write-skew-can-happen-in-repeatable-reads)
+> ref: [Why write skew can happen in Repeatable reads?](https://stackoverflow.com/questions/48417632/why-write-skew-can-happen-in-repeatable-reads)
 
 醫生 on call 班表，其中 Alice, Bob 皆為醫師\
 on call 班表有個限制，必須要有至少有一個人值班\
@@ -173,7 +173,7 @@ Alice 以及 Bob 都不想值班，看到 on call 班表還有人\
 也就是說在 application layer，programmer 會先讀取目標資料，再透過 transaction 更新以及 commit
 
 ![](https://miro.medium.com/max/786/1*SGa1A9vBHetIm53WFjKjlA.png)
-> [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
+> ref: [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
 
 常見的 lost update 解決辦法包含
 ### Last-modified Date
@@ -356,25 +356,24 @@ read committed level 的隔離機制沒辦法防止 [Non-repeatable Read(Read Sk
 
 也就是說這個 level 的隔離，是 **沒辦法防止** 任何 read/write phenomena 的
 
-<hr>
-
+# Conclusion
 總結一下
 
 |isolation level|read lock|write lock|range lock|
 |:--|:--:|:--:|:--:|
-|serializable|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+|serializable|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |snapshot|-|-|-|
-|repeatable reads|:white_check_mark:|:white_check_mark:|:x:|
-|read committed|:white_check_mark:|:x:|:x:|
+|repeatable reads|:heavy_check_mark:|:heavy_check_mark:|:x:|
+|read committed|:heavy_check_mark:|:x:|:x:|
 |read uncommitted|:x:|:x:|:x:|
 
 |isolation level|dirty read|non-repeatable reads|phantom read|write skew|
 |:--|:--:|:--:|:--:|:--:|
 |serializable|:x:|:x:|:x:|:x:|
-|snapshot|:x:|:x:|:x:|:white_check_mark:|
-|repeatable reads|:x:|:x:|:white_check_mark:|:white_check_mark:|
-|read committed|:x:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
-|read uncommitted|:white_check_mark:|:white_check_mark:|:white_check_mark:|:white_check_mark:|
+|snapshot|:x:|:x:|:x:|:heavy_check_mark:|
+|repeatable reads|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|read committed|:x:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|read uncommitted|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 
 # References
 + [What is a database transaction?](https://stackoverflow.com/questions/974596/what-is-a-database-transaction)

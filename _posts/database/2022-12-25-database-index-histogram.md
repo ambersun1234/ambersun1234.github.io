@@ -246,11 +246,12 @@ index seek 就是完美的吃到了 index 的狀況\
 
 ```sql
 SELECT * FROM customers WHERE id = 1
-// assume id is primary key
+// assume id is secondary index
 ```
 
 如果是 B+ Tree 它就能以最短時間查詢到對應的 row(複雜度 $O(Log(n))$)\
-接下來在找到它原本的 data 就完成了\
+由於 index table 並不包含全部 row data\
+所以接下來在找到它原本的 data 就完成了\
 總共是 2 次的 table look up(index table + data table)
 
 如果你剛好用到 clustered index\
@@ -311,6 +312,7 @@ wildcard 在中間的情況也不會是 full table scan\
 + 當你用 `WHERE` 篩出來的 row(e.g. `WHERE indexed_col = 1`)包含了 **很大部份的 table 資料(e.g. 90%)**
     + 那麼與其用 where clause 慢慢篩出來不如直接 Full Table Scan 然後再挑出你要的資料
 + 當你的 index 屬於 [low cardinality](https://en.wikipedia.org/wiki/Cardinality_%28SQL_statements%29) 的時候
+    + cardinality 是一個數值，用以表示資料的重複性，數字越小，重複性越小
     + low cardinality 代表你的 index 內包含很多重複性資料，也就是你的 index 並不能指定到唯一的資料
     + 那麼它還要經過更多次的 key lookup 可能才能找到你要的資料，那乾脆就直接 Full Table Scan
 
