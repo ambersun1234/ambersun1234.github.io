@@ -59,7 +59,7 @@ thread A 正在執行一個任務，突然它需要進行 I/O\
 以 process 的角度來看，它並沒有浪費任何 CPU time, 也就是 process 不會 idle 浪費效能
 
 更遑論如果 process 是處於 Many to Many 的架構下\
-因為 kernel-level thread 會實體對應到一顆實體核心\
+因為 kernel-level thread 會分別對應到實體核心\
 這樣就是真正的多工了
 
 ## Coroutine(Fiber, Green Threads)
@@ -262,7 +262,7 @@ m 上面就不會包含太多不相關的 cache data, 就可以提升 locality
 而第一點提到的 scheduler global mutex lock 的問題就可以得到緩解(global lock 的問題被簡化成了 per-`p` lock)\
 所以整體的架構是長這樣
 ![](https://pic1.zhimg.com/80/v2-256fbdd4c64eec3b856588b389d3d8ac_720w.webp)
-> [深度解密Go语言之 scheduler](https://zhuanlan.zhihu.com/p/80853548)
+> ref: [深度解密Go语言之 scheduler](https://zhuanlan.zhihu.com/p/80853548)
 
 每個 `p` 上面都有一個存放 `g` 的 local run queue(`p.gFree`), 然後 assign `m` 給 `p` 執行 `g`
 > 你說為什麼會有多個 `m` 呢？ 如果 `m1` 要執行 blocking I/O, `p` 就會被 assign 新的 `m`
