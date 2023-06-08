@@ -7,12 +7,12 @@ math: true
 ---
 
 # Preface
-這篇文章主要會以 [LeetCode 560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/) 為主探討如何優化 subarray sum
+這篇文章主要會以 subarray sum 為主探討一些常見的題目
 
-# Subarray Sum
-subarray 為一個 array 的連續子集合，subarray 不可為空，subarray sum 則為這個子陣列的和
+> subarray 為一個 array 的連續子集合，subarray 不可為空，subarray sum 則為這個子陣列的和
 
-# Brute Force Approach
+# [LeetCode 560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/)
+## Brute Force Approach
 最直觀的作法當然是每個 subarray 都檢查一遍，確認該 subarray 的總和是否為 k 即可\
 pseudo code 為以下
 ```pseudo
@@ -26,13 +26,13 @@ for i from 0 to length(array)
 對於非常大的陣列來說，它很容易就會 `TLE(Time Limit Exceeded)`\
 所以很明顯的，這個作法有待改進
 
-# Cumulative Table
+## Cumulative Table
 ![](https://img.yamol.tw/item/1632087-0-5eba9f06e87c8.png#s-404,324)
 
 上圖為身高的累進圖表，可以看到分別紀錄了各個身高所對應的 **累進比例**\
 比方說，從 140 cm 到 160 cm 的人數佔了所有人的 62.5 %
 
-## Cumulative Sum of Array
+### Cumulative Sum of Array
 同樣的概念可以套用到 array 上面\
 假設有一個 array [5, 4, -1, 7, 8]\
 那麼他的 cumulative sum of array 就會是
@@ -53,7 +53,7 @@ cumulative[3] = array[0] + array[1] + array[2] + array[3]
 
 依此類推
 
-## How to Get Subarray Sum from Cumulative Sum Array
+### How to Get Subarray Sum from Cumulative Sum Array
 假設我要找的 subarray sum 是 `8`\
 以肉眼觀察可以找到 2 組解答，分別為 `[5, 4, -1]` 以及 `[8]`\
 那要怎麼利用 cumulative sum array 來快速的找到呢？
@@ -79,11 +79,11 @@ $array[i] + array[i + 1] + ... + array[j] = cumulative[j] - cumulative[i - 1]$
 
 > 我的習慣會是建立 cumulative sum array 的時候在前面多塞一個數值為 0 的(上面的 cumulative[-1] 就會等於 0)
 
-## How Cumulative Sum Array Helps Speedup?
+### How Cumulative Sum Array Helps Speedup?
 看到這你不難發現，使用 cumulative sum array 可以取得 **任意區間** 的 subarray sum(透過兩個 cumulative 的數值相減即可得到區間和)\
 亦即只要把 cumulative sum array 建立起來，你就不需要用 2 層 for-loop 暴力的窮舉出所有可能了
 
-# Cumulative Sum Approach
+## Cumulative Sum Approach
 
 |index|-1|0|1|2|3|4|
 |:--|:--:|:--:|:--:|:--:|:--:|:--:|
@@ -157,7 +157,7 @@ func subarraySum(nums []int, k int) int {
 }
 ```
 
-## Why do we Need to Store Occurrence of cumulative[i] in Map
+### Why do we Need to Store Occurrence of cumulative[i] in Map
 前面提到，為了加速尋找 `cumulative[j] - k` 能夠跑得更快，因此實做當中使用了 map 的結構\
 但是為什麼要紀錄 `cumulative[j] - k` 出現了幾次呢？\
 只要紀錄他有出現過不就好了嗎？
@@ -173,7 +173,7 @@ func subarraySum(nums []int, k int) int {
 假設你的條件剛好是 `cumulative[j] - k = 14`\
 如果你沒有紀錄出現的次數，在之後的答案當中你會少算了 1 次(以這個例子來說)
 
-## Do we Need to Consider -k Situation
+### Do we Need to Consider -k Situation
 我在嘗試理解這個算法的時候，一個問題油然而生\
 我到底需不需要考慮 `-k` 的情況？
 
