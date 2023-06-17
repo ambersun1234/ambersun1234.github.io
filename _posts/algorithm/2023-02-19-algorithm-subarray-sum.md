@@ -181,6 +181,58 @@ func subarraySum(nums []int, k int) int {
 意思就是說，如果考慮到 `-k` 的情況，你對回去原本的陣列看，他的 subarray sum 也會是 `-k`\
 所以只需要考慮 `k` 的情況就好了
 
+# [LeetCode 53. Maximum Subarray](https://leetcode.com/problems/maximum-subarray)
+subarray 是由一個以上的**連續元素**所組成的，而 subarray sum 就是所有區間數值加總起來\
+要找到 maximum subarray sum 最直覺的方法就是窮舉出所有區間組合\
+但是這樣太複雜了，我們可以試著簡化問題
+
+看一個實際例子比較快\
+如果之前的區間最大和(0 ~ n-1)是 `10`
+1. `num[n] = 2`, 因為 `10 + 2 > 10`, 所以目前 maximum subarray sum 就是 `10 + 2`(num[0 ~ n])
+2. `num[n] = -1`, 因為 `10 + (-1) < 10`，所以目前 maximum subarray sum 就是 `10 + (-1)`(num[0 ~ n])
+2. `num[n] = 20`, 因為 `20 > 10`, 所以目前 maximum subarray sum 就是 `20`(num[n])
+
+> 注意第二點，為什麼最大區間和不是 10 而是 9?\
+> 因為我們要考慮 "**連續**的情況"\
+> 如果你把它寫成 10, 那麼最大區間和中間就會有空格，就不符合 subarray 的定義了
+
+我們可以把上述的情況匯總成以下規則
+1. 如果 `num[n]` 小於 `num[0 ~ n]`, 那 maximum subarray sum 就是 `num[0 ~ n]`
+2. 如果 `num[n]` 大於 `num[0 ~ n]`, 那 maximum subarray sum 就是 `num[n]`
+
+<hr>
+
+所以目前最大區間和，取決於 `之前的最大區間和`\
+這就是動態規劃(dynamic programming)\
+因為要我算出最大區間和實在是太困難了，當我知道之前的最大區間和(n-1)，在加上目前的數字，我可以很輕易的判斷現在的區間最大和為多少(n)
+
+<hr>
+
+所以實做就很簡單了
+```go
+func maxSubArray(nums []int) int {
+    size := len(nums)
+    dp := make([]int, size)
+    maxSubSum := nums[0]
+    dp[0] = nums[0]
+
+
+    for i := 1; i < size; i++ {
+        dp[i] = max(nums[i], nums[i] + dp[i - 1])
+        maxSubSum = max(maxSubSum, dp[i])
+    }
+
+    return maxSubSum
+}
+
+func max(a, b int) int {
+    if a > b {
+        return a
+    }
+    return b
+}
+```
+
 # See Also
 + [LeetCode 1171. Remove Zero Sum Consecutive Nodes from Linked List](https://leetcode.com/problems/remove-zero-sum-consecutive-nodes-from-linked-list/)
 
