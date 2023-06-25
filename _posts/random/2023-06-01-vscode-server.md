@@ -228,8 +228,9 @@ bantime  = 3600
 $ sudo service fail2ban restart
 ```
 
-# Code Server
+# Website Code Server
 我們會使用 [code server](https://github.com/coder/code-server) 作為遠端的伺服器\
+它可以讓我們以網頁的方式操作 vscode, 這通常很適合如果你是使用 iPad 或是手機操作的\
 當然，直接灌在系統上面有可能會污染系統，我個人較傾向使用 Docker 的方式
 
 使用官方的 image 並且在 `port 8080` 打開對外服務
@@ -269,6 +270,17 @@ cert: false
 ```shell
 $ ssh -L 8080:127.0.0.1:8080 server
 ```
+
+# VSCode Code Server
+除了網頁版的方式之外，VSCode 官方出的套件，可以讓你的本機電腦 VSCode 連線到遠端的 VSCode\
+聽起來有點雞肋，不過如果你像我一樣，可能剛好手邊的電腦效能沒有那麼好，就可以用這種方式
+
+你需要的東西有
+1. 兩台電腦都必須要安裝 [VSCode](https://code.visualstudio.com/)
+2. 下載 [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) 套件
+
+然後點選左下角連接到 remote machine\
+如果你前面 SSH 都有設定好，它會跳出選項，跟著操作基本上就可以了
 
 # References
 + [設定 Linux 開放 ssh 連線](https://www.ruyut.com/2022/04/ssh-linux.html)
