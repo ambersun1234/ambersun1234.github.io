@@ -66,7 +66,7 @@ thread A 正在執行一個任務，突然它需要進行 I/O\
 基本上 coroutine 共享的資料與 thread 無異，主要的差異是在\
 coroutine 是採用 [cooperatively scheduled](https://en.wikipedia.org/wiki/Cooperative_multitasking) 跟 process 還有 thread 的 [preemptively scheduled](https://en.wikipedia.org/wiki/Preemption_(computing)) 是不一樣的
 
-cooperatively schedule 是 programmer 或語言實做決定何時要進行 context switch
+cooperatively schedule 是 programmer 或語言實做決定何時要讓出 CPU time(user space context switch)
 
 > 根據現有的資料，有的說 coroutine 共享的資料與 thread 一致\
 > 有的則說 coroutine 擁有自己的 stack\
@@ -74,7 +74,10 @@ cooperatively schedule 是 programmer 或語言實做決定何時要進行 conte
 
 由於 coroutine 基本上都是在 user-space, kernel 對此可謂是毫不知情\
 亦即 coroutine 的排程是 **不會被 kernel scheduler** 影響的，而前面提到的 cooperatively scheduled 則是你可以自己管控何時要進行 context switch(這裡指的是語言實做自己的排程，而非 kernel scheduler)\
-這樣的好處是，你不會因為做事情做到一半就突然 timeout 而被 kernel swap out
+這樣的好處是，你不會因為做事情做到一半就突然 timeout 而被 kernel swap out\
+壞處是，由於讓出 CPU time 這件事情必須是 **主動且願意**, 要是其中一個 coroutine 不願意 release CPU 那就會導致 starving 的問題
+
+> 藉由 [Yield](https://en.wikipedia.org/wiki/Yield_(multithreading)) 的行為主動讓出 CPU time
 
 那 coroutine 相比 thread 來說，能提昇效能嗎？\
 hmm 效果不大\
@@ -446,7 +449,10 @@ sysmon 就會負責將這些 goroutine 塞到 global run queue 讓他們等著�
 sysmon 會將他們的 `p` 奪走\
 可參考 [runtime/prco.go#L5453](https://github.com/golang/go/blob/master/src/runtime/proc.go#L5453)
 
-> 為什麼單純跑太久會被奪走 `p`? 就只是單純的 timeout 而已，符合 scheduler 的行為([Round Robin](https://en.wikipedia.org/wiki/Round-robin_scheduling))
+> 為什麼單純跑太久會被奪走 `p`? 就只是單純的 timeout 而已，符合 scheduler 的行為([Round Robin](https://en.wikipedia.org/wiki/Round-robin_scheduling))\
+> 可是前面 [Coroutine(Fiber, Green Threads)](#coroutinefiber-green-threads) 不是說，讓出 CPU time 必須是要出於主動意願的情況下嗎\
+> Golang Runtime Scheduler 並沒有可以讓 programmer 控制這個行為的操作(e.g. yield)\
+> 因此，scheduler 會主動進行 preempt, 盡可能不讓 starving 的情況發生
 
 ```go
 if s == _Prunning || s == _Psyscall {
