@@ -352,6 +352,17 @@ blocking 的情況下，就是將自己塞進去 sender wait queue(`sendq`)\
 ![](https://miro.medium.com/v2/resize:fit:640/1*cVt3pF8FcBtF3q1oVc3fHg.gif)
 > ref: [How Does Golang Channel Works](https://levelup.gitconnected.com/how-does-golang-channel-works-6d66acd54753)
 
+<hr>
+
+那如果往 closed channel 塞資料會發生什麼事情？\
+它會 **直接 panic**(可參考 [go/src/runtime/chan.go#204](https://github.com/golang/go/blob/master/src/runtime/chan.go#L204))
+```go
+if c.closed != 0 {
+    unlock(&c.lock)
+    panic(plainError("send on closed channel"))
+}
+```
+
 ### Receive on Channel
 基本上 receive 的過程跟 send 差不多\
 也是先檢查 sendq 有沒有人存在，如果有，就直接從他的 sudog 拿資料並返回
@@ -413,6 +424,28 @@ blocking 的情況下，將自己塞入 receiver wait queue(`recvq`)
 
 ![](https://miro.medium.com/v2/resize:fit:720/1*pisoQBZZpXjFxwXuSfIWuA.gif)
 > ref: [How Does Golang Channel Works](https://levelup.gitconnected.com/how-does-golang-channel-works-6d66acd54753)
+
+<hr>
+
+值得注意的是，讀取 closed channel **並不會造成 panic**\
+根據 [go/src/runtime/chan.go#513](https://github.com/golang/go/blob/master/src/runtime/chan.go#L513)
+```go
+if c.closed != 0 {
+    if c.qcount == 0 {
+        if raceenabled {
+            raceacquire(c.raceaddr())
+        }
+        unlock(&c.lock)
+        if ep != nil {
+            typedmemclr(c.elemtype, ep)
+        }
+        return true, false
+    }
+    // The channel has been closed, but the channel's buffer have data.
+}
+```
+我們可以發現，當 channel 被 closed 的時候，他的返回值會被清空(`typedmemclr`)\
+所以你讀到的數值就是空值(它會根據型態自動轉型, e.g. `false`, `0`)
 
 ## Share Memory by Communicating
 `Do not communicate by sharing memory; instead, share memory by communicating.`
@@ -516,7 +549,7 @@ func main() {
 
 在這個例子裡面，是使用 unbuffered channel :arrow_right: 所以整隻程式會是 [Blocking Send](#blocking-send) 與 [Blocking Receive](#blocking-receive)\
 另外不一樣的是，當某個 goroutine 失敗的時候，它必須要將原本的 task 讓出來給別人嘗試解決，因此需要額外的 statusChannel 紀錄說目前問題被解決了沒\
-`statusChannel <- true` 必須寫在 `go producer` 後面的原因是因為，必須先要有人接收資料，才能開始送資料(不然會 all goroutines are deadlock)\
+`statusChannel <- true` 必須寫在 `go producer` 後面的原因是因為，必須先要有人接收資料，才能開始送資料(不然會 `all goroutines are deadlock`)\
 由於本例是以 unbuffered channel 的方式撰寫\
 因此，當 consumer 的數量小於等於 1 的時候，將會觸發 deadlock，因為當 failed 的時候，重新 enqueue 寫進去 channel 的資料將沒有人可以讀取(all goroutines are asleep)
 
