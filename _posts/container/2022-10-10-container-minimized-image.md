@@ -68,12 +68,12 @@ Alpine Linux 是安全且輕量的發行版 基於 [musl libc](https://www.musl-
 
 <hr>
 
-在 [ambersun1234/minimized-docker-image-lab](https://github.com/ambersun1234/minimized-docker-image-lab) 裡面我提供了一個簡單的 echo API 實做\
+在 [ambersun1234/blog-labs/minimized-docker-image-lab](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab) 裡面我提供了一個簡單的 echo API 實做\
 把 source code 包進去的跟只包 binary 的他們的差別如下
 
 ||with source code|binary only|
 |:--|:--:|:--:|
-|Implementation|[Multi-stage Build](https://github.com/ambersun1234/minimized-docker-image-lab/tree/master/multi-stage)|[Non-optimized](https://github.com/ambersun1234/minimized-docker-image-lab/tree/master/non-optimized)|
+|Implementation|[Multi-stage Build](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab/multi-stage)|[Non-optimized](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab/non-optimized)|
 |Size|1.18 GB|17.6 MB|
 |Layer|10|2|
 
@@ -147,7 +147,7 @@ $ docker inspect alpine:latest
 ```
 {% endraw %}
 
-實驗程式碼可以參考 [ambersun1234/minimized-docker-image-lab](https://github.com/ambersun1234/minimized-docker-image-lab)
+實驗程式碼可以參考 [ambersun1234/blog-labs/minimized-docker-image-lab](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab)
 
 # References
 + [Docker Image Size - Does It Matter?](https://semaphoreci.com/blog/2018/03/14/docker-image-size.html)

@@ -94,15 +94,15 @@ Redis 提供了一套完整且常見的資料結構，常見的有以下
 
 我會分別對 lists 以及 sorted sets 取值(在頭尾各取不定數量的資料)\
 透過時間分析不同 data structure 會如何影響取值效率\
-你可以在 [ambersun1234/Redis Benchmark - Lists vs. Sorted Sets](https://github.com/ambersun1234/redis-lists-sorted-sets-benchmark) 這裡找到實驗程式碼
+你可以在 [ambersun1234/Redis Benchmark - Lists vs. Sorted Sets](https://github.com/ambersun1234/blog-labs/tree/master/redis-lists-sorted-sets-benchmark) 這裡找到實驗程式碼
 
 首先，先看看一次取 100 筆資料的結果\
-![](https://raw.githubusercontent.com/ambersun1234/redis-lists-sorted-sets-benchmark/master/benchmark-100.png)\
+![](https://github.com/ambersun1234/blog-labs/blob/master/redis-lists-sorted-sets-benchmark/benchmark-100.png?raw=true)\
 從上圖你可以很明顯的看到，lists 在頭尾的部份表現與 sorted sets 差距比中間來的小，換言之就是 lists 在頭尾的操作效率會比中間高
 
 再來是取 1000 筆 以及 10000 資料\
-![](https://raw.githubusercontent.com/ambersun1234/redis-lists-sorted-sets-benchmark/master/benchmark-1000.png)\
-![](https://raw.githubusercontent.com/ambersun1234/redis-lists-sorted-sets-benchmark/master/benchmark-10000.png)\
+![](https://github.com/ambersun1234/blog-labs/blob/master/redis-lists-sorted-sets-benchmark/benchmark-1000.png?raw=true)\
+![](https://github.com/ambersun1234/blog-labs/blob/master/redis-lists-sorted-sets-benchmark/benchmark-10000.png?raw=true)\
 不難看出即使一次取一大段的資料，在多數情況下 lists 的效率仍然比 sorted sets 還要來的差(約 $0.5 * 10^6$ nanoseconds)
 
 ## Redis Transactions

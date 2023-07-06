@@ -114,21 +114,21 @@ func optimize(db *gorm.DB) error {
 `POST /benchmark` API 就是單純的跑 benchmark(可以設定要測幾次)
 
 結果如下\
-![](https://github.com/ambersun1234/sql-n1-benchmark/raw/master/100_benchmark.png)\
+![](https://github.com/ambersun1234/blog-labs/blob/master/sql-n1-benchmark/100_benchmark.png?raw=true)\
 可以看到當資料庫的資料有 100 筆的情況下\
 就有不小的差距了，大約是 **$2 \times 10^7$**
 
-![](https://github.com/ambersun1234/sql-n1-benchmark/raw/master/1000_benchmark.png)\
+![](https://github.com/ambersun1234/blog-labs/blob/master/sql-n1-benchmark/1000_benchmark.png?raw=true)\
 1000 筆的資料下就更慢了 大約是 **$2 \times 10^8$**\
 當資料多了 10 倍後，效能也直接慢了 10 倍
 
-![](https://github.com/ambersun1234/sql-n1-benchmark/raw/master/10000_benchmark.png)\
+![](https://github.com/ambersun1234/blog-labs/blob/master/sql-n1-benchmark/10000_benchmark.png?raw=true)\
 10000 筆大約是 **$3 \times 10^9$**\
 也是一樣慢了 10 倍
 
 可見，使用了 N + 1 的寫法，當資料越多的情況下，他的速度是成倍數下降的
 
-詳細的測試程式碼可以參考 [ambersun1234/sql-n1-benchmark](https://github.com/ambersun1234/sql-n1-benchmark)
+詳細的測試程式碼可以參考 [ambersun1234/blog-labs/sql-n1-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/sql-n1-benchmark)
 
 # References
 + [[科普文]什么是ORM中的N+1](https://zhuanlan.zhihu.com/p/27323883)

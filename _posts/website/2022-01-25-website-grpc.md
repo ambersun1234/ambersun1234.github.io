@@ -270,7 +270,7 @@ $ curl localhost:6666/api/user/1
 {"user_id":"1","user_name":"test_user_name","first_name":"test_first_name","last_name":"test_last_name","email":"test@test.com"}
 ```
 
-詳細的實作程式碼可參考 [ambersun1234/grpc-gateway-users](https://github.com/ambersun1234/grpc-gateway-users)
+詳細的實作程式碼可參考 [ambersun1234/blog-labs/grpc-gateway-users](https://github.com/ambersun1234/blog-labs/tree/master/grpc-gateway-users)
 
 # Compare with Traditional RESTful-API
 
@@ -346,10 +346,10 @@ client 端使用 Python 分別對其進行 十萬次的 benchmark testing
 跨語言的支援同時也是 gRPC 的一大強項\
 就我這幾天的撰寫而言，就上手程度而言沒有太大的難度，基本上只要能夠順利 generate proto 就沒太大問題了
 
-實驗相關程式碼可以在 [ambersun1234/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/RESTful-vs.-gRPC-benchmark) 中找到
+實驗相關程式碼可以在 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark) 中找到
 
 ### Result
-![](https://github.com/ambersun1234/RESTful-vs.-gRPC-benchmark/blob/master/benchmark.png?raw=true)
+![](https://github.com/ambersun1234/blog-labs/blob/master/RESTful-vs.-gRPC-benchmark/benchmark.png?raw=true)
 
 上述 benchmark 結果為 gRPC vs. RESTful API 的速度測試\
 其中綠色線代表 RESTful, 紫色線代表 gRPC\

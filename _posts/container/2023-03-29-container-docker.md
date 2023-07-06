@@ -150,7 +150,7 @@ $ docker inspect ubuntu:22.04
 在 **RootFS** 那裡你可以看到 layers 那邊正好就是我們這裡第一層 layer sha256 的結果\
 得證
 
-實驗程式碼可以參考 [ambersun1234/minimized-docker-image-lab](https://github.com/ambersun1234/minimized-docker-image-lab)
+實驗程式碼可以參考 [ambersun1234/blog-labs/minimized-docker-image-lab](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab)
 
 # Docker Networking
 得益於優異的網路設定，其他服務可以很輕鬆的與 container 連接, 不須理會他是跑在哪一個 OS 上面，更甚至不用知道他是不是 container\
