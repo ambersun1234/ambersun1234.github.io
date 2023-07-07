@@ -100,6 +100,9 @@ $ npx prisma generate --schema schema.prisma
 $ npx prisma migrate dev --name init --schema schema.prisma
 ```
 
+> 注意到一點，當你 migration 完成之後\
+> migration 的 history 檔案也務必要加入版控裡面
+
 > 預設定義檔路徑是 ./schema.prisma\
 > 如果你放在別的地方要指過去
 
@@ -286,8 +289,8 @@ CREATE TABLE `User` (
     `id` VARCHAR(191) NOT NULL,
     `username` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `last_login_at` DATETIME(3) NOT NULL,
 
+    UNIQUE INDEX `User_username_key`(`username`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
@@ -344,8 +347,7 @@ module.export = {
 這樣就可以 work 了
 
 # Simple REST-ful lab
-> to be continued
-<!-- 有關上述所有的程式碼實做，你可以在 []() 找到 -->
+有關上述所有的程式碼實做，你可以在 [ambersun1234/blog-labs/simple-restful-lab](https://github.com/ambersun1234/blog-labs/tree/master/simple-rest-lab) 找到
 
 # References
 + [Express Response.send() throwing TypeError](https://stackoverflow.com/questions/49374802/express-response-send-throwing-typeerror)
