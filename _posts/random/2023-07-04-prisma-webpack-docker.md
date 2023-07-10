@@ -119,11 +119,12 @@ Prisma 透過 JavaScript client 與 Query Engine 進行溝通，然後才到資�
 npx prisma generate 這行指令，上一節才看到，它會負責生成 client 以及 engine
 
 注意到，query engine 是 binary(aka. 執行檔)\
-它會根據你目前的系統，自動下載相對應的 binary 到 `node_modules/@prisma/engines` 以及 `node_modules/.prisma/client` 裡頭\
-檔案名稱的規則為
+它會根據你目前的系統，自動下載相對應的 binary 到 `node_modules/@prisma/engines` 以及 `node_modules/.prisma/client` 裡頭
 
 > @prisma/client :arrow_right: prisma module 本體，下載後就不會改動了\
 > .prisma/client :arrow_right: 根據你的 schema.prisma 動態生成的
+
+檔案名稱的規則為
 
 |Prefix|Platform|Postfix|Image|
 |:--|:--|:--|:--|
@@ -282,7 +283,7 @@ datasource db {
 如此一來，不需要手動執行指令，也可以初始化資料庫 table 了
 
 ```sql
-USE db;
+USE restdb;
 
 -- CreateTable
 CREATE TABLE `User` (
@@ -346,8 +347,8 @@ module.export = {
 除了載入 `.env` 之外，也將系統層級的環境變數寫入 `process.env` 裡面\
 這樣就可以 work 了
 
-# Simple REST-ful lab
-有關上述所有的程式碼實做，你可以在 [ambersun1234/blog-labs/simple-restful-lab](https://github.com/ambersun1234/blog-labs/tree/master/simple-rest-lab) 找到
+# Simple REST lab
+有關上述所有的程式碼實做，你可以在 [ambersun1234/blog-labs/simple-rest-lab](https://github.com/ambersun1234/blog-labs/tree/master/simple-rest-lab) 找到
 
 # References
 + [Express Response.send() throwing TypeError](https://stackoverflow.com/questions/49374802/express-response-send-throwing-typeerror)
