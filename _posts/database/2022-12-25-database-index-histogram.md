@@ -153,7 +153,11 @@ B+ Tree 的特點就是，他是一顆自平衡樹，也就是說它不會出現
 而這樣做的好處就是找到資料最慢僅須花費 $O(Log(n))$ 而已
 
 而 B+ Tree 僅有在 leaf node 儲存資料，並且 leaf node 之間都會用 pointer 互相連接(linked list)\
-這樣的作法有助於提昇 locality(資料庫多半會做 pre-load(i.e. disk read-ahead) 增進效能)
+這樣的作法有助於 **提昇 locality**(資料庫多半會做 pre-load(i.e. disk read-ahead) 增進效能)\
+並且在 full table scan 下的效能海放 B Tree(因為後者必須執行 tree traversal 可能會 **cache miss**, 前者可以依靠連接的 pointer)
+
+![](https://i.stack.imgur.com/l6UyF.png)
+> ref: [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
 
 ## Hash Index
 Hash index 顧名思義是用 hash 來達成的\
@@ -340,3 +344,4 @@ wildcard 在中間的情況也不會是 full table scan\
 + [Does MySQL use only one index per query/sub-query?](https://stackoverflow.com/questions/65419712/does-mysql-use-only-one-index-per-query-sub-query)
 + [Distinguishing Access and Filter-Predicates](https://use-the-index-luke.com/sql/explain-plan/oracle/filter-predicates)
 + [Index Seek和Index Scan的区别以及适用情况](https://blog.csdn.net/u013230234/article/details/78345333)
++ [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
