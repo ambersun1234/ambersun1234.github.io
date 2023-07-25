@@ -1,5 +1,5 @@
 ---
-title: 資料庫 - Redis Cache
+title: 資料庫 - Redis Cache 與 Cache Strategies
 date: 2022-09-28
 categories: [database]
 tags: [cache, redis, transaction]
@@ -57,6 +57,108 @@ cpu cache 的空間，以最新發布家用旗艦處理器 [AMD Ryzen 9 7950x](h
 CPU 的 memory 不能讓程式設計師直接存取是很合理的事情\
 試想如果你能夠手動操作，那這將會是個災難(搞亂 cache data 有可能會導致一直 cache miss, 造成效能低下)\
 不過不要誤會，即使我們不能直接操作，作業系統也替我們做了許多的 cache 在 cpu cache 了
+
+# Cache Strategies
+## Cache Aside(Read Aside)
+![](https://www.prisma.io/dataguide/dataguide-images/database-caching/cache-aside.png)
+> ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
+
+這大概是最常見的 cache 策略之一了\
+概念很簡單，因為資料庫的讀寫通常很慢，如果每一次都需要 access 資料庫，那麼響應時間會太久\
+假如在旁邊放一個 cache 呢？
+
+cache 有資料(i.e. `cache hit`), 就不用 query 資料庫，效率也會變高\
+如果找不到資料(i.e. `cache miss`), 查詢資料庫撈資料，順便寫回 cache(讓下次存取不會 cache miss)
+
+Cache Aside 在大多數情況下都是很好的解決辦法\
+尤其是在 **read heavy** 的情況，因為常用的資料會在 cache 裡面，而 cache 讀取效率高所以再多的讀取 request 都可以 handle\
+倘若 cache 意外下線了，也沒關係，因為資料都可以透過資料庫 restore
+
+![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*dPnVCTxrsXgsJdOtXUN3IA.png)
+> ref: [Consistency between Cache and Database, Part 1](https://medium.com/starbugs/consistency-between-cache-and-database-part-1-f64f4a76720)
+
+唯一算是缺點的，兩邊的資料可能會 **不一致**(可參考上圖)\
+為什麼？\
+我們的好朋友 [Atomic Operation](../../random/python-gil/#atomic-operation) 解釋了一切\
+重新審視 cache aside 的實做，你會發現\
+當 cache miss 的時候，你會 query 資料庫，然後再寫入 cache\
+問題出在這裡，多執行緒的狀況下，你沒辦法保證他是 unit of work\
+所以會出現 inconsistency 的狀況
+
+> 可參考 [關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) \| Shawn Hsu](../../random/python-gil)
+
+## Read Through
+![](https://www.prisma.io/dataguide/dataguide-images/database-caching/read-through.png)
+> ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
+
+長的跟 [Cache Aside](#cache-asideread-aside) 很像\
+不同的是，Read Through 是將 cache 放在中間\
+所有的讀取都跟 cache 讀取，然後 write 全部直接跟 database 溝通
+
+一樣？ 我覺的是一模一樣阿\
+這麼說吧, 因為讀取全部都找 cache, 所以在某種程度上，application 是不會知道有 database 的存在的(所以架構上較簡單)
+
+> 可是 cache miss 的時候不是要去 database 找？
+
+對！\
+但這步驟是透過 library 或者是第三方的套件完成的\
+而 [Cache Aside](##cache-asideread-aside) 是自己 **手動** 寫回 cache 的\
+所以這是他們的不同
+
+缺點呢，也一樣會有資料 **不一致** 的問題
+
+## Write Through
+![](https://www.prisma.io/dataguide/dataguide-images/database-caching/write-through.png)
+> ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
+
+解決 **不一致** 最簡單的解法就是\
+每一次的更新，都寫進去 cache 裡面，永遠保持 cache 的資料是最新的
+
+Write Through 的概念就是，每一次的更新，都一起更新 cache 跟 database\
+這樣就不會 cache miss\
+當然這個作法也是有缺點的，同時更新 cache 與 database，會增加延遲
+
+> double write 不會遇到前面 [Cache Aside](#cache-asideread-aside) 的問題嗎？\
+> 答案是不會，因為 [Cache Aside](#cache-asideread-aside) 是 reader 更新，而 [Write Through](#write-through) 是 writer 更新
+
+通常使用 [Write Through](#write-through) 會搭配使用 [Read Through](#read-through)\
+因為 cache 的資料永遠都是 up-to-date 且與資料庫的資料始終同步\
+因此配合 [Read Through](#read-through) 可以解決資料不一致的問題
+
+## Write Back(Write Behind)
+![](https://www.prisma.io/dataguide/dataguide-images/database-caching/write-back.png)
+> ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
+
+[Write Through](#write-through) 每一次都要寫回去，overhead 會太重\
+所以，[Write Back](#write-backwrite-behind) 的策略是，**每隔一段時間再寫回去**\
+這樣，你可以增加 write performance\
+缺點也很明顯，如果你是用 [Redis](#redis) 這種 in-memory cache\
+當它掛的時候，會有 data loss
+
+[Write Back](#write-backwrite-behind) 可以搭配 [Read Through](#read-through) 組合\
+合併兩者的優勢，組合成 最佳讀寫策略
+
+## Write Around
+![](https://www.prisma.io/dataguide/dataguide-images/database-caching/write-around.png)
+> ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
+
+仔細看可以發現他是 [Cache Aside](#cache-asideread-aside) 與 [Read Through](#read-through) 的結合體\
+write 永遠寫入 database, read 永遠讀 cache\
+因此，兩者的缺點仍然存在，也就是資料會 **不一致**
+
+<hr>
+
+稍微總結一下\
+只要是 reader 更新 cache 就有可能會導致資料不一致的情況\
+如果是 writer 更新 cache 就有可能會拖慢執行速度
+
+|Strategy|Pros|Cons|
+|:--|:--|:--|
+|[Cache Aside](##cache-asideread-aside)|容易實做，增加 read 效率|資料可能不一致|
+|[Read Through](#read-through)|架構簡單，可增加 read 效率|資料可能不一致|
+|[Write Through](#write-through)|解決資料不一致的問題|速度偏慢|
+|[Write Back](#write-backwrite-behind)|可增加 write 效率|資料可能會遺失|
+|[Write Around](#write-around)|read 效率可以最佳化|資料可能不一致|
 
 # Redis
 REmote DIctionary Server - Redis 是一款 in-memory 的 key-value 系統\
@@ -189,3 +291,7 @@ appendonly yes
 # References
 + [Redis persistence](https://redis.io/docs/manual/persistence/#append-only-file)
 + [Difference between Buffering and Caching in OS](https://www.geeksforgeeks.org/difference-between-buffering-and-caching-in-os/)
++ [Cache Strategies](https://medium.com/@mmoshikoo/cache-strategies-996e91c80303)
++ [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
++ [Consistency between Cache and Database, Part 1](https://medium.com/starbugs/consistency-between-cache-and-database-part-1-f64f4a76720)
++ [淺談各種資料庫cache策略: cache aside、read through、write through、write back](https://homuchen.com/posts/databse-chache-strategies/)
