@@ -1,5 +1,5 @@
 ---
-title: 資料庫 - Redis Cache 與 Cache Strategies
+title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
 categories: [database]
 tags: [cache, redis, transaction]
@@ -57,6 +57,43 @@ cpu cache 的空間，以最新發布家用旗艦處理器 [AMD Ryzen 9 7950x](h
 CPU 的 memory 不能讓程式設計師直接存取是很合理的事情\
 試想如果你能夠手動操作，那這將會是個災難(搞亂 cache data 有可能會導致一直 cache miss, 造成效能低下)\
 不過不要誤會，即使我們不能直接操作，作業系統也替我們做了許多的 cache 在 cpu cache 了
+
+# Cache Warming
+cache 的容量通常不大，因此所儲存的資料是有限的\
+這就會遇到一些問題，當我需要的資料不在 cache 裡面的時候，是不是要去 database 撈資料出來放著\
+這個情況被稱之為 **cache miss**，反之則為 **cache hit**
+
+> c.f. array 操作這種，也跟 cache hit/miss 有關哦(CPU L1 cache)
+
+cache miss 的情況下，很明顯的會比 cache hit 的 `反應時間還要久`\
+所以我們需要 cache warming
+
+為了最大可能，避免 cache miss 的情況發生\
+你可以怎麼做？\
+手動的將需要的資料放到 cache 裡面，這樣對於 end-user 來說，沒有 cache miss, 載入速度更快，使用者體驗會更好\
+問題是 我要怎麼知道要放哪些資料到 cache 裡面？\
+**crawler(爬蟲)** 或許是個手段，爬完一次，所有 miss 的資料現在都會在 cache 裡面了\
+但是這樣會有一點問題
+1. 現今系統都不是 single server 這麼簡單，幾千、幾萬台的 cache server 要更新到哪時候？
+2. 為了防止 [DDOS](https://en.wikipedia.org/wiki/Denial-of-service_attack), 太頻繁的發 request 也會被擋
+
+根據現有的手段，我們可以做的更好嗎？\
+試想，每一台 cache server 他們的資料是不是一樣的？\
+如果是一樣的，那為什麼需要用爬蟲重新爬一次？ 直接從現有的 cache server 複製一份不就好了？\
+而這正是 Netflix 的 Cache Warming 的機制
+
+<hr>
+
+![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*FffR7-sUe6alYL6-XvInfg.png)
+> ref: [Cache warming: Agility for a stateful service](https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642)
+
+從現有的正在運行的 cache node 完整的複製一份資料出來(i.e. `dumper`)\
+透過 `populator` 寫到新的 node 上面\
+不就好了嗎？
+
+為了進一步縮減 warm up 的時間，我們不必等待 "全部資料複製出來" 再操作\
+可以把它切成一小塊一小塊，中間擺一個 message queue, 資料塞進去\
+兩邊同時作業(i.e. [producer consumer problem](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem))，可以更快完成
 
 # Cache Strategies
 ## Cache Aside(Read Aside)
@@ -295,3 +332,7 @@ appendonly yes
 + [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
 + [Consistency between Cache and Database, Part 1](https://medium.com/starbugs/consistency-between-cache-and-database-part-1-f64f4a76720)
 + [淺談各種資料庫cache策略: cache aside、read through、write through、write back](https://homuchen.com/posts/databse-chache-strategies/)
++ [What is Cache Warming?](https://www.section.io/blog/what-is-cache-warming/)
++ [Cache warming: Agility for a stateful service](https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642)
++ [Cache Warming: Know it’s Importance to Improve Website Performance](https://www.payoda.com/cache-warming/)
++ [Cache warming: Agility for a stateful service](https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642)

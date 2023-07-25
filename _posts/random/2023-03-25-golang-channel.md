@@ -22,7 +22,7 @@ math: true
 # Buffer
 buffer 是用於暫存資料的一個空間，此時的資料是屬於 **尚未處理過的**
 
-> c.f. [資料庫 - Redis Cache - Cache vs. Buffer \| Shawn Hsu](../../database/database-redis#cache-vs-buffer)
+> c.f. [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache#cache-vs-buffer)
 
 ## Zero Capacity Buffer
 亦即沒有一個暫存空間，這會導致在 receiver 處理完資料之前，sender 必須等待(也就是所謂的 `rendezvous`)\
