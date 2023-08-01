@@ -35,18 +35,16 @@
         <time class="dt-published" datetime="{{ document.date | date: date_format }}">{{ document.date | date: date_format }}</time>
       </span>
 
-      &nbsp;&nbsp;&nbsp;
-      
-      <span class="page__meta-readtime">
-        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
-        <time class="dt-published" datetime="{{ last_modified_at | date: date_format }}">
-          {% if last_modified_at %}
-            {{ last_modified_at | date: date_format }}
-          {% else %}
-            {{ document.date | date: date_format }}
-          {% endif %}
-        </time>
-      </span>
+      {% if page.collection == "posts" %}
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="{{ page.last_modified_at | date: date_format }}">
+            {{ page.last_modified_at | date: date_format }}
+          </time>
+        </span>
+      {% endif %}
     {% endif %}
   </p>
 {% endif %}

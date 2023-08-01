@@ -222,6 +222,7 @@ timezone: Asia/Taipei # https://en.wikipedia.org/wiki/List_of_tz_database_time_z
 
 # Plugins (previously gems:)
 plugins:
+  - jekyll-last-modified-at
   - jekyll-paginate
   - jekyll-sitemap
   - jekyll-gist
@@ -238,7 +239,6 @@ whitelist:
   - jekyll-gist
   - jekyll-feed
   - jekyll-include-cache
-  - jekyll-last-modified-at
 
 
 # Archives
@@ -276,10 +276,6 @@ compress_html:
   clippings: all
   ignore:
     envs: development
-
-last-modified-at:
-    date-format: '%Y-%m-%d'
-
 
 # Defaults
 defaults:
