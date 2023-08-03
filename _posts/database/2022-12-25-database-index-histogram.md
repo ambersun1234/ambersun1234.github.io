@@ -24,7 +24,7 @@ math: true
 所以 Index 總的來說就是加速資料查詢的時間的一個方法\
 不同的是，Index 是透過拿取一個或多個 column data 建立另一個 table\
 由於這個 table 僅有存放少數 column data 加上它會自動幫你排序\
-搜尋的時候，因為已經排序過了，所以是用 binary search 的方式，也因此他的查詢會變得相對簡單且快速
+搜尋的時候，因為已經排序過了，所以是用 binary search/tree traversal 的方式，也因此他的查詢會變得相對簡單且快速
 
 ## Composite Index
 有 single index 就有 composite index\
@@ -68,18 +68,14 @@ WHERE b>=12 AND c=15
 他們的 ***查詢順序要符合定義的順序***\
 這樣才吃的到 index
 
-## Pros of Index
-能夠更快速的讀取資料庫中的資料
+<hr>
 
-## Cons of Index
-因為 index 的建立是仰賴 **空間換時間**\
-並且 index 的 table 是保持著排序好的狀態\
-因此每一次的更新，除了更改原本 table 資料外，index table 也需要做同步的更新\
-所以可能會有較高的 overhead
+|Pros|Cons|
+|:--|:--|
+|能夠更快速的讀取資料庫中的資料|因為 index 的建立是仰賴 **空間換時間**<br>並且 index 的 table 是保持著排序好的狀態<br>因此每一次的更新，除了更改原本 table 資料外，index table 也需要做同步的更新<br>所以可能會有較高的 overhead|
 
 # Type of Index
-## Index Architecture
-### Clustered Index
+## Clustered Index
 clustered index 是用於決定資料在 **實際硬體上的儲存順序**\
 通常 clustered index 在 table 建立之初就會決定好了
 
@@ -116,14 +112,19 @@ MySQL 對於 clustered index 的建立，在官方文件中有說明到 [MySQL 8
 + 沒 primary key :arrow_right: 找第一個 unique field 當 clustered index
 + 啥都沒有 :arrow_right: 我自己幫你偷偷建立一個
 
-### Non-clustered Index
+## Covering Index(Index with Included Columns)
+與其完全不儲存資料，Covering Index 僅儲存 *部份* 的 column data\
+算是一種介於 [Clustered Index](#clustered-index) 與 [Non-clustered Index](#non-clustered-index) 之間的解決方案
+
+## Non-clustered Index
 就是我們常見自己加的 index
 ```sql
 ALTER TABLE `table` ADD INDEX `product_id_index` (`product_id`)
 ```
 
 與 clustered index 不同的是，non-clustered index **並不會儲存 row data**, 他是儲存一個 pointer to original data(i.e. reference)\
-也因此在 query 的時候，使用 non-clustered index 會需要做 **二次 look up**(相對 clustered index 會慢一點)
+也因此在 query 的時候，使用 non-clustered index 會需要做 **二次 look up**(相對 clustered index 會慢一點)\
+更重要的是，non-clustered index 不一定是 unique 的
 
 ![](https://vladmihalcea.com/wp-content/uploads/2021/04/ClusteredIndexSecondaryIndex-1536x1145.png)
 > ref: [Clustered Index](https://vladmihalcea.com/clustered-index/)
@@ -143,29 +144,14 @@ non-clustered index 又稱 secondary index
 |Reverse Index|將 key 反過來存(i.e. `24538` :arrow_right: `83542`)<br>這樣可以減緩 leaf block contention, 因為原本緊鄰的 data, primary key 反轉之後位置會差很多<br>(`24538` :arrow_right: `83542`, `24539` :arrow_right: `93542`)|
 
 # Index Implementations
-## B+ Tree Index
-![](https://vladmihalcea.com/wp-content/uploads/2021/04/ClusteredIndexTable-2048x997.png)
-> ref: [Clustered Index](https://vladmihalcea.com/clustered-index/)
-
-index 如其名，就是利用 B+ Tree 建起來的 index\
-B+ Tree 的特點就是，他是一顆自平衡樹，也就是說它不會出現普通 binary search tree 那種歪掉的情況\
-自平衡樹的特點就是它會最佳化樹高，使得每個 leaf node 到 root 的距離都是最短的\
-而這樣做的好處就是找到資料最慢僅須花費 $O(Log(n))$ 而已
-
-而 B+ Tree 僅有在 leaf node 儲存資料，並且 leaf node 之間都會用 pointer 互相連接(linked list)\
-這樣的作法有助於 **提昇 locality**(資料庫多半會做 pre-load(i.e. disk read-ahead) 增進效能)\
-並且在 full table scan 下的效能海放 B Tree(因為後者必須執行 tree traversal 可能會 **cache miss**, 前者可以依靠連接的 pointer)
-
-![](https://i.stack.imgur.com/l6UyF.png)
-> ref: [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
-
 ## Hash Index
 Hash index 顧名思義是用 hash 來達成的\
 用 hash 的好處之一就是快速，只要算一下就可以馬上定位到資料 $O(1)$
 
 > 需要注意像是 wildcard query(e.g. WHERE username LIKE 'john%') 這種 hash index 也沒辦法處理就是
 
-但同時缺點也很明顯，如果找不到資料的話就可能會是 [Full Table Scan](#table-scan) 了
+但同時缺點也很明顯，針對範圍查詢，效率也會很低\
+更甚至如果找不到資料的話就可能會是 [Full Table Scan](#table-scan) 了
 
 > 它不全然會是 full table scan 的原因是，你的 query 可能剛好有其他 index 可以用，不需要 table scan
 
@@ -176,7 +162,92 @@ Hash index 顧名思義是用 hash 來達成的\
 > [Linear Probing](https://en.wikipedia.org/wiki/Linear_probing)\
 > [Double Hashing](https://www.geeksforgeeks.org/double-hashing/)
 
-並且使用 hash index 對於 disk read-ahead 沒有幫助
+並且使用 hash index 對於 disk read-ahead 沒有幫助\
+因為下一頁的資料不一定在你的旁邊\
+因此這種操作屬於 **Random I/O**
+
+> 詳細可以參考 [資料庫 - 最佳化 Read/Write 設計(硬體層面) \| Shawn Hsu](../../database/database-optimization-hardware)
+
+## SSTable(LSM Tree)
+另一種 index 實做的方式是稱為 SSTable(Sorted String Table)\
+亦即將 key 進行排序\
+排序過後的好處就是說，我能夠花較少的時間 query 到我想要的資料\
+比如說使用 [binary search](https://en.wikipedia.org/wiki/Binary_search_algorithm)
+
+為了避免日後 Random I/O 造成的效能瓶頸\
+SSTable 會先在記憶體中維護一個資料結構(e.g. [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree), [Red-Black Tree](https://en.wikipedia.org/wiki/Red%E2%80%93black_tree))\
+等到寫入超過一定的量之後，在存到硬碟裡面(segment file)\
+不同的 segment file 可能會包含相同 key 的 entry\
+所以也必須適時的進行 **合併與壓縮的操作**\
+又因為說 segment file 的內容是排序過的，所以合併的操作效率也不會太慢
+
+> 符合 `合併與壓縮` 的儲存引擎，通稱 LSM Tree(Log-Structured Merge-Tree)\
+> 要注意的是，合併壓縮的操作會在某種程度上影響到效能，因為他是開一條 thread 下去處理，但同時你還在持續 serve client
+
+另外 SSTable 也有所謂的 log file，避免你在寫入 disk 的時候意外中斷，造成資料遺失
+
+> 作法跟 Redis 的 RDB, AOF 一樣，可參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
+
+重點來了\
+因為可能你有很多個 segment file\
+所以當你要查詢的時候，有可能會 miss 掉(i.e. 該 key 不存在於該 segment file 當中)\
+因此必須要往前一份資料找\
+你可以配合一些其他的工具避免此類的狀況(e.g. [Bloom Filter](https://en.wikipedia.org/wiki/Bloom_filter))
+
+## B Tree Index
+![](https://builtin.com/sites/www.builtin.com/files/styles/ckeditor_optimize/public/inline-images/1_b-tree-indexing.jpg)
+> ref: [How Database B-Tree Indexing Works](https://builtin.com/data-science/b-tree-index)
+
+B Tree 是一種自平衡的樹狀資料結構，也就是從 root 到每一個節點，所花費的時間最多不超過 $O(Log(n))$\
+[SSTable](#sstablelsm-tree) 最差的情況會是 $O(n)$，相比 B Tree，它可以在最短時間內找到你要的資料
+
+B Tree 將資料以 page 為單位分開，大小通常為 `4KB`(MySQL 的分頁大小為 `16KB`)\
+每個 page 對應樹狀結構中的 node，且每個 node 都包含有資料以及 child node 的 pointer
+
+B Tree 的所有操作都是基於 page 的修改\
+新增，刪除都會重寫整個 page 的資料\
+但是當 page 剩餘空間不夠的時候，就會遇到 [Fragmentation](#fragmentation) 的問題了\
+那，這個例子是屬於哪一種的斷裂？ 是 [External Fragmentation](#external-fragmentation)
+
+## B+ Tree Index
+![](https://vladmihalcea.com/wp-content/uploads/2021/04/ClusteredIndexTable-2048x997.png)
+> ref: [Clustered Index](https://vladmihalcea.com/clustered-index/)
+
+B Tree 在 sequential scan 的情況下，必須來回 parent/child node 之間\
+而 B+ Tree 則是在園有的基礎上做了些改進
+
+1. B+ Tree **僅有在 leaf node 儲存資料**
+2. leaf node 之間都會用 pointer 互相連接(linked list)
+
+這樣的作法有助於 **提昇 locality**(資料庫多半會做 pre-load(i.e. disk read-ahead) 增進效能)\
+並且在 full table scan 下的效能海放 B Tree(因為後者必須執行 tree traversal 可能會 **cache miss**, 前者可以依靠連接的 pointer)
+
+![](https://i.stack.imgur.com/l6UyF.png)
+> ref: [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
+
+# Fragmentation
+## Internal Fragmentation
+內部斷裂指的是 **當一個 process 被分配到的空間太大，導致說有部份的空間被浪費(i.e. 沒有被使用到)**\
+且該未使用的空間太小不足以再塞入其他 process
+
+這通常是因為每次分配的空間大小都一樣所導致的\
+解決辦法就是針對不同大小的 process 分配相對應的記憶體大小(動態大小記憶體分配)
+
+![](https://media.geeksforgeeks.org/wp-content/uploads/20190924115421/Untitled-Diagram-146.png)
+
+## External Fragmentation
+外部斷裂指的是 **剩餘記憶體空間足夠, 但單個記憶體空間不夠大**
+
+這通常是因為採用了動態大小的記憶體配置\
+解決辦法可以使用 [磁碟重組](https://support.microsoft.com/zh-tw/windows/%E7%82%BA%E6%82%A8%E7%9A%84-windows-10-%E9%9B%BB%E8%85%A6%E9%80%B2%E8%A1%8C%E7%A3%81%E7%A2%9F%E9%87%8D%E7%B5%84-048aefac-7f1f-4632-d48a-9700c4ec702a) 或者是使用 [paging](https://www.geeksforgeeks.org/paging-in-operating-system/) 的機制
+
+![](https://media.geeksforgeeks.org/wp-content/uploads/20200729172413/2581.png)
+
+<hr>
+
+檔案系統的 Fragmentation 會導致資料不連續\
+如果是使用傳統硬碟(HDD)，在讀寫資料會因為資料不連續的問題，必須額外的做 seek 的動作\
+進而造成效能瓶頸
 
 # Predicates
 predicates 基本上分為
@@ -324,6 +395,7 @@ wildcard 在中間的情況也不會是 full table scan\
 > to be continued
 
 # References
++ 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
 + [SQL筆記：Index Scan vs Index Seek](https://blog.darkthread.net/blog/index-scan-vs-seek/)
 + [Optimizing MySQL LIKE '%string%' queries in innoDB](https://stackoverflow.com/questions/10354248/optimizing-mysql-like-string-queries-in-innodb)
 + [Performance of LIKE queries on multmillion row tables, MySQL](https://stackoverflow.com/questions/11418932/performance-of-like-queries-on-multmillion-row-tables-mysql)
@@ -345,3 +417,4 @@ wildcard 在中間的情況也不會是 full table scan\
 + [Distinguishing Access and Filter-Predicates](https://use-the-index-luke.com/sql/explain-plan/oracle/filter-predicates)
 + [Index Seek和Index Scan的区别以及适用情况](https://blog.csdn.net/u013230234/article/details/78345333)
 + [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
++ [Difference between Internal and External fragmentation](https://www.geeksforgeeks.org/difference-between-internal-and-external-fragmentation/)
