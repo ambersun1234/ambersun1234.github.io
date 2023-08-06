@@ -7,6 +7,7 @@ serve:
                 sh -c "git config --system --add safe.directory '*' && \
                         jekyll serve --watch \
                         --livereload true \
+                        --incremental \
                         --force_polling true"
 
 docker-up:
