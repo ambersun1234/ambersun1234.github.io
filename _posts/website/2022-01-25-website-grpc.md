@@ -8,7 +8,7 @@ math: true
 
 # RPC
 RPC(Remote Procedure Call) 是一種通信協定, 它能夠 **允許本機電腦程式呼叫遠端電腦程式**\
-聽起來好像還好? 重點是它能夠以 **類似於呼叫本地 function 般輕鬆**
+聽起來好像還好? 重點是它能夠以 **類似於呼叫本地 function 般輕鬆**(稱為 `location transparency`)
 
 ```golang
 // post.go
@@ -43,7 +43,25 @@ gRPC 是 google 基於 rpc 所開發的一套 library, 其支援超過十幾種�
 + 跨平台 跨語言
 + 更快速 - 自行 encode 有可能會增加 run time cost
 
+## Schema Evolution
+資料格式可能會因為需求的改變而改變\
+這時候格式的變更可能會造成一些不相容的問題\
+而相容格式的情況包含兩種
+
+### Backward Compatibility
+向後相容(Backward Compatibility)亦即 `新 code 可以讀取舊的 format`\
+因為你有辦法明確的處理舊的格式，你甚至知道它長怎樣
+
+### Forward Compatibility
+向前相容(Forward Compatibility)的定亦是 `舊的 code 有辦法讀取新的 format`\
+這裡指的是即使遇到新的格式，我仍有辦法 **不出錯**\
+代表它可以忽略新格式裡的新東西
+
 # Protocol Buffer
+Protocol Buffer 是一種資料編碼格式\
+由於其**採用 binary encode** 的方式，使得整體資料的大小相比 textual encode 還要更小\
+也因此傳輸速度可以更快
+
 接下來就讓我們實際的來定義 protocol 檔案吧
 
 ```proto
@@ -67,33 +85,86 @@ message User {
   string last_name = 4;
   string email = 5;
 }
-
-
-/*
- * message UserList {
- *     repeated User users = 1;
- * }
- */
 ```
 
 首先你會先定義 protobuf 的版本(現在都用 proto3)，以及 package name(避免撞名)\
 go_package 定義了 generated file 的檔案位置
 
+## Service
+service 包含了所有你定義的 RPC 方法\
+而 gRPC 總共有 4 種 RPC 模式
+
+|Method|Example|
+|:--|:--|
+|Simple RPC(Unary RPC)|rpc SayHello(HelloRequest) returns (HelloResponse);|
+|Client-side Streaming|rpc LotsOfReplies(HelloRequest) returns (**stream** HelloResponse);|
+|Server-side Streaming|rpc LotsOfGreetings(**stream** HelloRequest) returns (HelloResponse);|
+|Bidirectional Streaming|rpc BidiHello(**stream** HelloRequest) returns (**stream** HelloResponse);|
+
+本篇將專注在 Simple RPC 的部份
+
+## Message
 message 區塊就是定義資料格式，我覺的有點像是 C 語言的 structure\
-裡面包含了一個 message 要有的東西，它可以是 string, int32, bool ... etc.(詳細支援型別可以上 [Scalar Value Types](https://developers.google.com/protocol-buffers/docs/proto3#scalar) 查找)\
-後面的 ***= 1*** 是一個唯一的 **識別符號(用於在 encode 之後的 message 中找到相對應的 field)**, 其中
-+ `1 到 15` :arrow_right: 是使用 `1 個 byte`
-    + 因此，較常使用的欄位可以考慮使用 1 到 15(因為數據量較小，理論傳輸速度比較快)
-+ `16 到 2047` :arrow_right: 是使用 `2 個 byte`
-+ `2048 到 2^29 - 1` :arrow_right: 可以使用
-+ `19000 到 19999` :arrow_right: <font color="red">protobuf 保留用, 不能做使用</font>
+裡面包含了
 
-有一種特別的語法 `repeated`\
-以上面的例子來說，你可以把它想像成 dynamic array, 圖像化的說法就如下
+|Content Type|Description|
+|:--|:--|
+|Field ID|ID 為對應每個欄位的號碼，以 ***= x*** 表示，其中 x 可以是<br>`1 到 15` :arrow_right: 是使用 `1 個 byte`<br>`16 到 2047` :arrow_right: 是使用 `2 個 byte`<br>`2048 到 2^29 - 1` :arrow_right: 可以使用<br>`19000 到 19999` :arrow_right: protobuf 保留用, **不能做使用**<br>|
+|Field Type|它可以是 string, int32, bool ... etc.(詳細支援型別可以上 [Scalar Value Types](https://developers.google.com/protocol-buffers/docs/proto3#scalar) 查找)|
+|Field Data||
 
-```c
-User users = [user1, user2, user3, ... , userN]
+encode 完成之後，他的排列方式會長這樣
 ```
+|----------|------------|------------|
+| Field ID | Field Type | Field Data |
+|----------|------------|------------|
+```
+
+<hr>
+
+為什麼需要 `Field ID`?\
+`Field Name`(i.e. `user_id`, `user_name`) 不就足以區分各個欄位了嗎？\
+沒錯！ 你說的對，但是為了 [Backward Compatibility](#backward-compatibility) 以及 [Forward Compatibility](#forward-compatibility)\
+Field ID 是必要的
+
+根據上述的 protocol buffer 的定義，我們可以知道\
+`tag 1` 對應到 `user_id`\
+`tag 2` 對應到 `user_name`
+
+如果今天我把 `user_name` 改成 `user_fullname` 會發生什麼事情？\
+舊的系統可以讀取新的資料格式嗎？\
+你當然可以直接改實作\
+但是有了 `Field ID` 之後，**只要 ID 不變，不管 Field Name 怎麼改都不會有差**\
+因此可以達到 [Backward Compatibility](#backward-compatibility)
+
+至於 [Forward Compatibility](#forward-compatibility)\
+我要怎麼讀取新的資料格式？\
+如果遇到沒看過得 ID，略過往下一個繼續看不就行了？\
+因為 encode 過的資料都是排列緊湊在一起的，其中也包含了 **偏移量**(可以從 `Field Type` 得知)\
+所以利用 `Field ID` 與 `Field Type` 你可以輕易的達成向前相容
+
+### Repeated
+```proto
+message UserList {
+    repeated User users = 1;
+}
+```
+
+其實就是 array\
+他在格式裡面的表示方法也一樣就是
+```
+|----------|------------|------------|
+| Field ID | Field Type | Field Data |
+|----------|------------|------------|
+```
+只不過有很多組這樣
+```
+|---|-----|----|---|-----|----|-----|
+| 1 | int | 12 | 1 | int | 33 | ... |
+|---|-----|----|---|-----|----|-----|
+  ^              ^
+```
+上述等價於 `[]int{12, 33}`
 
 ## Compile protocol Buffer
 撰寫完成之後，我們必須要把 proto 檔 compile 成我們能用的
@@ -119,7 +190,7 @@ $ protoc --go_out=. --go_opt=paths=source_relative \
     + 這個狀況是你要正確的 install 這些 `command` 在機器上(也就是 `go install google.golang.org/protobuf/cmd/proto-gen-go` 之類的)
     + go package 的部份有分成 `module` 跟 `command`, 其中 command 的部份需要手動下載，你用 go mod download 是沒有用的
 + `protoc: command not found`
-    + 記得 `export PATH="$PATH:$(go env GOPATH)/bin" >> ~/.bashrc`
+    + 記得 `export PATH="\$PATH:$(go env GOPATH)/bin" >> ~/.bashrc`
 + `protoc-gen-go-grpc: unable to determine Go import path for "users.proto"`
     + 可參考 [proto编译组件使用](https://www.cnblogs.com/yisany/p/14888041.html#1503280869), [Windows 使用 protoc 编译 Go 语言的 protobuf 文件](https://zhuanlan.zhihu.com/p/446199514)
 
@@ -127,10 +198,19 @@ $ protoc --go_out=. --go_opt=paths=source_relative \
 + `*.pb.go` :arrow_right: 包含各種序列化、反序列化、getter 以及 setter 的 message type
 + `*_grpc.pb.go` :arrow_right: 包含 server 以及 client 端的實作 interface 程式碼
 
-> 在某些網站上，你會看到有人在 compile protobuf 的時候使用 --go_out=plugins=grpc=. 這個參數\
+> 在某些網站上，你會看到有人在 compile protobuf 的時候使用 `--go_out=plugins=grpc=.` 這個參數\
 > 這個參數在 **github.com/golang/protobuf** 這裡是支援的，但是在 **google.golang.org/protobuf** 這裡是不支援的\
 > 這裡都建議使用 google.golang.org 開頭的 :arrow_left: 這個是新版的\
 > ref: [Switch from --go_out=plugins to -go-grpc_out PATH problem [duplicate]](https://stackoverflow.com/questions/61044883/switch-from-go-out-plugins-to-go-grpc-out-path-problem)
+
+## Pros and Cons
+所以 [Protocol Buffer](#protocol-buffer) 他有哪些優缺點？
+
+|Pros|Cons|
+|:--|:--|
+|特殊的 binary encode，減少資料大小，使得傳輸速度快|相比 textual encode(e.g. [JSON](https://en.wikipedia.org/wiki/JSON), [XML](https://en.wikipedia.org/wiki/XML)), binary encode 無法肉眼 decode|
+|支援 [Backward Compatibility](#backward-compatibility) 以及 [Forward Compatibility](#forward-compatibility)||
+
 
 # How do I use gRPC on website
 根據 [The state of gRPC in the browser](https://grpc.io/blog/state-of-grpc-web/) 所述\
@@ -365,6 +445,7 @@ RESTful 平均呼叫時間 2000000 nanoseconds\
 > 有關 HTTP 的介紹，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../http/networking-http1)
 
 # References
++ 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
 + [gRPC Concepts Overview](https://github.com/grpc/grpc/blob/master/CONCEPTS.md)
 + [Introduction to gRPC](https://grpc.io/docs/what-is-grpc/introduction/)
 + [Protocol Buffer Basics: Go](https://developers.google.com/protocol-buffers/docs/gotutorial)
@@ -378,3 +459,4 @@ RESTful 平均呼叫時間 2000000 nanoseconds\
 + [Why doesn't the `time` command work with any option?](https://askubuntu.com/questions/434289/why-doesnt-the-time-command-work-with-any-option)
 + [gnuplot 語法解說和示範](https://hackmd.io/@sysprog/Skwp-alOg)
 + [The state of gRPC in the browser](https://grpc.io/blog/state-of-grpc-web/)
++ [Core concepts, architecture and lifecycle](https://grpc.io/docs/what-is-grpc/core-concepts/)
