@@ -95,6 +95,8 @@ model User {
 $ npx prisma generate --schema schema.prisma
 ```
 
+> generate 會在 `npm i` 的時候自動執行
+
 然後就要同步 schema 了
 ```shell
 $ npx prisma migrate dev --name init --schema schema.prisma
