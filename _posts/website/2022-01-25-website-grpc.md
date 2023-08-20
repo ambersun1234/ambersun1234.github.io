@@ -2,7 +2,7 @@
 title: 網頁程式設計三兩事 - gRPC
 date: 2022-01-25
 categories: [website]
-tags: [api, grpc, rpc]
+tags: [api, grpc, rpc, design pattern, protobuf]
 math: true
 ---
 
@@ -33,6 +33,25 @@ RPC 的呼叫流程如下
 + server > 傳送至 server stub
 + server > 解析呼叫參數(unmarshalling)
 + server > 呼叫 function
++ 再依序返回
+
+# Proxy Pattern
+而 [RPC](#rpc) 的概念即是對應到 Design Pattern 裡的 Proxy Pattern 代理模式\
+用戶端藉由呼叫 `stub` 這個替身，這個替身會替它將 request forward 給真正的處理函式\
+用戶不需要管這個 function 在哪裡，替身都會幫它處理好
+
+## Definition
+代理模式真正的定義如下\
+`為物件提供一個代表或替身，藉以控制外界的接觸`
+
+在 [RPC](#rpc) 中，替身單純做 request forward，並沒有 "控制外界的接觸"\
+這是因為 proxy pattern 有很多變體，如下所示
+
+|Name|Description|
+|:--|:--|
+|遠端代理|管理遠端與用戶端的互動|
+|虛擬代理|控制與 `成本高昂的物件` 的互動|
+|保護代理|控制用戶端與物件的接觸，通常與權限有關|
 
 # gRPC
 gRPC 是 google 基於 rpc 所開發的一套 library, 其支援超過十幾種語言(包含 [C++](https://github.com/grpc/grpc/tree/master/src/cpp), [Python](https://github.com/grpc/grpc/tree/master/src/python), [Go](https://github.com/grpc/grpc-go) ... etc.)\
@@ -445,6 +464,7 @@ RESTful 平均呼叫時間 2000000 nanoseconds\
 > 有關 HTTP 的介紹，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../http/networking-http1)
 
 # References
++ 深入淺出設計模式 第二版(ISBN: 978-986-502-936-4)
 + 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
 + [gRPC Concepts Overview](https://github.com/grpc/grpc/blob/master/CONCEPTS.md)
 + [Introduction to gRPC](https://grpc.io/docs/what-is-grpc/introduction/)
