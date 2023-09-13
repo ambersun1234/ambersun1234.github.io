@@ -121,6 +121,19 @@ func pop(stack []int) []int {
 注意到你不能直接使用 monotonic stack 這個 array 當作結果\
 因為它只代表當前的歷史紀錄，因此你必須要使用額外的陣列儲存，以這個例子來說是 `nextGreater`
 
+## Time Complexity
+兩層迴圈就是 $O(n^2)$ 嗎\
+顯然不是的
+
+第一層迴圈顯然是 $O(n)$\
+然後 inner loop 是逐一檢查 stack 的內容\
+你說這樣還不是會跑完一次
+
+換個角度思考，stack 裡面的資料進出幾次？\
+答案是 2 次，哪 2 次？\
+每個元素只會被寫入一次，在 outer loop 的時候做的，而 inner loop 只負責 pop(已經被移出 stack 的元素不可能再寫回去)\
+所以整體的複雜度為 $O(2n)$
+
 # Examples
 
 |Level|Link|
@@ -128,3 +141,6 @@ func pop(stack []int) []int {
 |Easy|[1475. Final Prices With a Special Discount in a Shop](https://leetcode.com/problems/final-prices-with-a-special-discount-in-a-shop/)|
 |Easy|[496. Next Greater Element I](https://leetcode.com/problems/next-greater-element-i/)|
 |Medium|[503. Next Greater Element II](https://leetcode.com/problems/next-greater-element-ii/)|
+
+# References
++ [Time complexity of Monotonic stack question](https://stackoverflow.com/questions/69494043/time-complexity-of-monotonic-stack-question)
