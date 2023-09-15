@@ -2,7 +2,7 @@
 title: DevOps - 單元測試 Unit Test
 date: 2022-05-09
 categories: [devops]
-tags: [unit test]
+tags: [unit test, mock, TDD, dependency injection]
 math: true
 ---
 
@@ -13,7 +13,7 @@ math: true
 > QA - Quality Assurance\
 > 通常泛指 軟體測試工程師
 
-就我所待過得公司，大部分的 **測試** 都是泛指 `手動 QA`\
+就我所待過的公司，大部分的 **測試** 都是泛指 `手動 QA`\
 什麼意思呢？ 就是會有專門的 QA 人員，透過 web UI 或是其他方式手動進行測試\
 這會產生一個問題，如果目前系統更新得很頻繁，那 QA 人員會被累死吧\
 並且會有很大的機會，會漏掉某些 corner case
@@ -40,7 +40,7 @@ RD 自己寫測試同樣會有盲點，手動測試可能可以 cover 到這些,
 假設你有一個 function 是用於計算加法，你想要對它做 unit test\
 它寫起來會長這樣
 
-```
+```go
 func addition(addend int, augend int) int {
 	return addend + augend;
 }
@@ -158,20 +158,69 @@ func getUser() (UserResponse, error) {
 mocking 可以替代原有的 function 或 object, 使其可以 **模擬原有行為**\
 這樣的好處是可以讓我們專注於要測試對象本身的邏輯
 
-> 可參考 [Mock](#mock)
+> 可參考 [Test Double](#Test-Double)
 
-## Mock
-當我以為 mock 就只是這樣而已的時候，我發現我錯了\
-原來除了 mock 之外還有很多用於測試的 object type\
-我把它整理成如下表格，做個紀錄
+# Test Double
+雖然常常講要 mock 這個 mock 那個\
+不過人家的正式名稱是 `Test double`(測試替身)
 
-|Object Type|Description|
-|:--|:--|
-|Mock|針對不同輸入，**回傳不同輸出**<br>mock 裡面 **不會有實作**|
-|Stub|針對不同輸入，**回傳相同輸出**<br>stub 裡面 **會有實作**|
-|Dummy|填充目標物件，主要目的是不讓測試掛掉|
-|Spy|主要紀錄呼叫次數以及參數設定|
-|Fake Object|擁有 **簡單版** 的實作|
+## Type
+![](https://yu-jack.github.io/images/unit-test/unit-test-best-practice-12.png)
+
+Test Double 以功能性分為兩派 [State Verification](#state-verification) 以及 [Behaviour Verification](#behaviour-verification)
+
+### Verification Type
+#### State Verification
+狀態，指的是系統內的狀態\
+軟體工程裡系統的狀態通常是 variable, object properties 等等
+
+通俗點說，你的變數狀態在經過一系列的操作之後，必須要符合某種狀態\
+比如說一個計算器，當前數值為 10\
+當我進行加法 +1 的時候，它應該要變成 11\
+這就是狀態驗證
+
+而 Stub 類型多以模擬狀態(資料)為主
+
+#### Behaviour Verification
+這裡的行為就指的是，你的運行過程，狀態遷移的 **過程** 合不合理\
+像是他有沒有跟對的 component 互動
+
+符合這個類型的，歸類在 Mock 類型裡面，以模擬行為為主
+
+<hr>
+
+Test Double 內部又分五個種類
+
++ `Dummy`
+    + 用於填充目標物件(i.e. 參數)，僅僅是為了不讓測試掛掉的作用
++ `Fake Object`
+    + 較為 **簡單版本** 的實做
+    + 比如說用 in-memory database 取代原本的 MySQL 之類的
++ `Stub`
+    + 根據不同的輸入，給定相對應的輸出
++ `Spy`(Partial Mock)
+    + 原本的定義是用以監看，各種被呼叫的實做的各項數據(被 call 了幾次, 誰被 call) :arrow_right: 跟間諜一樣
+    + 有時候也指 Partial Mock, 不同的是，只有實做中的 **部份內容** 被替代
++ `Mock`
+    + 跟 `Stub` 一樣，此外還包含了 [Behaviour Verification](#behaviour-verification)
+
+整理成表格的話就如下
+
+|Object Type|Have Implementation|Verification Type|
+|:--|:--:|:--:|
+|Dummy|:x:|[State Verification](#state-verification)|
+|Fake Object|:heavy_check_mark:|[State Verification](#state-verification) or [Behaviour Verification](#behaviour-verification)|
+|Stub|:x:|[State Verification](#state-verification)|
+|Spy|:heavy_check_mark:|[Behaviour Verification](#behaviour-verification)|
+|Mock|:heavy_check_mark:|[State Verification](#state-verification) or [Behaviour Verification](#behaviour-verification)|
+
+> Dummy 為什麼可以做狀態驗證？\
+> 它沒有在 check 輸出阿？\
+> 事實上狀態驗證也包含了驗證參數數量這種，即使 Dummy 只有填充物件的用途，它仍然可以做驗證
+
+> Fake Object 可以驗證狀態或行為的原因在於\
+> 他是簡單版本的實做，同時因為他是實做，代表它能驗證輸出是否符合預期\
+> 更重要的是實做本身可以驗證行為(i.e. 確保執行順序像是 A :arrow_right: B :arrow_right: C)
 
 # Dependency Inversion Principle
 ![](https://upload.wikimedia.org/wikipedia/commons/9/96/Dependency_inversion.png)\
@@ -188,6 +237,69 @@ mocking 可以替代原有的 function 或 object, 使其可以 **模擬原有�
 在測試的例子當中，就可以將實作抽換成 mock 了
 
 ![](/assets/img/posts/dip.jpg)
+
+# Issues that I have when Writing Tests
+到這裡你已經足夠了解如何撰寫測試了\
+不過在一開始我寫測試的時候，錯誤的實做了一些東西\
+借這個機會，一起紀錄一下
+
+## Don't Use Inconsistent Input to Test Implementation
+測試本質上的目的是在於確保你的改動不會改壞東西\
+因此，你的測試資料它必須是固定不變的\
+目的是當測試出錯的時候，你能夠 **重現它**
+
+假設你用了 random() 之類的東西當輸入，每一次跑測試的資料都不一樣\
+那我怎麼知道在什麼情況下，我的程式會出錯，並且對於開發者來說它很難查明 root cause\
+所以這其實是個 anti pattern
+
+正確的作法，也相對簡單\
+每一筆的 test case 資料，都應該使用 fixed data\
+不要使用隨機產生的資料，去測試你的程式
+
+## Constant or Literal in Unit Test
+既然我們已經知道要使用 fixed data 當作程式的 input\
+另一個問題接踵而至
+
+我在 [Do you use constants from the implementation in your test cases?](https://stackoverflow.com/questions/3360074/do-you-use-constants-from-the-implementation-in-your-test-cases) 發現有人也遇到一樣的問題\
+大意是說\
+在測試的時候，你的 expected result 要使用 literal 還是實做當中的 constant
+
+以連結內的例子來看
+```c
+const float PI = 3.14;
+float getPi() 
+{ 
+   return PI;
+}
+
+// 這樣子寫
+void testPiIs3point14() {
+   AssertEquals(getPi(), 3.14);
+}
+
+// 還是這樣子寫
+void testPiIs3Point14() {
+   AssertEquals(getPi(), PI);
+}
+```
+
+一種是直接將期望結果寫死，一種是用個變數\
+我最先想到的問題是，如果常數改變了，我的 unit test 是不是抓不到錯誤\
+抓不到錯誤那我的 test case 不就白寫了
+
+我的擔心是正確的，但我擔心的地方不該是這個 test case 該做的\
+用 constant 代表說我希望這個 function 回傳的是 `PI` 這個常數的數值\
+用 literal 代表我希望這個 function 回傳的是 `3.14`\
+高階一點的看法是
++ `constant`: 我希望這個 function 的 ***行為*** 是回傳 `PI`
+
+unit test 的宗旨我們開頭有提過，是測試 function 的 `logic`\
+錯誤的數值是結果，導致這個結果的原因是 **logic 不符合預期**\
+以這樣的觀點下去看，數值錯誤不應該在這裡處理，我只關心我的邏輯有沒有正確\
+因此我們應該 **使用 constant**
+
+但錯誤的結果需要有人負責\
+因此你該做的事情是，額外寫個 unit test 確保 PI 是 3.14
 
 # Test-Driven Development - TDD
 ![](https://www.thinktocode.com/wp-content/uploads/2018/02/red-green-refactor.png)
@@ -235,3 +347,7 @@ mocking 可以替代原有的 function 或 object, 使其可以 **模擬原有�
 + [Unit Test 中的替身：搞不清楚的Dummy 、Stub、Spy、Mock、Fake](https://medium.com/starbugs/unit-test-%E4%B8%AD%E7%9A%84%E6%9B%BF%E8%BA%AB-%E6%90%9E%E4%B8%8D%E6%B8%85%E6%A5%9A%E7%9A%84dummy-stub-spy-mock-fake-94be192d5c46)
 + [How can I do test setup using the testing package in Go](https://stackoverflow.com/questions/23729790/how-can-i-do-test-setup-using-the-testing-package-in-go)
 + [Dependency inversion principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle)
++ [Unit Test 觀念學習 - 3A Pattern、名詞 (SUT、DOC)](https://ithelp.ithome.com.tw/m/articles/10299052)
++ [Unit Test 實踐守則 (五) - 如何有效使用 Test Double](https://yu-jack.github.io/2020/10/12/unit-test-best-practice-part-5/)
++ [unit test 該怎麼用? 又該如何在 express 開發上實作 unit test?](https://yu-jack.github.io/2019/12/10/unit-test-express/#test-double-%E6%B8%AC%E8%A9%A6%E6%9B%BF%E8%BA%AB)
++ [Test Double（2）：五種替身簡介](https://teddy-chen-tw.blogspot.com/2014/09/test-double2.html)
