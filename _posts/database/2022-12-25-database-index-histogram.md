@@ -68,7 +68,13 @@ WHERE b>=12 AND c=15
 他們的 ***查詢順序要符合定義的順序***\
 這樣才吃的到 index
 
+> 注意到如果你使用 composite index 的時候沒有依照建構順序\
+> 在你嘗試使用 explain 去看 execution plan 也不見得會顯現出來差別\
+> 但實務上他的執行速度還是有差別的
+
 <hr>
+
+使用 index 的好壞處，可以簡單的寫成以下
 
 |Pros|Cons|
 |:--|:--|
