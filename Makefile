@@ -5,7 +5,8 @@ serve:
                 --volume="$(shell pwd):/srv/jekyll" \
                 -p 4000:4000 -p 35729:35729 jekyll/jekyll \
                 sh -c "git config --system --add safe.directory '*' && \
-                        jekyll serve --watch \
+                        jekyll serve --trace \
+                        --watch \
                         --incremental \
                         --livereload \
                         --force_polling true"

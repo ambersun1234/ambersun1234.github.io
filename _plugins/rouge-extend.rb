@@ -1,6 +1,6 @@
 # This "hook" is executed right before the site's pages are rendered
 Jekyll::Hooks.register :site, :pre_render do |site|
-    puts "Adding more JavaScript Markdown aliases..."
+    puts "Adding more rouge aliases..."
     require "rouge"
 
     # https://github.com/rouge-ruby/rouge/pull/760/files
