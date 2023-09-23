@@ -40,18 +40,18 @@ RD 自己寫測試同樣會有盲點，手動測試可能可以 cover 到這些,
 假設你有一個 function 是用於計算加法，你想要對它做 unit test\
 它寫起來會長這樣
 
-```go
-func addition(addend int, augend int) int {
-	return addend + augend;
+```js
+const addition = (addend, augend) => {
+    return addend + augend
 }
 
-func test() {
-    assert(addition(1,1), 2);
-    assert(addition(2, 3), 5);
+const testAddition() => {
+    expect(addition(1, 1)).toEqual(2)
+    expect(addition(2, 3)).toEqual(5)
 }
 ```
 
-在上述 pseudo code，你可以看到我用了一個 assertion 來確保兩個參數的結果是一致的\
+在上述 pseudo code，你可以看到我用了一個 expect 來確保兩個參數的結果是一致的\
 如果不一致，它會跳出錯誤\
 而這就是 unit test
 
@@ -63,90 +63,82 @@ func test() {
 例如 初始化資料庫連線、設定 config 等等的\
 這些瑣碎的事情，會無形中增加測試的複雜程度
 
-以 golang [testing](https://pkg.go.dev/testing) package 而言，從 go 1.4 起就有提供類似 `setup` 以及 `teardown` 的作法\
-透過實作 `func TestMain(m *testing.M)` 即可以自定義裡面的呼叫邏輯
-```go
-func TestMain(m *testing.M) {
+以 [Jest](https://jestjs.io/) 來說你可以這樣寫
+```js
+it("should return 2", () => {
     setup()
-    m.Run()
+
+    expect(...).toEqual(...)
+
     teardown()
-}
+})
 ```
-不過 TestMain 的 setup, teardown 只會在該 test 當中跑一次而已\
+不過 setup, teardown 只會在該 test 當中跑一次而已\
 其實這樣是不夠用的 我們會希望每一次的 test 都是互相獨立的(亦即降低其他可能會影響測試結果的因素)\
 所以能夠在每一次 test 都重新初始化是最好的\
 你可以這樣做
-```go
-func TestAdd(t *testing.T) {
+```js
+it("should return 2", () => {
     setup()
-    // do test
-    teardown()
-}
 
-func TestAddFail(t *testing.T) {
-    setup()
-    // do test
+    expect(...).toEqual(...)
+
     teardown()
-}
+})
+
+it("should return 5", () => {
+    setup()
+
+    expect(...).toEqual(...)
+
+    teardown()
+})
 ```
 不過顯然我們有更好的作法, 目前市面上的 testing framework 都有提供類似的作法\
 不會需要自己刻一個底層的邏輯(i.e. 怎麼呼叫 test, 怎麼控制流程 ... etc.)
 + [google/googletest](https://github.com/google/googletest) :arrow_right: C, C++
 + [facebook/TestSlide](https://github.com/facebook/TestSlide) :arrow_right: Python
 + [stretchr/testify](https://github.com/stretchr/testify) :arrow_right: Golang
++ [Jest](https://jestjs.io/) :arrow_right: JavaScript
 
-以 testify 來說\
-我們可以使用 `suite` package 來實作\
-`SetupTest` 以及 `TearDownTest` 會在每一次的 test 都執行，確保測試之間的相依性降至最低\
-為了能夠執行 testify 的內容，我們需要一個程式進入點 `TestMath`, 在這裡初始化
+[Jest](https://jestjs.io/) 提供了一種簡單的方法\
+也就是使用 `beforeEach` 以及 `afterEach`\
+他的行為跟字面上的意思一樣，就是在每一個測試執行之前/之後，額外做一些事情\
+確保測試之間的相依性降至最低\
+為了能夠執行，我們需要一個程式進入點 `describe`, 在這裡初始化
 
-接下來 testify 會遍歷並執行所有名字為 `Testxxxx` 的 function
-```go
-import (
-    "github.com/stretchr/testify/suite"
-)
+```js
+describe("Test Addition", () => {
+    beforeEach(() => {
+        // setup test
+    })
 
-type TestMathSuite struct {
-    suite.Suite
+    afterEach(() => {
+        // teardown test
+    })
 
-    benchmarkLoopCount int
-}
+    it("should execute successfully with addition", () => {
+        // test your function here
+    })
 
-func TestMath(t *testing.T) {
-    suite.Run(t, new(TestMathSuite))
-}
-
-func (suite *TestMathSuite) SetupTest() {
-    suite.benchmarkLoopCount = 10
-}
-
-func (suite *TestMathSuite) TearDownTest() {}
-
-func (suite *TestMathSuite) TestAdd() {
-  // test your function here
-}
-
-func (suite *TestMathSuite) TestAddFail() {
-  // test your function here
-}
+    it("should return error with addition", () => {
+        // test your function here
+    })
+})
 ```
 
 ## What if there's a Function Inside?
 當然，在測試的過程中，你的實作幾乎不可能像是上面的加法範例一樣簡單\
 它可能包含了許多的 sub-function, 可能是另一個檢查 function 或是 database 相關的
-```go
-func getUser() (UserResponse, error) {
+```js
+const getUser = async (userID) => {
     ...
 
-    if _, err := isUserLogin(); err != nil {
-        panic(err)
+    if (!db.isUserLogin(userID)) {
+        return null
     }
 
-    db.GetUser()
-
-    ...
-
-    return user, nil
+    return db.getUser(userID)
 }
 ```
 
