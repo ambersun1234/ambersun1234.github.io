@@ -235,6 +235,66 @@ Test Double 內部又分五個種類
 不過在一開始我寫測試的時候，錯誤的實做了一些東西\
 借這個機會，一起紀錄一下
 
+## Minimize Test Case Scope
+拿 cursor based pagination 為例
+
+> 可參考 [資料庫 - 更好的分頁機制 Cursor Based Pagination \| Shawn Hsu](../../database/database-cursor-pagination)
+
+假設你想要測試 cursor 是否能正確的查詢到下一頁的資料\
+一種寫法是
+
+```js
+it("should return data if cursor is empty", () => {
+    const response = request(router).get("/").query({})
+    expect(response.body).toEqual(expected)
+
+    const response2 = request(router).get("/").query({
+        cursor: response.next_cursor
+    })
+    expect(response2.body).toEqual(expected2)
+})
+```
+很直覺的一種寫法，為了測試 cursor 能不能正確動作\
+我做了兩次 API call, 一次是為了取得下一頁的 cursor，第二次是為了驗證他有沒有正確 paginate
+
+這樣做是屬於 bad practice, 尤其是當 cursor 並沒有依賴於前者的 response\
+**每一項的測試應該是獨立的**，這樣做的好處在於出問題的時候你可以很清楚的找到問題點(i.e. root cause)
+
+你可能會問，cursor 不是從上一次的 API call 的 response 拿回來的結果嗎\
+這樣就是有依賴關係阿，為什麼還是不推薦這樣寫
+
+原因在於 unit test 中你的資料多半是使用 mock 之類的 [Test Double](#test-double)\
+理所當然的你會知道他的回傳結果是什麼\
+所以在這個 context 下，拆成兩個部份是合理的
+
+<hr>
+
+但假設，你測試的東西是比如說 ... enum 好了\
+而該 enum 裡面包含了幾十個可以接受的數值\
+那麼很明顯的，將它獨立分開放，會使得程式碼過於冗長且難以維護\
+但是把它擺在一起，在出錯的時候你很難確定是哪一個 value 造成問題
+
+多數的測試框架如 [Jest](https://jestjs.io/) 並沒有提供 expect with message 的功能\
+但仍然是有解的，像是 [jest-expect-message](https://www.npmjs.com/package/jest-expect-message) 就擴充原本的功能\
+讓你的測試可以這樣寫
+
+```js
+const SEARCH_TYPE = {
+    USER: 'USER',
+    GROUP: 'GROUP'
+}
+
+const validateType = (type) => Object.values(SEARCH_TYPE).includes(type)
+
+it("should pass if type is valid", () => {
+    const validValues = ['USER', 'GROUP']
+
+    validValues.forEach(type => {
+        expect(validateType(type), `shouldn't return error if type is ${type}`).toBeTruthy()
+    })
+})
+```
+
 ## Don't Use Inconsistent Input to Test Implementation
 測試本質上的目的是在於確保你的改動不會改壞東西\
 因此，你的測試資料它必須是固定不變的\
