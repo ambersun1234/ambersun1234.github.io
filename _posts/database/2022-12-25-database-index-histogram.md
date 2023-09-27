@@ -148,6 +148,7 @@ non-clustered index 又稱 secondary index
 |Dense Index|儲存所有 record 的 pair(1 對 1)|
 |Sparse Index|儲存 **部份** record 的 block 起點(每個 block 有若干 record，亦即1 對 多)<br>找到該 block 後 sequential 尋找目標 record|
 |Reverse Index|將 key 反過來存(i.e. `24538` :arrow_right: `83542`)<br>這樣可以減緩 leaf block contention, 因為原本緊鄰的 data, primary key 反轉之後位置會差很多<br>(`24538` :arrow_right: `83542`, `24539` :arrow_right: `93542`)|
+|Inverted Index|多用於搜尋功能，其資料結構為 hashmap, key 為 content, value 為位置<br>比如說 `cat` 一詞出現在 document `1, 4, 22, 103 頁`|
 
 # Index Implementations
 ## Hash Index
