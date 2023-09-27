@@ -44,6 +44,8 @@ math: true
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 ```
 
+> 用 `SELECT * FROM pg_extension;` 查看是否有正確載入
+
 ## Trigraph
 `pg_trgm` 是採用 trigraph matching 的機制\
 也就是說它一次是取 **3 個字母**(撇除特殊字元, i.e. non-alphanumerics)\
@@ -160,6 +162,17 @@ data source 是從這裡拿到的 [https://www.ssa.gov/oact/babynames/names.zip]
 benchmark 本身的 code 是使用 [Node.js](https://nodejs.org/en) 配合 [Prisma](https://www.prisma.io/)\
 operator class 分別指定 `gist_trgm_ops` 與 `gin_trgm_ops` 即可
 ```js
+datasource db {
+    provider     = "postgresql"
+    url          = "postgresql://admin:admin@localhost:5555/benchmark"
+    extensions   = [pg_trgm]
+}
+
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions"]
+}
+
 model unique {
     id    Int    @id @default(autoincrement())
     name  String
@@ -172,6 +185,10 @@ model unique {
     @@index([gin(ops: raw("gin_trgm_ops"))], type: Gin)
 }
 ```
+
+> 雖然我看 [Enable PostgreSQL extensions for native database functions](https://www.prisma.io/docs/guides/migrate/developing-with-prisma-migrate/enable-native-database-functions)\
+> 他是說只要在 prisma 裡面啟用 pg_tgrm 再做 migration 就可以了\
+> 但我怎麼試都沒辦法
 
 最後要注意的事情就是他的時間，畢竟要做 benchmark\
 他的 timer 要是高精度的，幸好 Node.js 有提供到 nanoseconds
@@ -232,6 +249,22 @@ Bitmap Heap Scan on "unique"  (cost=36.08..72.87 rows=10 width=4)
       Index Cond: (gin % 'abc'::text)
 ```
 
+改用 `pg_trgm` operator 後要注意的一點是\
+他的 similarity threshold 是用 `pg_trgm.similarity_threshold` database variable 控制的\
+預設值為 `0.3`, 但如果你想要改他也可以透過以下指令進行更改
+```sql
+SET pg_trgm.similarity_threshold = 0.2;
+// or 
+SELECT set_limit(0.2);
+``` 
+> 查看當前 threshold 就是改成 `SHOW pg_trgm.similarity_threshold` 或 `SELECT show_limit()`
+
+但是他的作用域是 per session 的，所以它會自己變回去\
+永久改掉預設值的方法就是使用 ALTER, 如下所示
+```sql
+ALTER DATABASE my_database SET pg_trgm.similarity_threshold = 0.2;
+```
+
 還記得前面講的 [Trigraph](#trigraph) 嗎？\
 **簡單版本的理解**基本上就是將兩個 trigraph array 做 bitwise operation 而已罷了\
 所以它才叫做 bitmap index scan
@@ -266,3 +299,4 @@ Bitmap Heap Scan on "unique"  (cost=36.08..72.87 rows=10 width=4)
 + [fuzzy search](https://www.techtarget.com/whatis/definition/fuzzy-search)
 + [Approximate string matching](https://en.wikipedia.org/wiki/Approximate_string_matching)
 + [Understanding Postgres GIN Indexes: The Good and the Bad](https://pganalyze.com/blog/gin-index)
++ [Using psql how do I list extensions installed in a database?](https://stackoverflow.com/questions/21799956/using-psql-how-do-i-list-extensions-installed-in-a-database)
