@@ -42,22 +42,25 @@ CREATE TABLE users (
 CREATE TABLE posts (
     id INT AUTO_INCREMENT,
     user_id INT NOT NULL,
+    title TEXT NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP,
     CONSTRAINT pk_posts PRIMARY KEY (id),
     CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT uk_posts UNIQUE (user_id, title, deleted_at)
 );
 INSERT INTO users (username, email)
 VALUES ('john', 'john@example.com'),
     ('alice', 'alice@example.com'),
     ('bob', 'bob@example.com'),
     ('bob', 'bob2@example.com');
-INSERT INTO posts (user_id, content)
-VALUES (1, 'This is the first post by john.'),
-    (1, 'Another post by john.'),
-    (2, 'User2 is posting here.'),
-    (3, 'Hello from bob.'),
-    (4, 'Hello from bob.');
+INSERT INTO posts (user_id, title, content)
+VALUES (1, 'hello', 'This is the first post by john.'),
+    (1, '','Another post by john.'),
+    (2, 'hello', 'User2 is posting here.'),
+    (3, 'hello', 'Hello from bob.'),
+    (4, 'hello', 'Hello from bob.');
 ```
 
 ##  PostgreSQL
@@ -65,7 +68,7 @@ VALUES (1, 'This is the first post by john.'),
 $ docker run -d \
     -e POSTGRES_PASSWORD=postgres \
     -e POSTGRES_DB=test \
-    --name test-postgres postgres
+    --name test-postgres postgres:15
 $ docker exec -it test-postgres bash
 > psql -U postgres
 > \c test
@@ -83,21 +86,24 @@ CREATE TABLE users (
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
+    title TEXT NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    deleted_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    UNIQUE (user_id, title, deleted_at)
 );
 INSERT INTO users (username, email)
 VALUES ('john', 'john@example.com'),
     ('alice', 'alice@example.com'),
     ('bob', 'bob@example.com'),
     ('bob', 'bob2@example.com');
-INSERT INTO posts (user_id, content)
-VALUES (1, 'This is the first post by john.'),
-    (1, 'Another post by john.'),
-    (2, 'User2 is posting here.'),
-    (3, 'Hello from bob.'),
-    (4, 'Hello from bob.');
+INSERT INTO posts (user_id, title, content)
+VALUES (1, 'hello', 'This is the first post by john.'),
+    (1, '', 'Another post by john.'),
+    (2, 'hello', 'User2 is posting here.'),
+    (3, 'hello', 'Hello from bob.'),
+    (4, 'hello', 'Hello from bob.');
 ```
 
 # Column must appear in the GROUP BY clause or be used in an aggregate function
@@ -367,6 +373,165 @@ ORDER BY p1.user_id, p1.id;
 3. `rows`
     + p2 的表只會回傳一行，代表說他是擁有 [Functional Dependence](#functional-dependence) 的特性
 
+# Unique Constraint
+這個算是最近踩到的\
+我本身在測試的環境是 PostgreSQL 14\
+而這個版本的 PostgreSQL 在 unique constraint 上面有一個很特別的規則
+
+根據 [PostgreSQL E.5. Release 15 - E.5.3.1.2. Indexes](https://www.postgresql.org/docs/15/release-15.html#id-1.11.6.5.5.3.4) 裡面提到的
+> Allow unique constraints and indexes to treat NULL values as not distinct (Peter Eisentraut)\
+> \
+> Previously NULL entries were always treated as distinct values, \
+> but this can now be changed by creating constraints and indexes using UNIQUE NULLS NOT DISTINCT.
+
+大意是說，PostgreSQL 15 以前的所有版本，都將 null data 視為 `distinct values`
+
+很明顯這不是我們所期望的\
+`null` 應該是一樣的才對？\
+如果你短時間內沒辦法升級成 15 該怎麼辦？\
+可以設定兩組 unique index, 亦即 `(userID, title, deletedAt)` 與 `(userID, title)`
+
+假設你有一個需求是這樣子，我希望每個使用者發文的文章 title 都必須是 distinct 的\
+理所當然的你的 constraint 是設定 `(userID, title, deletedAt)`\
+然後你的 deletedAt 預設為 null(文章可以被刪除)\
+你已經有一筆資料 `(12, 邁阿密旅遊記, null)`\
+如果又有新的一筆，一樣是 `(12, 邁阿密旅遊記, null)`，它是可以被成功寫入的，在 15 以前
+
+![](https://media.makeameme.org/created/why-did-you-5c3700.jpg)
+> [https://makeameme.org/meme/why-did-you-5c3700](https://makeameme.org/meme/why-did-you-5c3700)
+
+## Experiment
+設定環境的步驟如同前面所述(可參考 [Environment Setup](#environment-setup))
+
+### PostgreSQL 15
+在 PostgreSQL 15 中，如果你新增一筆 `(1, 'hello')` 會得到以下結果
+```shell
+test=# INSERT INTO posts(user_id, title, content) VALUES (1, 'hello', '');
+ERROR:  null value in column "content" of relation "posts" violates not-null constraint
+DETAIL:  Failing row contains (6, 1, hello, null, 2023-10-08 16:11:34.111809, null).
+test=#
+
+test=# \d posts;
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           | not null | 
+ title      | text                        |           | not null | 
+ content    | text                        |           | not null | 
+ created_at | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ deleted_at | timestamp without time zone |           |          | 
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+    "posts_user_id_title_deleted_at_key" UNIQUE CONSTRAINT, btree (user_id, title, deleted_at)
+Foreign-key constraints:
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+```
+
+符合預期，確實 null 已經 **不在被視為是 distinct values**
+
+### PostgreSQL 14
+> 設定如先前的 docker command，替換掉 docker image 為 `postgres:14` 即可
+
+那麼 PostgreSQL 14 呢\
+即使有新增 constraint 它也接受寫入，正如上一節提到在 15 以前 null value 都被視為 distinct values
+```shell
+test=# SELECT * FROM posts;
+ id | user_id | title |             content             |         created_at         | deleted_at 
+----+---------+-------+---------------------------------+----------------------------+------------
+  1 |       1 | hello | This is the first post by john. | 2023-10-08 16:14:29.786042 | 
+  2 |       1 |       | Another post by john.           | 2023-10-08 16:14:29.786042 | 
+  3 |       2 | hello | User2 is posting here.          | 2023-10-08 16:14:29.786042 | 
+  4 |       3 | hello | Hello from bob.                 | 2023-10-08 16:14:29.786042 | 
+  5 |       4 | hello | Hello from bob.                 | 2023-10-08 16:14:29.786042 | 
+  7 |       1 | hello |                                 | 2023-10-08 16:15:40.923995 | 
+(6 rows)
+
+test=# \d posts;
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           | not null | 
+ title      | text                        |           | not null | 
+ content    | text                        |           | not null | 
+ created_at | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ deleted_at | timestamp without time zone |           |          | 
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+    "posts_user_id_title_deleted_at_key" UNIQUE CONSTRAINT, btree (user_id, title, deleted_at)
+Foreign-key constraints:
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+
+test=#
+```
+
+前面還有提到一個解法，就是我再加一個 partial index
+```shell
+// 先把現有的 constraint 拿掉
+test=# ALTER TABLE posts DROP CONSTRAINT posts_user_id_title_deleted_at_key;
+
+// 新增兩個 partial index
+test=# CREATE UNIQUE INDEX uk_id_title on posts (user_id, title) WHERE deleted_at IS NULL;
+CREATE INDEX
+test=# CREATE UNIQUE INDEX uk_id_title_deleted_at on posts(user_id, title, deleted_at) WHERE deleted_at IS NOT NULL;
+CREATE INDEX
+
+// 最後會長這樣
+test=# \d posts;
+                                        Table "public.posts"
+   Column   |            Type             | Collation | Nullable |              Default              
+------------+-----------------------------+-----------+----------+-----------------------------------
+ id         | integer                     |           | not null | nextval('posts_id_seq'::regclass)
+ user_id    | integer                     |           | not null | 
+ title      | text                        |           | not null | 
+ content    | text                        |           | not null | 
+ created_at | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ deleted_at | timestamp without time zone |           |          | 
+Indexes:
+    "posts_pkey" PRIMARY KEY, btree (id)
+    "uk_id_title" UNIQUE, btree (user_id, title) WHERE deleted_at IS NULL
+    "uk_id_title_deleted_at" UNIQUE, btree (user_id, title, deleted_at) WHERE deleted_at IS NOT NULL
+Foreign-key constraints:
+    "posts_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id
+```
+
+讓我們來測試看看 constraint 會不會正確動作
+```shell
+test=# SELECT * FROM posts;
+ id | user_id | title |             content             |         created_at         | deleted_at 
+----+---------+-------+---------------------------------+----------------------------+------------
+  1 |       1 | hello | This is the first post by john. | 2023-10-08 16:14:29.786042 | 
+  2 |       1 |       | Another post by john.           | 2023-10-08 16:14:29.786042 | 
+  3 |       2 | hello | User2 is posting here.          | 2023-10-08 16:14:29.786042 | 
+  4 |       3 | hello | Hello from bob.                 | 2023-10-08 16:14:29.786042 | 
+  5 |       4 | hello | Hello from bob.                 | 2023-10-08 16:14:29.786042 | 
+(5 rows)
+
+test=# INSERT INTO posts(user_id, title, content) VALUES (1, 'hello', '');
+ERROR:  duplicate key value violates unique constraint "uk_id_title"
+DETAIL:  Key (user_id, title)=(1, hello) already exists.
+```
+
+當 `deleted_at` 為空的時候，因為 `user_id` 與 `title` 都重複到\
+因此 PostgreSQL 14 正確的回復了一個錯誤，說這個組合已經存在，不能寫入
+
+```shell
+test=# INSERT into posts(user_id, title, content, deleted_at) values(1, 'hello', '', now());
+INSERT 0 1
+test=# select * from posts;
+ id | user_id | title |             content             |         created_at         |         deleted_at         
+----+---------+-------+---------------------------------+----------------------------+----------------------------
+  1 |       1 | hello | This is the first post by john. | 2023-10-08 16:14:29.786042 | 
+  2 |       1 |       | Another post by john.           | 2023-10-08 16:14:29.786042 | 
+  3 |       2 | hello | User2 is posting here.          | 2023-10-08 16:14:29.786042 | 
+  4 |       3 | hello | Hello from bob.                 | 2023-10-08 16:14:29.786042 | 
+  5 |       4 | hello | Hello from bob.                 | 2023-10-08 16:14:29.786042 | 
+  9 |       1 | hello |                                 | 2023-10-08 16:34:45.991099 | 2023-10-08 16:34:45.991099
+(6 rows)
+```
+而當 `deleted_at` 有值的時候，就允許寫入了
+
 # References
 + [How to Calculate Cumulative Sum-Running Total in PostgreSQL - PopSQL](https://popsql.com/learn-sql/postgresql/how-to-calculate-cumulative-sum-running-total-in-postgresql)
 + [3.5. Window Functions](https://www.postgresql.org/docs/current/tutorial-window.html)
@@ -377,3 +542,4 @@ ORDER BY p1.user_id, p1.id;
 + [What is a CTE scan, and what are its implications for performance?](https://stackoverflow.com/questions/26852535/what-is-a-cte-scan-and-what-are-its-implications-for-performance)
 + [14.1. 善用 EXPLAIN](https://docs.postgresql.tw/the-sql-language/performance-tips/using-explain#14.1.1.-explain-ji-ben-gai-nian)
 + [Day.23 分析語法效能必備 - MYSQL語法優化 (Explain)](https://ithelp.ithome.com.tw/articles/10275783)
++ [Create unique constraint with null columns](https://stackoverflow.com/questions/8289100/create-unique-constraint-with-null-columns)
