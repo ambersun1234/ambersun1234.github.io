@@ -532,6 +532,25 @@ test=# select * from posts;
 ```
 而當 `deleted_at` 有值的時候，就允許寫入了
 
+## Prisma
+另外值得注意的是，如果你使用 [prisma](https://www.prisma.io/)\
+prisma 目前不支援 conditional index 的寫法(測試環境是 `5.3` 版)\
+也就是 `CREATE UNIQUE INDEX ... WHERE ...` 的寫法是沒有用的
+
+你說手動更改 migration script 有效果嗎？\
+不但沒有用而且 prisma 會自動建立新的 migration，這是已知的行為\
+可參考 
++ [Partial unique indexes are being recreated on every migration with prisma migrate #13417](https://github.com/prisma/prisma/issues/13417#issuecomment-1732034518)
++ [Prisma tries to re-create indexes in migration if they were previously created with "WHERE" #14651](https://github.com/prisma/prisma/issues/14651)
+
+解決的辦法我目前想到的就是\
+手動執行 custom sql script 而已
+```shell
+$ npx prisma db execute --file ./custom.sql -- schema prisma/schema.prisma
+```
+
+這個可能要等 prisma 官方之後的修改
+
 # References
 + [How to Calculate Cumulative Sum-Running Total in PostgreSQL - PopSQL](https://popsql.com/learn-sql/postgresql/how-to-calculate-cumulative-sum-running-total-in-postgresql)
 + [3.5. Window Functions](https://www.postgresql.org/docs/current/tutorial-window.html)
