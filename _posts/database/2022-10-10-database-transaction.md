@@ -77,9 +77,14 @@ Consistency 是一個第一次有點難理解的東西
         + foreign-key 有指到資料庫中某些 table 的 primary key 上
         + foreign-key 為空，那就代表目前沒有外鍵的關係或 relation 未知
 
+> 八卦是你塞入違反系統的 invariants 它也不會阻止你\
+> 也因此書中是說，consistency 應該要是 application 的責任，而非 database
+
 所以回到 consistency\
 對資料庫的每一次操作，資料庫的狀態都必須要符合它該有的 invariants\
 這就是 consistency 在描述的東西
+
+簡言之，處於 "良好狀態"
 
 ## Isolation
 若是多個 transaction 同時對同一個資源更新，它仍然會有 data race 的風險\
@@ -172,6 +177,8 @@ Alice 以及 Bob 都不想值班，看到 on call 班表還有人\
 其中 lost update 多半符合 `read-modify-write` 的特徵\
 也就是說在 application layer，programmer 會先讀取目標資料，再透過 transaction 更新以及 commit
 
+> 在使用 ORM 的時候，由於不熟其特性即有可能發生此狀況
+
 ![](https://miro.medium.com/max/786/1*SGa1A9vBHetIm53WFjKjlA.png)
 > ref: [複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions](https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c)
 
@@ -222,7 +229,7 @@ hmmm 那就要自己定規則去處理囉
 # Database Lock
 ## Shared Lock(Read Lock)
 shared lock 可以被多個 transaction 持有，因為 shared lock 的特性是依舊可以讓你讀取資料\
-多個 transaction 讀取資料並不會改變資料本身 所以是安全的
+多個 transaction 讀取資料並不會改變資料本身 所以是安全的(前題是隔離機制設置正確)
 
 那也因為 shared lock 只能讀取的特性，所以任何嘗試更新資料的行為是不被允許的
 
@@ -249,16 +256,25 @@ SELECT ... FOR UPDATE
 
 > [15.7.2.4 Locking Reads](https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html)
 
-## Range Lock
-一個區間內的 lock?
-
-嚴格來說他的定義是，只要我的 query 返回的有可能不只一個 row\
-那就會使用到 range lock
+## Predicate Lock
+有別於 [Shared Lock](#shared-lockread-lock) 與 [Exclusive Lock](#exclusive-lockwrite-lock)\
+predicate lock 並不屬於某個特定物件，他是屬於匹配某些條件的物件的 lock
 
 比如說
 ```sql
-SELECT * FROM User WHERE username LIKE 'shawn%'
+SELECT * FROM user WHERE created_at > '2023-10-01' AND created_at < '2023-10-31'
 ```
+
+這些查詢出來的 rows 都擁有著 predicate lock
+
+> predicate: 一系列的表示式，用於 filter data row
+
+## Index Range Lock
+一個區間內的 lock?\
+那不就是 [Predicate Lock](#predicate-lock)？ 顯然不是的
+
+不一樣的地方在於，Range Lock 是建立在 index 之上的\
+所以速度上會快於 [Predicate Lock](#predicate-lock)
 
 # Database Locking Mechanism
 ## Optimistic Locking(Optimistic Concurrency Control)
@@ -316,22 +332,51 @@ MySQL 8.0 InnoDB 預設 shared lock 以及 exclusive lock 都是以 row-level lo
 
 # Isolation Level
 ## Serializable
+序列化隔離機制，有以下 2 幾種作法
+
+### Single Thread Approach
 最安全的隔離機制之一，完全犧牲掉 concurrency 帶來的好處\
 換來的是最完美，不會有任何 read/write phenomena 的發生\
-transaction 在交易期間會拿住 read lock, write lock 以及 [range lock](#range-lock)
+也因為他是使用單執行緒進行操作，因此如果有一個特別慢的卡住，會讓後面的堵住
 
-但是有另外一種機制是不使用 locking(也就是 [Optimistic Locking](#optimistic-lockingoptimistic-concurrency-control) 的機制)\
-我一樣讓若干個 transaction 同步執行\
-唯一不同的是，當那個天選 transaction 成功 commit 資料的時候\
-剩餘的 transaction 會得到失敗的結果
+像是 [Redis](https://redis.io/) 底層就是使用單執行緒處理的\
+詳細可以參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
 
-在 serializable 的情況下，任何 read/write phenomena **都不會發生**
+### Two-Phase Locking(2PL)
+就是 [Pessimistic Locking](#pessimistic-locking)\
+那 2 phase 是哪兩個階段？\
+`拿取(acquire)` 跟 `釋放(release)` 的兩個時段
+
+而正如上述提到的，[悲觀鎖](#pessimistic-locking) 只能讓擁有 [Exclusive Lock](#exclusive-lockwrite-lock) 的人更改資料\
+與此同時，其他擁有 [Shared Lock](#shared-lockread-lock) 的只能等待\
+至於要等多久？ 沒有人知道
+
+缺點的話\
+由於 acquire/release lock 的過程是很耗費時間的\
+再加上若是並發寫入，`n - 1` 個 tx 都要等待，所以他的效能很差
+
+> 可以用 [Predicate Lock](#predicate-lock) 或 [Index Range Lock](#index-range-lock) 實做\
+> 多數因為效能問題而普遍採用 [Index Range Lock](#index-range-lock)
 
 ## Snapshot
-snapshot 的概念也就是說，在交易執行期間，對資料庫進行一個快照\
-所以執行期間你讀到的資訊保證都是不變的\
-那要怎麼避免上述的 read/write phenomena 呢？\
-在 commit 的時候，它會將快照跟資料庫做一次比對，確保更新的部份沒有被其他人更新過
+snapshot 就是對資料庫進行快照\
+對於正在執行中的 transaction 不予理會
+
+具體來說他是怎麼做的呢？\
+維護 **一個物件的多版本**(multi-version concurrency control, mvcc)
+
+![](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Tje55--GvuNvVLf5IM7unQ.png)
+> [The “I” in ACID — Weak Isolation Levels](https://rahulpradeep.medium.com/the-i-in-acid-weak-isolation-levels-7e2dbbadd45e)
+
+也就是說我把 `UPDATE` 轉換成 `新增` 以及 `刪除`\
+如此一來我就會擁有多個版本的歷史紀錄\
+當需要存取的時候，我只要撈特定版本資訊就可以了(created by current transaction)
+
+而要注意的是, snapshot **仍然需要 [Exclusive Lock(Write Lock)](#exclusive-lockwrite-lock)**\
+因為他有可能是 concurrent 在執行\
+read 的時候不需要用 lock, 因為他是從 snapshot 中讀取的
+
+> 即: read 不會 block write, 而 write 不會 block read
 
 但是對於 [Write Skew](#write-skew) 的狀況用 snapshot 也沒辦法避免\
 因為 write skew 是更新兩個不同的 row data, 而有可能會違反特定的 condition\
@@ -339,11 +384,30 @@ snapshot 的機制下，它也不會知道 condition 的存在(他是在 applica
 
 因此，snapshot 機制下，[Write Skew](#write-skew) 依然會發生
 
+## Serializable Snapshot Isolation(SSI)
+一樣使用 snapshot 但是 **不使用 locking**\
+也就是 [Optimistic Locking](#optimistic-lockingoptimistic-concurrency-control) 的機制
+
+> 早期的 OCC(Optimistic Concurrency Control) 不使用 snapshot, 這是它跟 SSI 主要的區別
+
+一樣是對當前資料庫進行快照\
+但是讓若干個 transaction **同步執行**\
+唯一不同的是，在 commit 的時候，它會將快照跟資料庫做一次比對，確保更新的部份沒有被其他人更新過\
+萬一更新的部份發生衝突了呢？ 那就是必須 rollback
+
+> 這就是不需要用 lock 的原因，一次只會有一個 transaction 成功 commit
+
+也因為我不使用 lock, 所有的 acquire/release overhead 都沒有\
+因此，他的效能是比 [Snapshot](#snapshot) 還要來的高的
+
 ## Repeatable Reads
 transaction 在交易期間會拿住 read lock 以及 write lock
 
 也因為這樣，所以在 repeatable reads level 的隔離機制下\
 [Phantom Read](#phantom-read), [Write Skew](#write-skew) 也有可能會出現
+
+> 由於 SQL standard 並未定義 [Snapshot](#snapshot)\
+> 後來的實做有的稱之為 [Repeatable Reads](#repeatable-reads)，但它可能代表 Snapshot 或 Serializable
 
 ## Read Committed
 其餘 transaction 只能看到已經被 commit 過得資料(transaction 在交易期間會拿住 write lock)\
@@ -375,7 +439,11 @@ read committed level 的隔離機制沒辦法防止 [Non-repeatable Read(Read Sk
 |read committed|:x:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |read uncommitted|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 
+> :heavy_check_mark: 表示會發生
+
 # References
++ 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
++ 內行人才知道的系統設計面試指南(ISBN: 978-986-502-885-5)
 + [What is a database transaction?](https://stackoverflow.com/questions/974596/what-is-a-database-transaction)
 + [ACID](https://en.wikipedia.org/wiki/ACID#Consistency_(Correctness))
 + [Consistency (database systems)](https://en.wikipedia.org/wiki/Consistency_(database_systems))
