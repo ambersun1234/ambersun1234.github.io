@@ -45,6 +45,22 @@ transaction 只會有兩種狀態 - 成功或失敗
 + 成功 :arrow_right: **commit** 操作
 + 失敗 :arrow_right: **rollback** 操作(復原我的操作，當作什麼都沒發生過)
 
+## Need to Use Transaction for Single Query?
+答案是 **不用**
+
+根據 [13.3.1 START TRANSACTION, COMMIT, and ROLLBACK Statements](https://dev.mysql.com/doc/refman/8.0/en/commit.html)
+> By default, MySQL runs with autocommit mode enabled. \
+> This means that, when not otherwise inside a transaction, each statement is atomic, as if it were surrounded by START TRANSACTION and COMMIT. \
+> You cannot use ROLLBACK to undo the effect; \
+> however, if an error occurs during statement execution, the statement is rolled back.
+
+每個 sql statement 即使你沒有明確地使用 transaction 把它包住\
+它也仍然是一個 unit of work\
+transaction 多數情況下只用於 2 個以上的 sql statement\
+多包一層毫無意義，即使是 `CREATE` 或是 `UPDATE` 都一樣
+
+> [What does a transaction around a single statement do?](https://stackoverflow.com/questions/1171749/what-does-a-transaction-around-a-single-statement-do)
+
 # ACID
 ACID 是一系列描述 transaction 該滿足的屬性, 他是由 4 個屬性組合而成\
 一個提供資料一致、穩定的系統 他的條件必定符合 ACID 原則\
