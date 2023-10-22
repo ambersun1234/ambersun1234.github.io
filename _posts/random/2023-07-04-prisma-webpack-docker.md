@@ -349,8 +349,8 @@ module.export = {
 除了載入 `.env` 之外，也將系統層級的環境變數寫入 `process.env` 裡面\
 這樣就可以 work 了
 
-# Simple REST lab
-有關上述所有的程式碼實做，你可以在 [ambersun1234/blog-labs/simple-rest-lab](https://github.com/ambersun1234/blog-labs/tree/master/simple-rest-lab) 找到
+# Example
+有關上述所有的程式碼實做，你可以在 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination) 找到
 
 # References
 + [Express Response.send() throwing TypeError](https://stackoverflow.com/questions/49374802/express-response-send-throwing-typeerror)
