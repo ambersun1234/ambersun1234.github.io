@@ -391,6 +391,50 @@ unit test 的宗旨我們開頭有提過，是測試 function 的 `logic`\
     + 有了測試，你每一次的更動都不用擔心會不小心把 code 改壞
     + 算上程式品質，你撰寫的測試是有用的
 
+# Example
+```js
+describe("pageNumber", () => {
+    const validators = [middleware.pageNumber()];
+
+    it("should pass if pageNumber is valid", async () => {
+      const validValues = [1, 1e3];
+
+      for (const value of validValues) {
+        const request = createRequest({ query: { pageNumber: value } });
+        await testExpressValidatorMiddleware(request, validators);
+        const result = validationResult(request);
+
+        expect(result.array()).toEqual([]);
+      }
+    });
+
+    it("should return error if pageNumber is invalid", async () => {
+      const invalidValues = ["abc", -100];
+
+      for (const value of invalidValues) {
+        const request = createRequest({ query: { pageNumber: value } });
+        await testExpressValidatorMiddleware(request, validators);
+        const result = validationResult(request);
+        expect(result.array()).toEqual([
+          {
+            ...RequestErrorTemplate,
+            value,
+            msg: Errors.InvalidPageNumber,
+            path: "pageNumber",
+            location: "query",
+          },
+        ]);
+      }
+    });
+  });
+```
+
+以上是一個簡單的單元測試的例子\
+主要的目的在於測試 middleware 各個 validation function 是否正確動作\
+以這個例子是測試 cursor based pagination 的 `pageNumber`\
+因為這個相對單純，所以沒有任何的 mock 以及 beforeEach, afterEach\
+詳細的程式碼可以參考 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination)
+
 # References
 + [软件敏捷开发 TDD 方案](https://cloud.tencent.com/developer/article/1494387)
 + [使人瘋狂的 SOLID 原則：單一職責原則 (Single Responsibility Principle)](https://medium.com/%E7%A8%8B%E5%BC%8F%E6%84%9B%E5%A5%BD%E8%80%85/%E4%BD%BF%E4%BA%BA%E7%98%8B%E7%8B%82%E7%9A%84-solid-%E5%8E%9F%E5%89%87-%E5%96%AE%E4%B8%80%E8%81%B7%E8%B2%AC%E5%8E%9F%E5%89%87-single-responsibility-principle-c2c4bd9b4e79)
