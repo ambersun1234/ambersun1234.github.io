@@ -377,7 +377,7 @@ unit test 的宗旨我們開頭有提過，是測試 function 的 `logic`\
 透過不斷的新增修改，你的實作最後會符合所有的需求場景，到此你的功能就開發完成了\
 而開發途中產生的 test case 可以當作 unit test 或 integration test 放在 CI/CD pipeline 上面執行，確保每一次的修改都是符合預期的
 
-> 有關 integration test 的介紹可以參考 [DevOps - 整合測試 integration test \| Shawn Hsu](../)\
+> 有關 integration test 的介紹可以參考 [DevOps - 整合測試 Integration Test \| Shawn Hsu](../../devops/devops-integration-test)\
 > 有關 CI/CD pipeline 的介紹可以參考 [DevOps - 從 GitHub Actions 初探 CI/CD \| Shawn Hsu](../../devops/devops-github-action)
 
 ## Struggles to Run TDD
