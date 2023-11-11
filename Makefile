@@ -7,7 +7,6 @@ serve:
                 sh -c "git config --system --add safe.directory '*' && \
                         jekyll serve --trace \
                         --watch \
-                        --incremental \
                         --livereload \
                         --force_polling true"
 
