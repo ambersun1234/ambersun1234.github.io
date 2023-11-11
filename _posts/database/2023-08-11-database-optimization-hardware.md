@@ -159,7 +159,7 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 壞處也很明顯 **寫入的速度會被受限(但寫入不會有衝突)**
 
 ### Multi Leader
-![](https://media.licdn.com/dms/image/C5112AQE4giiXdpATXQ/article-cover_image-shrink_600_2000/0/1578341090265?e=1697068800&v=beta&t=XRRQ_lwQfNIieHBK4gseaRaopUNHbzlQxNAZAoI5qgM)
+![](https://media.licdn.com/dms/image/C5112AQE4giiXdpATXQ/article-cover_image-shrink_600_2000/0/1578341090265?e=1704931200&v=beta&t=ApZ2UYzCbBeG58Y7HT-bSQdEWcAbuarI7uMRqvy5trc)
 > ref: [Distributed Systems - Multi Leader Replication](https://www.linkedin.com/pulse/distributed-systems-multi-leader-replication-divagar-carlmarx/)
 
 既然 [Single Leader](#single-leadermaster-slave) 僅解決了讀取的效能問題\
@@ -244,8 +244,8 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 也因此 scale out 也成為現今的主流選擇之一
 
 ## Summary
-![](https://microsegment.io/img/scale-up-vs-scale-out.png)
-> ref: [Scaling up vs scaling out your security segmentation](https://microsegment.io/post/2019-09-15-scale-up-vs-scale-out/)
+![](https://www.researchgate.net/profile/Jeff-Sedayao/publication/273702105/figure/fig1/AS:391785424670724@1470420332559/Scale-out-storage-compared-to-scale-up-storage.png)
+> ref: [https://www.researchgate.net/figure/Scale-out-storage-compared-to-scale-up-storage_fig1_273702105](https://www.researchgate.net/figure/Scale-out-storage-compared-to-scale-up-storage_fig1_273702105)
 
 # References
 + 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
