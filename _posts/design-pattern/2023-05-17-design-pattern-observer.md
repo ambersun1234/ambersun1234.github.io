@@ -2,7 +2,7 @@
 title: 設計模式 101 - Observer Pattern
 date: 2023-05-17
 categories: [design pattern]
-tags: [observer, observable]
+tags: [observer, observable, subject, publisher, subscriber, topic]
 math: true
 ---
 
@@ -140,6 +140,7 @@ $ python3 observer_pattern.py
 唯一不同的是，訂閱者可能會訂閱不同的東西對吧？\
 假設 A 要訂閱 X, B 要訂閱 Y\
 那麼不同資料全部混在同一個 event bus 裡頭顯然是不合理的，因此我們需要對不同資料進行 filter 處理
+
 ## Message Filter
 ### Topic Based
 publisher 送出的訊息中會帶有所謂的 topic, 而 subscriber 只會收到相對應的 topic 發送的訊息\
@@ -150,15 +151,21 @@ publisher 送出的訊息中會帶有所謂的 topic, 而 subscriber 只會收�
 
 <hr>
 
-當然也有部份系統支援兩種模式，亦即 publisher 發送帶有特定 topic 的訊息，而 subscriber 可以根據 topic 註冊其內容屬性
-
-<hr>
-
+當然也有部份系統支援兩種模式，亦即 publisher 發送帶有特定 topic 的訊息，而 subscriber 可以根據 topic 註冊其內容屬性\
 這邊附上兩張對比圖，可以更清楚的了解其差異
 
 ![](https://miro.medium.com/max/770/1*s1kclXywIwae86iNa7cKZQ.png)
 ![](https://miro.medium.com/max/495/1*-GHFC93E4ODwNc98IE5_vA.gif)
 > ref: [Observer vs Pub-Sub Pattern](https://betterprogramming.pub/observer-vs-pub-sub-pattern-50d3b27f838c)
+
+# Differences Comparison
+
+|Description|[Observer Pattern](#observer-pattern)|[Publisher-Subscriber Pattern](#publisher-subscriber-pattern)|
+|:--|:--:|:--:|
+|Message Delivery|Synchronous|Asynchronous|
+|Aware of Subscriber|Yes|No|
+|Broker|No|Yes|
+|Type|1 to Many|Many to Many|
 
 # References
 + 深入淺出設計模式 第二版(ISBN: 978-986-502-936-4)
