@@ -123,8 +123,18 @@ $ python3 observer_pattern.py
 + 在 `subject.next(1)` 的時候，john 以及 bob 都有拿到最新的訂閱資料
 + 在 `subject.next(2)` 的時候，因為 bob 已經取消訂閱了，所以只有 john 有拿到更新的資料
 
+# Producer-Consumer Pattern
+同樣都是發送訊息給訂閱者\
+[Observer Pattern](#observer-pattern) 是為了要讓 **每個訂閱者都有資料**\
+但是 Producer-Consumer 的目標在於，透過多個 consumer 消化資料\
+所以他的目的是 **消化**
+
+所以我沒必要讓全部的訂閱者都拿到資料\
+因此，一筆資料只會由一個 consumer 處理\
+所以 Producer-Consumer Pattern 是屬於 1 To 1 的架構
+
 # Publisher-Subscriber Pattern
-跟 Observer Pattern 一樣擁有 publisher(subject) 以及 subscriber(observer)\
+跟 [Observer Pattern](#observer-pattern) 一樣擁有 publisher(subject) 以及 subscriber(observer)\
 不同的是他們發送事件的方式
 + Observer Pattern 是直接通知訂閱者更新資料
 + Publisher-Subscriber Pattern 是透過 ***event bus*** 進行資料傳遞
@@ -135,7 +145,7 @@ $ python3 observer_pattern.py
 
 同樣都是透過將資料放在同一個地方進行傳遞\
 並且也有生產者(publisher)以及消費者(subscriber)\
-而且他們都不知道對方的存在，亦即誰送的資料誰收的資料其實對它來說都是未知的
+而且他們都 **不知道對方的存在**，亦即誰送的資料誰收的資料其實對它來說都是未知的
 
 唯一不同的是，訂閱者可能會訂閱不同的東西對吧？\
 假設 A 要訂閱 X, B 要訂閱 Y\
@@ -160,14 +170,16 @@ publisher 送出的訊息中會帶有所謂的 topic, 而 subscriber 只會收�
 
 # Differences Comparison
 
-|Description|[Observer Pattern](#observer-pattern)|[Publisher-Subscriber Pattern](#publisher-subscriber-pattern)|
-|:--|:--:|:--:|
-|Message Delivery|Synchronous|Asynchronous|
-|Aware of Subscriber|Yes|No|
-|Broker|No|Yes|
-|Type|1 to Many|Many to Many|
+|Description|[Observer Pattern](#observer-pattern)|[Publisher-Subscriber Pattern](#publisher-subscriber-pattern)|[Producer-Consumer Pattern](#producer-consumer-pattern)|
+|:--|:--:|:--:|:--:|
+|Message Delivery|Synchronous|Asynchronous|Asynchronous|
+|Aware of Subscriber|:heavy_check_mark:|:x:|:x:|
+|Decouple|:x:|:heavy_check_mark:|:x:|
+|Broker|:x:|:heavy_check_mark:|:x:|
+|Type|1 to Many|1 to Many<br>Many to Many|1 To 1|
 
 # References
 + 深入淺出設計模式 第二版(ISBN: 978-986-502-936-4)
 + [Observer vs Pub-Sub Pattern](https://betterprogramming.pub/observer-vs-pub-sub-pattern-50d3b27f838c)
 + [Publish-subscribe pattern](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern#Message_filtering)
++ [Publish/Subscribe vs Producer/Consumer?](https://stackoverflow.com/questions/42471870/publish-subscribe-vs-producer-consumer)
