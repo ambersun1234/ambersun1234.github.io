@@ -74,16 +74,16 @@ index 我們之前就有講過，詳細可以參考 [資料庫 - Index 與 Histo
 
 PostgreSQL 在使用 Fuzzy search 的時候，有兩個特別的 index 類型可以加速這種計算
 
-## GIST(Generalized Search Tree based Index)
-tree based index 亦即 GIST index 可以使用 B+ tree, R tree 等自平衡樹實做\
+## GiST(Generalized Search Tree based Index)
+tree based index 亦即 GiST index 可以使用 B+ tree, R tree 等自平衡樹實做\
 所以你可以期待他的搜尋 **速度是比較快的**\
 除了本身資料結構的特性使得它速度快\
-另一個原因是，GIST index 將資料進行一定程度的壓縮，將它縮小至 n bit 的 signature\
+另一個原因是，GiST index 將資料進行一定程度的壓縮，將它縮小至 n bit 的 signature\
 而這個過程自然是使用 hash 的方式達成的
 
 由於他是使用 hash\
 這代表他有可能會出現碰撞，也就是說不同的資料可能會得到相同的 signature(i.e. hash value)\
-因此，在使用 GIST index 的時候，有可能會出現 `false positive` 的情況
+因此，在使用 GiST index 的時候，有可能會出現 `false positive` 的情況
 
 而當這個情況出現的時候，PostgreSQL 則會自動的將欄位資料撈出並進行 **二次檢查**
 
@@ -95,13 +95,13 @@ inverted index 的概念是 hashmap\
 
 所以 GIN index 你能夠推測出幾件事情
 1. 他的 index 更新會比較慢
-2. 查詢速度相比 [GIST Index](#gistgeneralized-search-tree-based-index) 還要快
+2. 查詢速度相比 [GiST Index](#gistgeneralized-search-tree-based-index) 還要快
 3. index 大小會比較大(因為它沒有壓縮過)
 
-為什麼 GIN index 比 GIST index 還要快？\
+為什麼 GIN index 比 GiST index 還要快？\
 自平衡樹的 query 時間雖然是 $O(Log(N))$, 但是 hashmap 的時間可是 $O(1)$\
-並且 GIST index 有可能會出現 false positive 導致需要進行二次確認的時間差\
-所以整體算起來，GIN index 速度上會比 GIST index 還快
+並且 GiST index 有可能會出現 false positive 導致需要進行二次確認的時間差\
+所以整體算起來，GIN index 速度上會比 GiST index 還快
 
 > 你可能會問，平平都是 hash\
 > 為什麼 GIN index 不用進行二次確認？\
@@ -111,14 +111,14 @@ inverted index 的概念是 hashmap\
 ## Pros and Cons
 整理成表格大概會長下面這樣
 
-||GIST index|GIN index|
+||GiST index|GIN index|
 |:--|:--:|:--:|
 |查詢速度|Slow|Fast|
 |更新速度|Fast|Slow|
 |Index 大小|Small|Large|
 |資料結構|Self-Balanced Tree|Hashmap|
 
-# Benchmark Testing for GIST and GIN Index
+# Benchmark Testing for GiST / GIN Index
 根據 [12.9. GiST and GIN Index Types](https://www.postgresql.org/docs/9.1/textsearch-indexes.html) 所述
 > As a rule of thumb, GIN indexes are best for static data because lookups are faster. \
 > For dynamic data, GiST indexes are faster to update. \
@@ -149,7 +149,7 @@ postgres (PostgreSQL) 15.4 (Debian 15.4-1.pgdg120+1)
 
 ## Benchmark Steps
 測試 index 基本上我的想法是\
-建一個 table, 裡面包含本次要測試的對象 `GIN` 以及 `GIST`\
+建一個 table, 裡面包含本次要測試的對象 `GIN` 以及 `GiST`\
 但同時我也想知道他們跟一般 secondary index 差距有多大
 
 對於資料集的部份，使用 python 進行 data processing\
@@ -212,7 +212,7 @@ return await conn.$queryRawUnsafe(`--sql
     WHERE similarity(${field}, '${name}') > 0
 `)
 ```
-但我後來怎麼測試都發現，`GIN`, `GIST` 跑起來卻跟沒加 index 差不多\
+但我後來怎麼測試都發現，`GIN`, `GiST` 跑起來卻跟沒加 index 差不多\
 很明顯這樣是有問題的，與 documentation 描述的不符合\
 後來下 EXPLAIN 下去看問題在哪
 
@@ -229,7 +229,7 @@ Seq Scan on "unique"  (cost=0.00..2344.72 rows=34149 width=4)
 > These index types support the above-described similarity operators, \
 > and additionally support trigram-based index searches for LIKE, ILIKE, ~, ~* and = queries. 
 
-僅有 similarity operator 有支援 GIN, GIST index\
+僅有 similarity operator 有支援 GIN, GiST index\
 而 similarity 等 function 沒有，所以它跑起來都是使用 sequential scan\
 正確的寫法應該要是這樣
 
@@ -278,13 +278,13 @@ ALTER DATABASE my_database SET pg_trgm.similarity_threshold = 0.2;
 
 你會發現，沒有加 index 與 secondary index 在進行 fuzzy search 的情況下\
 基本上是沒有幫助的，而隨者資料量增大，他的 query 時間也會相應的上升($1 \times 10^8$ 與 $2.5 \times 10^8$)\
-相對的 `GIN` 與 `GIST` index 完美的符合我們對他的假設
+相對的 `GIN` 與 `GiST` index 完美的符合我們對他的假設
 
-因為 `GIST` index 有 false positive 的情況會發生\
+因為 `GiST` index 有 false positive 的情況會發生\
 即使它使用自平衡樹，速度上也仍然不及 `GIN` 的 hashmap\
 當資料量大增的情況下，差距更大
 
-在極限狀況 66w 筆的 unique 資料下，`GIN` 的執行速度超越 `GIST` 達 ***15 倍***\
+在極限狀況 66w 筆的 unique 資料下，`GIN` 的執行速度超越 `GiST` 達 ***15 倍***\
 比起 secondary index 差距甚至高達 ***52 倍***
 
 > 當然本次實驗僅專注在 read 的時間\
