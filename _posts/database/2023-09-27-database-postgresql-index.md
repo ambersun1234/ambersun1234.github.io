@@ -270,8 +270,11 @@ ALTER DATABASE my_database SET pg_trgm.similarity_threshold = 0.2;
 所以它才叫做 bitmap index scan
 
 ## Benchmark Result
-![](https://github.com/ambersun1234/blog-labs/raw/master/postgresql-gist-gin/benchmark/unique/benchmark-unique.png)
-![](https://github.com/ambersun1234/blog-labs/raw/master/postgresql-gist-gin/benchmark/unique-large/benchmark-unique-large.png)
+
+||||
+|:--:|:--:|:--:|
+|Dataset Size|10w|66w|
+|Benchmark Result|![](https://github.com/ambersun1234/blog-labs/raw/master/postgresql-gist-gin/benchmark/unique/benchmark-unique.png)|![](https://github.com/ambersun1234/blog-labs/raw/master/postgresql-gist-gin/benchmark/unique-large/benchmark-unique-large.png)|
 
 而當我們全部調適完成之後\
 可以看到這個圖是相當的漂亮
