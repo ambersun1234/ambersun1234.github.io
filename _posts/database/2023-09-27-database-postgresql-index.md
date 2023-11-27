@@ -118,6 +118,44 @@ inverted index 的概念是 hashmap\
 |Index 大小|Small|Large|
 |資料結構|Self-Balanced Tree|Hashmap|
 
+# tsvector and tsquery
+根據 [12.9. GiST and GIN Index Types](https://www.postgresql.org/docs/9.1/textsearch-indexes.html)\
+他是這麼說的
+
+> Creates a GiST (Generalized Search Tree)-based index. The column can be of tsvector or tsquery type.\
+> Creates a GIN (Generalized Inverted Index)-based index. The column must be of tsvector type.
+
+所以需要使用 GiST 與 GIN index 他們的資料型態必須是 tsvector 或者是 tsquery\
+問題來了，他們是什麼
+
+為了要支援 full text search, PostgreSQL 開發出了兩款資料型態，特別 for 此類的需求
+
+## tsvector
+tsvector 是為了 text search 而開發的，其中它儲存的資料是排序過的詞位\
+什麼意思呢
+```sql
+SELECT 'a fat cat sat on a mat and ate a fat rat'::tsvector;
+                      tsvector
+----------------------------------------------------
+ 'a' 'and' 'ate' 'cat' 'fat' 'mat' 'on' 'rat' 'sat'
+```
+上述例子，每個 "單詞" 就是一個詞位，所以你可以看到 `a` 這個單詞在 tsvector 中只有儲存一次\
+並且 tsvector 內部的資料是有排序過的
+
+根據 [9.13. Text Search Functions and Operators](https://www.postgresql.org/docs/current/functions-textsearch.html)\
+tsvector 本身能支援的搜尋相對 [tsquery](#tsquery) 少很多\
+它只有支援 perfect match 的情況，如果要用到 contain 的功能就沒辦法
+
+## tsquery
+tsquery 儲存的則是被搜尋的詞位(你可以把它想像成是 text query)\
+如果有多個詞位，它會使用不同的 operator 將它組合起來
+```sql
+SELECT 'hello & world'::tsquery
+     tsquery
+-----------------
+'hello' & 'world'
+```
+
 # Benchmark Testing for GiST / GIN Index
 根據 [12.9. GiST and GIN Index Types](https://www.postgresql.org/docs/9.1/textsearch-indexes.html) 所述
 > As a rule of thumb, GIN indexes are best for static data because lookups are faster. \
@@ -296,6 +334,142 @@ ALTER DATABASE my_database SET pg_trgm.similarity_threshold = 0.2;
 ## Implementation
 實驗的相關數據以及程式碼，都可以在 [ambersun1234/blog-post/postgresql-gist-gin](https://github.com/ambersun1234/blog-labs/tree/master/postgresql-gist-gin) 中找到
 
+# Benchmark Testing Array Type for GiST / GIN Index
+普通型別沒問題，那麼對於像是 array 這種 type 會不會也有所幫助呢？\
+PostgreSQL 可以將欄位設定為 array type\
+並且支援任意 built-in 或者是自定義的型別，長度不須指定
+
+array 型別並沒有直接被 GiST/GIN 支援\
+就算使用 `btree_gin` 這種的它也只有支援普通的型別(e.g. text, int ... etc.)
+```sql
+CREATE EXTENSION IF NOT EXISTS btree_gin;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+```
+不過我們還是有辦法使用 [tsvector and tsquery](#tsvector-and-tsquery) 來做到的
+
+## Benchmark Setup
+關於資料集的部份，我想就沿用我們的作法\
+資料集大小一樣是 10 萬筆\
+只不過資料格式就改成 array 的型態\
+這次我主要想要測試的是 string array\
+至於 array 裡面的個數，分別測試 10 個以及 20 個好了
+
+### String Array Type
+schema 的部份要注意的是 string array 並不能直接支援 GiST/GIN\
+須為 tsvector/tsquery 或者是 string\
+因此在 schema 的定義上必須直接儲存 
+```js
+model strArray {
+    id     Int                     @id @default(autoincrement())
+    origin String[]
+    index  Unsupported("tsvector")?
+    gist   Unsupported("tsvector")?
+    gin    Unsupported("tsvector")?
+
+    @@index([index])
+    @@index([gist], type: Gist)
+    @@index([gin], type: Gin)
+}
+```
+
+這裡採用分段寫入的方式，因為從 csv 寫入我無法直接寫 tsvector\
+所以一開始需要定義為 nullable\
+當我將原始 string array 寫入後再使用 `array_to_tsvector` 寫入相對應的資料即可
+```sql
+UPDATE "strArray" SET index = array_to_tsvector(origin);
+UPDATE "strArray" SET gist = array_to_tsvector(origin);
+UPDATE "strArray" SET gin = array_to_tsvector(origin);
+```
+
+### Int Array Type
+補充一下如果你想要試一下 integer array\
+可以直接用 `gist__int_ops` 以及 `gin__int_ops` 即可\
+只不過需要新增套件 `intarray`
+```sql
+CREATE EXTENSION IF NOT EXISTS intarray;
+```
+schema 的定義如下
+```js
+model intArray {
+    id    Int   @id @default(autoincrement())
+    index Int[]
+    gist  Int[]
+    gin   Int[]
+
+    @@index([index])
+    @@index([gist(ops: raw("gist__int_ops"))], type: Gist)
+    @@index([gin(ops: raw("gin__int_ops"))], type: Gin)
+}
+```
+
+執行 migration 的時候我遇到了一個很嚴重的效能問題\
+將 csv 資料寫入的時候並沒有花費太久的時間，反而是在建立 index 的時候比起預期時間還要長\
+上網看了一下好像不只我遇到
+
+根據 [slow index creation with gist and gist__int_ops](https://dba.stackexchange.com/questions/255121/slow-index-creation-with-gist-and-gist-int-ops)\
+Eric Cimineli 網友說到
+> I was able to get around this by creating the index with empty values in the column \
+> and then filling the data after, \
+> but it still took around 20 hours with a table of only 14 million rows.
+
+換句話說，10w 筆資料可能需要快 2 個小時才能完成寫入\
+事情似乎從 2009 年開始就有回報([Extremely slow intarray index creation and inserts.](https://www.postgresql.org/message-id/49BFD950.5040905@cheapcomplexdevices.com))\
+時至今日好像沒有解決辦法(或者我沒看到)
+
+然後我試了不同大小的資料集\
+10w 跑超過 8 個小時, 1w 的也跑超過 4 個小時\
+那我真的沒有什麼時間可以等，所以這部份就還是一樣留著做紀錄
+
+### Array Mock Data
+假資料的格式要稍微注意一下\
+根據 [8.15. Arrays](https://www.postgresql.org/docs/current/arrays.html)
+
+> To write an array value as a literal constant, \
+> enclose the element values within curly braces and separate them by commas. \
+> (If you know C, this is not unlike the C syntax for initializing structures.) \
+> You can put double quotes around any element value, and must do so if it contains commas or curly braces. \
+> (More details appear below.) 
+
+簡言之就是要長的像這樣
+```
+'{ val1 delim val2 delim ... }'
+就是
+'{"hello", "world"}'
+```
+
+> 注意到 csv 的內容，在 PostgreSQL 中雙引號必須要用 2 個才會正確讀進去\
+> 也就是說 `'{"hello", "world"}` 要變成 `'{""hello"", ""world""}`
+
+### Array Operators
+這次測試的 operator 為 overlap(`&&`)\
+他的效果大概長這樣
+```sql
+select ARRAY[1, 2, 3, 4, 5] && ARRAY[1, 2] -> true
+SELECT ARRAY[1, 2, 3, 4, 5] && ARRAY[10]   -> false
+```
+
+而這個 operator 都有被 GiST 以及 GIN index 支援\
+可參考 [11.2.5. GIN](https://www.postgresql.org/docs/current/indexes-types.html#INDEXES-TYPES-GIN) 以及 [11.2.3. GiST](https://www.postgresql.org/docs/current/indexes-types.html#INDEXES-TYPE-GIST)
+
+## Benchmark Result of String Array
+
+||||
+|:--:|:--:|:--:|
+|Dataset Size|10w|10w|
+|Array Length|10|20|
+|Benchmark Result|![](https://github.com/ambersun1234/blog-labs/blob/master/postgresql-gist-gin/benchmark/string-array/benchmark-string-array.png?raw=true)|![](https://github.com/ambersun1234/blog-labs/blob/master/postgresql-gist-gin/benchmark/string-array-large/benchmark-string-array-large.png?raw=true)|
+
+> 注意到上圖 y 軸單位的不同
+
+圖上可能不太好看出來\
+在 array 長度為 10 的情況下，GIN index 可以有 GiST index 的 13 倍\
+而長度 20 的情況下更是可以擁有大約 10 倍的效能提昇\
+也再次驗證了我們上述所說的，GIN index 在效能上是比 GiST 還要好的
+
+更不用提與沒加 index 的差別\
+長度為 10 的情況下，GiST 有接近 5 倍, GIN 可以接近 70 倍\
+為 20 的情況下，GiST 有 12.5 倍，而 GIN 可以高達 186 倍的效能提昇
+
 # References
 + [12.9. GiST and GIN Index Types](https://www.postgresql.org/docs/9.1/textsearch-indexes.html)
 + [F.35. pg_trgm — support for similarity of text using trigram matching](https://www.postgresql.org/docs/current/pgtrgm.html)
@@ -303,3 +477,15 @@ ALTER DATABASE my_database SET pg_trgm.similarity_threshold = 0.2;
 + [Approximate string matching](https://en.wikipedia.org/wiki/Approximate_string_matching)
 + [Understanding Postgres GIN Indexes: The Good and the Bad](https://pganalyze.com/blog/gin-index)
 + [Using psql how do I list extensions installed in a database?](https://stackoverflow.com/questions/21799956/using-psql-how-do-i-list-extensions-installed-in-a-database)
++ [8.15. Arrays](https://www.postgresql.org/docs/current/arrays.html)
++ [9.13. Text Search Functions and Operators](https://www.postgresql.org/docs/current/functions-textsearch.html)
++ [Can PostgreSQL index array columns?](https://stackoverflow.com/questions/4058731/can-postgresql-index-array-columns)
++ [Add support for tsvector](https://github.com/prisma/prisma/issues/5027#issuecomment-877630503)
++ [operator does not exist: integer[] @@ integer[]](https://stackoverflow.com/questions/21534758/operator-does-not-exist-integer-integer)
++ [Postgres - Copy (Stripped Double Quotes)](https://stackoverflow.com/questions/9417916/postgres-copy-stripped-double-quotes)
++ [59.2. Built-in Operator Classes](https://www.postgresql.org/docs/9.5/gist-builtin-opclasses.html)
++ [9.19. Array Functions and Operators](https://www.postgresql.org/docs/current/functions-array.html)
++ [11.2. Index Types](https://www.postgresql.org/docs/current/indexes-types.html)
++ [Why error occurred while creating GIN index?](https://stackoverflow.com/questions/32138996/why-error-occurred-while-creating-gin-index)
++ [8.11. Text Search Types](https://www.postgresql.org/docs/current/datatype-textsearch.html)
++ [F.8. btree_gin — GIN operator classes with B-tree behavior](https://www.postgresql.org/docs/current/btree-gin.html)
