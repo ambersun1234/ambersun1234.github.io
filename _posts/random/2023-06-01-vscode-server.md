@@ -128,7 +128,6 @@ sshd: 192.168.*.*
 > 我只允許我內網的機器能夠連線
 
 ## Upload Public Key to SSH Server
-### Manual Upload
 由於我們設定 ssh 的方式是不允許任何密碼登入\
 也因此不能使用 [ssh-copy-id](#ssh-copy-id) 的方式
 
@@ -144,7 +143,7 @@ $ chmod 700 ~/.ssh
 $ chmod 600 ~/.ssh/authorized_keys
 ```
 
-### ssh-copy-id
+## ssh-copy-id
 另一個方法就相對比較簡單，透過 `ssh-copy-id` 的指令上傳公鑰
 ```shell
 $ ssh-copy-id -i ~/.ssh/id_rsa.pub -p port user@host
@@ -154,6 +153,29 @@ $ ssh-copy-id -i ~/.ssh/id_rsa.pub -p port user@host
 但即使你成功上傳了金鑰，沒有妥當的設定後續的登入也依然會使用密碼，詳細可以參考 [SSH Config](#ssh-config)
 
 > port, user, host 要根據你的 SSH 伺服器位置而定
+
+### ERROR: failed to open ID file
+如果你在使用 ssh-copy-id 的時候，遇到
+```
+ERROR: failed to open ID file
+```
+
+我遇到的情況有兩個問題點\
+第一個， `-i` 指定的檔案名稱後綴需要有 `.pub`\
+如果是單純 `publickey` 這種它會出錯
+
+再來就是 Error 本身的錯誤\
+通常來說金鑰是成雙成對的出現，亦即擁有 public key 以及 private key\
+`ssh-copy-id` 在執行的時候會檢查，是否 key pair 都在該目錄底下\
+也因此，這個錯誤指的是它沒有找到私鑰
+
+> 需要注意的是檔名的部份也要一致，也就是說 `id_rsa` 需要跟 `id_rsa.pub` 一起出現
+
+你可以指定 `-f` 的 option 代表說不檢查私鑰\
+所以指令會變成
+```shell
+$ ssh-copy-id -i ./id_rsa.pub -f user@host
+```
 
 ## SSH Config
 每次都要打那麼一長串的指令實屬麻煩\
