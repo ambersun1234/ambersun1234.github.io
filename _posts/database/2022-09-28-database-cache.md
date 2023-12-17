@@ -32,12 +32,12 @@ Buffer 不限於軟體，硬體層也有類似的東西
 
 |device|description|volatile|
 |:--|:--|:--|
-|register 暫存器|位於 CPU 內部|yes|
-|CPU cache|位於 CPU 內部(分為 L1, L2, L3 cache)|yes|
-|RAM 記憶體|我們常說的 8G, 16G 就是這個|yes|
-|flash|USB 隨身碟|no|
-|HDD|傳統硬碟|no|
-|磁帶|冷儲存用，現已少見於個人 PC|no|
+|register 暫存器|位於 CPU 內部|:heavy_check_mark:|
+|CPU cache|位於 CPU 內部(分為 L1, L2, L3 cache)|:heavy_check_mark:|
+|RAM 記憶體|我們常說的 8G, 16G 就是這個|:heavy_check_mark:|
+|flash|USB 隨身碟|:x:|
+|HDD|傳統硬碟|:x:|
+|磁帶|冷儲存用，現已少見於個人 PC|:x:|
 
 > volatile 指的是易揮發，亦即斷電後資料就不見了
 
@@ -97,7 +97,7 @@ cache miss 的情況下，很明顯的會比 cache hit 的 `反應時間還要�
 
 # Cache Strategies
 ## Cache Aside(Read Aside)
-![](https://www.prisma.io/dataguide/dataguide-images/database-caching/cache-aside.png)
+![](https://www.prisma.io/dataguide/static/ef9dda8c508f666cdb64e3e67b12f27c/d880f/cache-aside.png)
 > ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
 
 這大概是最常見的 cache 策略之一了\
@@ -125,7 +125,7 @@ Cache Aside 在大多數情況下都是很好的解決辦法\
 > 可參考 [關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) \| Shawn Hsu](../../random/python-gil)
 
 ## Read Through
-![](https://www.prisma.io/dataguide/dataguide-images/database-caching/read-through.png)
+![](https://www.prisma.io/dataguide/static/ea53bdb85f36e30cdeee2f4faca908a6/d880f/read-through.png)
 > ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
 
 長的跟 [Cache Aside](#cache-asideread-aside) 很像\
@@ -145,7 +145,7 @@ Cache Aside 在大多數情況下都是很好的解決辦法\
 缺點呢，也一樣會有資料 **不一致** 的問題
 
 ## Write Through
-![](https://www.prisma.io/dataguide/dataguide-images/database-caching/write-through.png)
+![](https://www.prisma.io/dataguide/static/ca5ab292ecc451ab99f380bc101ea126/d880f/write-through.png)
 > ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
 
 解決 **不一致** 最簡單的解法就是\
@@ -163,7 +163,7 @@ Write Through 的概念就是，每一次的更新，都一起更新 cache 跟 d
 因此配合 [Read Through](#read-through) 可以解決資料不一致的問題
 
 ## Write Back(Write Behind)
-![](https://www.prisma.io/dataguide/dataguide-images/database-caching/write-back.png)
+![](https://www.prisma.io/dataguide/static/f950c899e6be1b733a8fff259cb4dd82/d880f/write-back.png)
 > ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
 
 [Write Through](#write-through) 每一次都要寫回去，overhead 會太重\
@@ -176,7 +176,7 @@ Write Through 的概念就是，每一次的更新，都一起更新 cache 跟 d
 合併兩者的優勢，組合成 最佳讀寫策略
 
 ## Write Around
-![](https://www.prisma.io/dataguide/dataguide-images/database-caching/write-around.png)
+![](https://www.prisma.io/dataguide/static/476bcd7061339deb7071e25444cb662f/d880f/write-around.png)
 > ref: [Introduction to database caching](https://www.prisma.io/dataguide/managing-databases/introduction-database-caching)
 
 仔細看可以發現他是 [Cache Aside](#cache-asideread-aside) 與 [Read Through](#read-through) 的結合體\
