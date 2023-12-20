@@ -204,6 +204,52 @@ E2E 的全名是 End 2 End，也就是端到端\
 因此 E2E 要測試的範圍，是從使用者的角度來使用我們的服務\
 換句話說，是從 API endpoint 進來到 response 的過程
 
+# Issues that I have when Writing Tests
+有了上次寫單元測試的經驗之後，寫起測試確實是比較順利\
+但我還是遺漏了一些重要的事情
+
+> 可以回顧一下 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../devops-unit-test/#issues-that-i-have-when-writing-tests)
+
+## Don't Setup Test with Your Implementation
+測試當然是一次測試一個 functionality\
+不過有時候你會需要做一些 setup test 之類的動作\
+比方說你想要測試 `刪除 user account` 的功能\
+那你一定會先建立 user account 然後再測試刪除的部份
+
+問題在於那個 "先建立 user account" 的部份\
+要注意的是，你 ***不能用 API*** 建立，也 ***不能用 service***\
+正確的作法應該是直接透過 ORM 或是 Raw SQL 直接建立
+
+Integration test 主要在測試 "單個" service 在 component 之間的整合\
+考慮以下簡單版的實作
+
+```js
+await this.userService.createUser(userData)
+await this.userService.deleteUser(userID)
+```
+
+這樣做，是錯的 :x:\
+過程中你實際使用了多個 function\
+你怎麼能保證 `createUser` 是正確的？\
+即使 `createUser` 有獨立的 test case 保護，在這個 case 主要是要測試 `deleteUser`\
+一個測試的 scope 應該僅限於它自己要測試的東西本身
+
+> 至於 E2E\
+> End to End 測試在於測試整個流程有沒有問題\
+> 對於 end user 來說它就是一個 **黑盒子**\
+> 你無法使用任何裡面的物件(i.e. services)
+
+但是你可能會問，使用 ORM 不就違反了我們說的嗎？\
+我們的目的是，測試 "我們寫的軟體" 的流程、實作有沒有問題\
+如果 ORM 會錯，那其實責任不在我們身上，加上他是比較靠近底層的實做\
+所以透過它幫忙 setup test 其實是沒問題的
+
+以我的例子來說，我就 偷懶嘛\
+都是使用 call api 的方式\
+這樣變成是一個 test case 裡面你會測試到多種不同的功能\
+而萬一其中一個壞掉，你有可能會發現不了\
+更重要的是，他是屬於 bad practice
+
 # Comparison of Testing Methodology
 
 ||Unit Test|Integration Test|E2E Test|
