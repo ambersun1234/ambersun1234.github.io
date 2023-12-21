@@ -1,7 +1,7 @@
 ---
 title: Linux Kernel - Clock
 date: 2021-09-20
-categories: [linux kernel]
+categories: [linux-kernel]
 tags: [clock]
 math: true
 ---

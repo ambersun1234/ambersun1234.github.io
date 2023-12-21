@@ -4,6 +4,9 @@ date: 2022-01-05
 categories: [git]
 tags: [linux, version control]
 math: true
+redirect_from:
+  - /posts/git-rebase/
+sitemap: true
 ---
 
 # Introduce to Git Rebase

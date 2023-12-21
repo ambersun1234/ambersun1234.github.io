@@ -1,9 +1,12 @@
 ---
 title: Linux Kernel - cgroups
 date: 2021-09-20
-categories: [linux kernel]
+categories: [linux-kernel]
 tags: [cgroups]
 math: true
+redirect_from:
+  - /posts/linux-cgroups/
+sitemap: true
 ---
 
 # Introduce to cgroups
