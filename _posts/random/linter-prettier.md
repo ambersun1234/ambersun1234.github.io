@@ -85,7 +85,7 @@ Linter 與 Prettier 不一樣的是\
         比如說 [no-unused-vars](https://eslint.org/docs/latest/rules/no-unused-vars) 就可以確保不會出現定義了卻沒使用的狀況發生\
         某些 Rule 甚至有一些選項可以設定，不過這就依照不同的規則而定
 + `Plugin`
-    + 對於某些你需要的功能，卻沒有內建，可以嘗試使用第三方套件或自己實做\
+    + 對於某些你需要的功能，卻沒有內建，可以嘗試使用第三方套件或自己實作\
         像是 [@angular-eslint/eslint-plugin](https://www.npmjs.com/package/@angular-eslint/eslint-plugin) 包含了 Angular 的最佳實踐
 
 ### Installation and Run
@@ -143,7 +143,7 @@ else
     exit 1
 fi
 ```
-上述是一個簡單的 automation check 的實做\
+上述是一個簡單的 automation check 的實作\
 可以看到它主要做兩件事情
 1. prettier check
 2. eslint check

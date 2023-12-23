@@ -47,8 +47,8 @@ integration test 會需要做到 input validation 嗎？\
 
 # Dependency Injection
 我們在 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../../devops/devops-unit-test) 有提到\
-依賴於實做與依賴於界面的優缺點\
-在實做整合測試的時候，這些 pros and cons 會更大程度的影響你的測試撰寫
+依賴於實作與依賴於界面的優缺點\
+在實作整合測試的時候，這些 pros and cons 會更大程度的影響你的測試撰寫
 
 ## Parallel vs. Sequential Execution of Integration Test
 講一個例子\
@@ -77,9 +77,9 @@ Jest 本身在執行測試的時候，為了節省執行時間提昇效率\
 沒有 Class 要怎麼做 Dependency Injection, 怎麼寫測試呢？
 
 這時候就必須要用到 Test Double 裡面的 Fake Object 了\
-Fake Object 可以提供較為簡單版本的實做\
-假設你需要替換掉資料庫的界面實做，你可以透過 Fake Object 來做測試\
-如此一來你不需要大改你原本的實做，只需要換成 Fake Object 就可以了
+Fake Object 可以提供較為簡單版本的實作\
+假設你需要替換掉資料庫的界面實作，你可以透過 Fake Object 來做測試\
+如此一來你不需要大改你原本的實作，只需要換成 Fake Object 就可以了
 
 > 有關 Test Double 的介紹可以參考 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../../devops/devops-unit-test/#test-double)
 
@@ -141,7 +141,7 @@ describe("test getUsersSlow", () => {
 });
 ```
 
-原本的實做是這樣的
+原本的實作是這樣的
 ```js
 export default {
   getUsersSlow: async (
@@ -170,7 +170,7 @@ export default {
 因為我們在這裡有跟 database 交互\
 為了讓每個測試有獨立的 connection，在 `beforeEach` 的時候手動建立一個 connection\
 並且使用 jest 的 spyOn 功能，將 `database.newConnection` 設置為 `conn`\
-如此一來在測試的時候，就會換成我們的實做了\
+如此一來在測試的時候，就會換成我們的實作了\
 然後每次執行的時候記得要將之前的 mock 重置 :arrow_right: `jest.resetAllMocks()`
 
 > 呼應到上述 [Dependency Injection in JavaScript?](#dependency-injection-in-javascript) 說到的\
@@ -241,7 +241,7 @@ await this.userService.deleteUser(userID)
 
 但是你可能會問，使用 ORM 不就違反了我們說的嗎？\
 我們的目的是，測試 "我們寫的軟體" 的流程、實作有沒有問題\
-如果 ORM 會錯，那其實責任不在我們身上，加上他是比較靠近底層的實做\
+如果 ORM 會錯，那其實責任不在我們身上，加上他是比較靠近底層的實作\
 所以透過它幫忙 setup test 其實是沒問題的
 
 以我的例子來說，我就 偷懶嘛\

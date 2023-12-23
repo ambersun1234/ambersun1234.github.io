@@ -32,7 +32,7 @@ math: true
     + Subject 作為唯一擁有狀態的物件，負責將狀態同步更新至多個不同的觀察者(Observer)
 
 ## Data
-Observer pattern 主要以 Subject 進行主動推送資料至 Observer 實做\
+Observer pattern 主要以 Subject 進行主動推送資料至 Observer 實作\
 但是也有另一種方法是讓 Observer 主動更新(透過 Subject 的 public getter)\
 但一般來說是使用推送的方法居多
 

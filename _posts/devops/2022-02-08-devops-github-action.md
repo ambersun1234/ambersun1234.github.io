@@ -8,7 +8,7 @@ math: true
 
 # CI/CD
 `Continuous Integration - CI` 是現今軟體開發流程當中的一種 best practice\
-開發的過程當中，我們有可能在實做中不小心改壞了一個東西，又剛好 QA 沒有測出來直上 production\
+開發的過程當中，我們有可能在實作中不小心改壞了一個東西，又剛好 QA 沒有測出來直上 production\
 這時候出問題就比較麻煩了對吧？
 
 於是乎持續整合的概念就被提出來\
@@ -358,7 +358,7 @@ branding:
 詳細實作程式碼你可以在 [ambersun1234/issue-assign-all-collaborators](https://github.com/ambersun1234/issue-assign-all-collaborators) 中找到
 
 ## Javascript Actions
-相比於 [Docker Container Actions](#docker-container-actions), javascript actions 在實做上面會稍微方便一點
+相比於 [Docker Container Actions](#docker-container-actions), javascript actions 在實作上面會稍微方便一點
 
 + `runs`
     + `runs.using` :arrow_right: 定義了你要用哪一個 runtime(可以是 `node12`, `node16`)
@@ -438,7 +438,7 @@ main().catch((e) => {
     core.setFailed(e);
 });
 ```
-不要看細部實做的話，是滿好懂的\
+不要看細部實作的話，是滿好懂的\
 定義一個 main function, 裡面透過 `@actions/core` 取得輸入，`@actions/exec` 執行指令\
 重點就只是 `core.getInput()` 以及 `cli.exec()` 僅此而已\
 當然你要設定輸出可以使用 `core.setOutput()`

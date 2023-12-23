@@ -186,13 +186,13 @@ Test Double 內部又分五個種類
 + `Dummy`
     + 用於填充目標物件(i.e. 參數)，僅僅是為了不讓測試掛掉的作用
 + `Fake Object`
-    + 較為 **簡單版本** 的實做
+    + 較為 **簡單版本** 的實作
     + 比如說用 in-memory database 取代原本的 MySQL 之類的
 + `Stub`
     + 根據不同的輸入，給定相對應的輸出
 + `Spy`(Partial Mock)
-    + 原本的定義是用以監看，各種被呼叫的實做的各項數據(被 call 了幾次, 誰被 call) :arrow_right: 跟間諜一樣
-    + 有時候也指 Partial Mock, 不同的是，只有實做中的 **部份內容** 被替代
+    + 原本的定義是用以監看，各種被呼叫的實作的各項數據(被 call 了幾次, 誰被 call) :arrow_right: 跟間諜一樣
+    + 有時候也指 Partial Mock, 不同的是，只有實作中的 **部份內容** 被替代
 + `Mock`
     + 跟 `Stub` 一樣，此外還包含了 [Behaviour Verification](#behaviour-verification)
 
@@ -211,8 +211,8 @@ Test Double 內部又分五個種類
 > 事實上狀態驗證也包含了驗證參數數量這種，即使 Dummy 只有填充物件的用途，它仍然可以做驗證
 
 > Fake Object 可以驗證狀態或行為的原因在於\
-> 他是簡單版本的實做，同時因為他是實做，代表它能驗證輸出是否符合預期\
-> 更重要的是實做本身可以驗證行為(i.e. 確保執行順序像是 A :arrow_right: B :arrow_right: C)
+> 他是簡單版本的實作，同時因為他是實作，代表它能驗證輸出是否符合預期\
+> 更重要的是實作本身可以驗證行為(i.e. 確保執行順序像是 A :arrow_right: B :arrow_right: C)
 
 # Dependency Inversion Principle
 ![](https://upload.wikimedia.org/wikipedia/commons/9/96/Dependency_inversion.png)\
@@ -232,7 +232,7 @@ Test Double 內部又分五個種類
 
 # Issues that I have when Writing Tests
 到這裡你已經足夠了解如何撰寫測試了\
-不過在一開始我寫測試的時候，錯誤的實做了一些東西\
+不過在一開始我寫測試的時候，錯誤的實作了一些東西\
 借這個機會，一起紀錄一下
 
 ## Minimize Test Case Scope
@@ -314,7 +314,7 @@ it("should pass if type is valid", () => {
 
 我在 [Do you use constants from the implementation in your test cases?](https://stackoverflow.com/questions/3360074/do-you-use-constants-from-the-implementation-in-your-test-cases) 發現有人也遇到一樣的問題\
 大意是說\
-在測試的時候，你的 expected result 要使用 literal 還是實做當中的 constant
+在測試的時候，你的 expected result 要使用 literal 還是實作當中的 constant
 
 以連結內的例子來看
 ```c

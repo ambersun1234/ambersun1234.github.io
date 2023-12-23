@@ -337,8 +337,8 @@ import (
 + `google.golang.org/protobuf/proto` **v2 message**(reflection 為 first-class function)
 
 既然已經定義了問題所在，接下來只有兩個選擇
-+ protoc-gen-go 使其使用新版實做(i.e. `google.golang.org/protobuf/proto`)
-+ grpc-gateway 降版，然後 generate 出來的就會是使用舊版實做(i.e. `github.com/golang/protobuf/proto`)
++ protoc-gen-go 使其使用新版實作(i.e. `google.golang.org/protobuf/proto`)
++ grpc-gateway 降版，然後 generate 出來的就會是使用舊版實作(i.e. `github.com/golang/protobuf/proto`)
 
 前者我沒找到如何更改的相關資料\
 後者，根據 [github.com/grpc-ecosystem/grpc-gateway #1989](https://github.com/grpc-ecosystem/grpc-gateway/issues/1989#issuecomment-783244615) 的討論串可以得知\
@@ -441,7 +441,7 @@ go versi9on go1.17.6 linux/amd64
 首先使用 Golang 分別架設 gRPC 與 RESTful server\
 client 端使用 Python 分別對其進行 十萬次的 benchmark testing
 
-值得注意的是，gRPC 的部份 server 與 client 端分別使用 Golang 與 Python 實做\
+值得注意的是，gRPC 的部份 server 與 client 端分別使用 Golang 與 Python 實作\
 跨語言的支援同時也是 gRPC 的一大強項\
 就我這幾天的撰寫而言，就上手程度而言沒有太大的難度，基本上只要能夠順利 generate proto 就沒太大問題了
 

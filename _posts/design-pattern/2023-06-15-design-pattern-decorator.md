@@ -35,17 +35,17 @@ if __name__ == "__main__":
                 benchmark(stub, f)
 ```
 
-以我個人來說，我很常會需要對我的實做進行所謂的 benchmark\
+以我個人來說，我很常會需要對我的實作進行所謂的 benchmark\
 常見的方法即為，測試目標 function 所需要花費的時間，上述我想要測試 gRPC 的平均呼叫時間\
-可以看到，為了要加入測試時間的程式碼，我不得不重新修改實做本身，讓它得以 **擴展** 它原本的行為\
+可以看到，為了要加入測試時間的程式碼，我不得不重新修改實作本身，讓它得以 **擴展** 它原本的行為\
 除了執行基本的 gRPC 呼叫，它還可以測試執行時間，並寫到特定的檔案內
 
 某種程度上它很丑對吧\
-為了新增某個功能而改變原本的實做本身屬實是不太好的行為\
+為了新增某個功能而改變原本的實作本身屬實是不太好的行為\
 這個篇章我們將一窺 [Decorator Pattern](#decorator-pattern) 可以如何解決這個問題
 
 > 有關 gRPC 的相關介紹，可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../../website/website-grpc)\
-> 詳細的實做程式碼可以參考 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark)
+> 詳細的實作程式碼可以參考 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark)
 
 # Open-Closed Principle
 > Class should be open for extension, but closed for modification
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 這個原則出現於 [Bertrand Meyer](https://en.wikipedia.org/wiki/Bertrand_Meyer) 所撰寫的物件導向書籍
 
 一個模組或者說物件，要怎麼樣同時保有這兩種特性？\
-不願意被修改可以很好理解，如果要新增功能，我們可以藉由 inheritance(繼承) 自己實做新功能\
+不願意被修改可以很好理解，如果要新增功能，我們可以藉由 inheritance(繼承) 自己實作新功能\
 但是你又說歡迎擴展？ 不是不願意更改嗎？
 
 回顧一下\
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     print(car.cost())
 ```
 
-上述的實做可以這樣解讀
+上述的實作可以這樣解讀
 ```
 整輛車的價格 = 改避震器的價格 + 其他1
 其他1 = 行車記錄器的價格 + 其他2
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
 <hr>
 
-不論 OOP 與否，Decorator 的核心概念就是 ***動態的*** 新增額外功能，而不更改到原本的實做
+不論 OOP 與否，Decorator 的核心概念就是 ***動態的*** 新增額外功能，而不更改到原本的實作
 
 # Benchmark Time Elapsed with Decorator Pattern
 Python 有內建提供給 [Decorator Pattern](#decorator-pattern) 的 syntax sugar\
@@ -180,9 +180,9 @@ if __name__ == "__main__":
                 benchmark()
 ```
 
-> 詳細的實做程式碼可以參考 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark)
+> 詳細的實作程式碼可以參考 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark)
 
-採用 [Decorator Pattern](#decorator-pattern) 之後，我既不會更改原本的實做，但我仍然可以擴充它，是不是很漂亮呢？
+採用 [Decorator Pattern](#decorator-pattern) 之後，我既不會更改原本的實作，但我仍然可以擴充它，是不是很漂亮呢？
 
 > decorator 裡面的 i 與 f 都是取自 global variable scope\
 > 當僅僅讀取 global variable 的時候不需要使用 `global xxx` syntax

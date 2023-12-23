@@ -67,7 +67,7 @@ Docker 的運作方式是，將每一行指令都疊加在先前的 layer 上面
 
 那我就好奇了\
 單純的減少層數，能夠縮減多少？\
-考慮以下實做程式碼
+考慮以下實作程式碼
 ```dockerfile
 // origin version
 FROM ubuntu:22.04

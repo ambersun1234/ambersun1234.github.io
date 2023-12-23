@@ -11,7 +11,7 @@ math: true
 當資料量太大的時候，我們多半會選擇將資料切成多個部份傳輸\
 也就是分頁的機制
 
-實做分頁機制可是有著大學問的\
+實作分頁機制可是有著大學問的\
 一起跟我看看吧
 
 ![](https://dds.dell.com/site/stage/9f/e0/Pagination_Anatomy_5c53ee133f.png)

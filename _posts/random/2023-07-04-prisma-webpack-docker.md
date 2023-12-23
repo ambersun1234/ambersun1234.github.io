@@ -350,7 +350,7 @@ module.export = {
 這樣就可以 work 了
 
 # Example
-有關上述所有的程式碼實做，你可以在 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination) 找到
+有關上述所有的程式碼實作，你可以在 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination) 找到
 
 # References
 + [Express Response.send() throwing TypeError](https://stackoverflow.com/questions/49374802/express-response-send-throwing-typeerror)

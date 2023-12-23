@@ -16,8 +16,8 @@ Angular 在一開始初始化 component，他的生命週期就開始了\
 > ref: [Lifecycle Hooks 學習筆記 (一)](https://ithelp.ithome.com.tw/articles/10188047)
 
 Angular 提供多種的 lifecycle hook 供使用\
-你可以依照自己的需求，使用某些部份的 hook 即可，不需要全部都實做\
-`@angular/core` package 提供了一系列的 interface, 實做的時候，他的 function name 需要 prefix `ng`\
+你可以依照自己的需求，使用某些部份的 hook 即可，不需要全部都實作\
+`@angular/core` package 提供了一系列的 interface, 實作的時候，他的 function name 需要 prefix `ng`\
 也就是 `OnChanges` 會是 `ngOnChanges`
 
 lifecycle hook 一個重點是，他的執行順序\
@@ -48,7 +48,7 @@ export class AppComponent implements OnChanges {
 }
 ```
 
-onchange function 吃一個參數，[SimpleChange](https://angular.io/api/core/SimpleChange) 實做 SimpleChanges interface, 定義如下
+onchange function 吃一個參數，[SimpleChange](https://angular.io/api/core/SimpleChange) 實作 SimpleChanges interface, 定義如下
 ```typescript
 class SimpleChange {
   constructor(previousValue: any, currentValue: any, firstChange: boolean)
@@ -61,7 +61,7 @@ class SimpleChange {
 
 你可以透過檢查 changes 有沒有包含你的 input name, 判斷說當下這個值有沒有改變
 
-要注意的是，如果你的 component 並不包含任何的 @Input, 即使你實做了 onChanges, 它也不會被呼叫
+要注意的是，如果你的 component 並不包含任何的 @Input, 即使你實作了 onChanges, 它也不會被呼叫
 
 ## OnInit
 跟 constructor 不同的是，onInit hook 被呼叫的時候，component 已經完成初始化了

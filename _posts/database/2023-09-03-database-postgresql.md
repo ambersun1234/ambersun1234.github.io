@@ -192,10 +192,10 @@ MySQL 會擴充 standard SQL，並視該 query 為合法的\
 bob 明明有兩個人，兩種不同的 email\
 可是在這裡卻只顯示出 `bob@example.com`, 而 `bob2@example.com` 卻莫名的不見了
 
-而 MySQL 自己也提到，他的內部有針對 functional dependence 實做 detection 的機制\
+而 MySQL 自己也提到，他的內部有針對 functional dependence 實作 detection 的機制\
 因此即使你 SELECT 一些 non-aggregated 的 column，MySQL 會自動推論它是否與 GROUP BY column 為 functional dependence 的關係
 
-但是 PostgreSQL 內部，就我目前看到的資料來說，並沒有實做此類 detection 的機制\
+但是 PostgreSQL 內部，就我目前看到的資料來說，並沒有實作此類 detection 的機制\
 如同前一節看到的範例一樣，PostgreSQL 在這種狀況下會拋出 error\
 所以，你必須使用 aggregate function 或者是 GROUP BY\
 這樣回過頭來看這個 Error 是不是就很明確了
@@ -231,7 +231,7 @@ window function 根據 PostgreSQL 官方的定義如下\
 以我們的例子來說，是把相同 username 擺在一起(`PARTITION BY u.username`)
 
 而從上面的結果也可以得知\
-兩個不同的 bob 都有正確的顯示出來，而他的結果是可以預測的(相對於 MySQL 的實做是 nondeterministic 的)\
+兩個不同的 bob 都有正確的顯示出來，而他的結果是可以預測的(相對於 MySQL 的實作是 nondeterministic 的)\
 我們更可以推測出一件事情，就是 window function 計算過得資料 **並不會合併成一列**，相反的彼此之間的前後關係仍然有所保留
 
 ## LAG() vs. LEAD()

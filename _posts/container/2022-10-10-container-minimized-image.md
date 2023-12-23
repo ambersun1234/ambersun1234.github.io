@@ -68,7 +68,7 @@ Alpine Linux 是安全且輕量的發行版 基於 [musl libc](https://www.musl-
 
 <hr>
 
-在 [ambersun1234/blog-labs/minimized-docker-image-lab](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab) 裡面我提供了一個簡單的 echo API 實做\
+在 [ambersun1234/blog-labs/minimized-docker-image-lab](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab) 裡面我提供了一個簡單的 echo API 實作\
 把 source code 包進去的跟只包 binary 的他們的差別如下
 
 ||with source code|binary only|

@@ -71,13 +71,13 @@ POS 的獎勵為 priority fee
 ![](https://ethereum.org/static/9628ab90bfd02f64cf873446cbdc6c70/302a4/gas.png)
 > ref: [ETHEREUM VIRTUAL MACHINE (EVM)](https://ethereum.org/en/developers/docs/evm/)
 
-值得一提的是，EVM 是採用 **stack-based approach** 實做的，並且為 big endian\
+值得一提的是，EVM 是採用 **stack-based approach** 實作的，並且為 big endian\
 亦即他的資料都是存在 stack 當中的，當有需要的時候使用 push, pop 就可以拿取以及儲存資料了\
 而這個 stack 大小為 `1024`, 每個 element 大小為 `256 bit`
 
 > 有關 endian 的介紹可以參考 [重新認識網路 - OSI 七層模型 - Endian \| Shawn Hsu](http://0.0.0.0:4000/http/networking-osi/#endian)
 
-常見的 EVM 實做有
+常見的 EVM 實作有
 + [go-ethereum](https://geth.ethereum.org/)
 + [Py-EVM](https://github.com/ethereum/py-evm)
 + [evmone](https://github.com/ethereum/evmone)
@@ -128,7 +128,7 @@ smart contract 本質上就是一連串自動執行的程式碼\
 ```
 顧名思義，它就是 interface，定義了 contract 裡面的架構\
 如上圖，定義了一個 function, 它擁有 3 個 input，依序為 address, uint256 以及 uint256\
-透過 ABI 我不用了解你是如何實做的，只要我根據 interface 提供參數，我就會拿到想要的結果
+透過 ABI 我不用了解你是如何實作的，只要我根據 interface 提供參數，我就會拿到想要的結果
 
 看著是不是跟 API 很像\
 不同的是，ABI 不能直接呼叫，它只是個定義，只能透過 binary 的方式存取\
@@ -611,7 +611,7 @@ gas price 被拆成兩個部份，base fee 與 priority fee\
 
 ## High Gas Price
 高昂的 Gas Price 往往會造成使用者不願意付錢進行交易\
-Cryptokitties 在某一版本的實做當中\
+Cryptokitties 在某一版本的實作當中\
 為了要列出使用者的第 n 隻貓咪，他們選擇用一個 for-loop 逐一檢查貓咪陣列，拉出符合條件的資料
 
 ```solidity
@@ -636,13 +636,13 @@ function tokensOfOwnerByIndex(address _owner, uint256 _index)
 > ref: [contracts/KittyOwnership.sol](https://github.com/dapperlabs/cryptokitties-bounty/blob/master/contracts/KittyOwnership.sol#L163)
 
 我們上面有提到，Gas Fee 是基於你耗費了多少的算力而決定的\
-而 Cryptokitties 的實做，其執行時間會隨者 totalSupply 的大小而增加\
+而 Cryptokitties 的實作，其執行時間會隨者 totalSupply 的大小而增加\
 換言之，運算的次數會隨之增加，最終導致高昂的 Gas Fee
 
 那麼有人提出來一個改進的方法，我們可以紀錄一個 map\
 這樣就可以避免要逐一檢索全部的陣列資料
 
-因此設計合約的時候，實做中你應該要考慮到耗費的資源\
+因此設計合約的時候，實作中你應該要考慮到耗費的資源\
 並且善用 [hardhat gas reporter](https://github.com/cgewecke/hardhat-gas-reporter) 等工具試圖優化
 
 詳細可以參考原本的 bounty issue [Listing all kitties owned by a user is O(n^2)](https://github.com/dapperlabs/cryptokitties-bounty/issues/4)

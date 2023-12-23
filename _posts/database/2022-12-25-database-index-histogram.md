@@ -48,7 +48,7 @@ WHERE c=221
 WHERE b>=12 AND c=15
 ```
 
-每一家資料庫的實做都不盡相同\
+每一家資料庫的實作都不盡相同\
 就好比如說
 + [IBM Informix 12.10](https://www.ibm.com/docs/zh-tw/informix-servers/12.10?topic=product-overview) 規定的是
     + query condition 第一個條件必須是 equality filter(只能用 =)
@@ -176,7 +176,7 @@ Hash index 顧名思義是用 hash 來達成的\
 > 詳細可以參考 [資料庫 - 最佳化 Read/Write 設計(硬體層面) \| Shawn Hsu](../../database/database-optimization-hardware)
 
 ## SSTable(LSM Tree)
-另一種 index 實做的方式是稱為 SSTable(Sorted String Table)\
+另一種 index 實作的方式是稱為 SSTable(Sorted String Table)\
 亦即將 key 進行排序\
 排序過後的好處就是說，我能夠花較少的時間 query 到我想要的資料\
 比如說使用 [binary search](https://en.wikipedia.org/wiki/Binary_search_algorithm)

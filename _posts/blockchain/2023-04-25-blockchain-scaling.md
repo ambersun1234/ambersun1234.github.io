@@ -52,7 +52,7 @@ zk proof 不只可以驗證交易正確以及合法性，還可以驗證整個 s
 recursive proof 可以使用 parallel 的方式大幅度的提高吞吐量\
 並且一旦驗證完成，所有相關的 block 都可以通過驗證
 
-> 不過依照論文所述，[PLONK](https://github.com/matter-labs/solidity_plonk_verifier) 實做目前還是沒辦法達成並行計算
+> 不過依照論文所述，[PLONK](https://github.com/matter-labs/solidity_plonk_verifier) 實作目前還是沒辦法達成並行計算
 
 # Optimistic Rollups
 既然 layer 1 的運算成本太高，我可以把一連串的交易 off-chain 算完(透過 off-chain virtual machine)，紀錄打包好再一次上傳(交給 on-chain contract)\
@@ -94,7 +94,7 @@ zk-rollups 由於產生驗證用的 zk proof 需要使用特定的硬體協助\
 |Pros|Cons|
 |:--|:--|
 |可提供 [zk proof](#zero-knowledge-proof---zk-proof) 證明 transaction|費用較高(除了計算 transaction 之外還要證明的費用)|
-|transaction 能較快被接受(免除 challenge period)|實做較困難|
+|transaction 能較快被接受(免除 challenge period)|實作較困難|
 |提供較強安全機制|需要特殊硬體協助|
 |較少的資料需要被寫回主網|交易紀錄順序可能會改變|
 

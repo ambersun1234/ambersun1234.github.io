@@ -37,7 +37,7 @@ Bitcoin 擺脫了必須透過中心化交易中心進行交易的概念\
 > security for small and rarely used applications, \
 > and the ability of different applications to very efficiently interact, are important. 
 
-為了打造去中心化的服務，Ethereum 創造了一門語言([solidity](https://docs.soliditylang.org/en/v0.8.19/))用以實做 smart contracts\
+為了打造去中心化的服務，Ethereum 創造了一門語言([solidity](https://docs.soliditylang.org/en/v0.8.19/))用以實作 smart contracts\
 而智能合約是由一系列指令組成的程式，運行在 Ethereum Blockchain 之上
 
 智能合約總結來說只幹三件事
@@ -54,7 +54,7 @@ smart contracts 本質上就是 code, 一旦合約成功部屬至鏈上，就 **
 對 blockchain 造成 **任何狀態更新**, 都會建立一個新的 transaction\
 狀態更新包括
 + 上傳新合約
-+ 更改合約(smart contract 實做上可以用成 configurable, 亦即你可以後期調整某些參數)
++ 更改合約(smart contract 實作上可以用成 configurable, 亦即你可以後期調整某些參數)
 + 更新合約儲存的資料
 
 而每一筆 transaction 你都必須要支付費用\

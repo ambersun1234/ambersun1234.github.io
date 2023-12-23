@@ -52,13 +52,13 @@ unbounded buffer 的大小為無上限(端看你機器有多大的 memory size)\
 kernel 僅須在建立 shared memory 的一開始介入，後續可以讓 process 之間處理\
 也因此，shared memory 的速度較快速(因為不用 kernel 幫忙)
 
-> process 的本質是與其他 process 相互隔離的，因此在實做上會相對困難，弄不好會有安全問題
+> process 的本質是與其他 process 相互隔離的，因此在實作上會相對困難，弄不好會有安全問題
 
 ## Message Passing
 使用 message passing 的機制可以讓 process 之間互相 **同步(synchronize)**\
 也因為它並不是採用共享空間的作法，因此 message passing 也可以應用在 distributed system 上面
 
-message passing 基本上都會實做兩個 function
+message passing 基本上都會實作兩個 function
 + `send`
 + `receive`
 
@@ -137,22 +137,22 @@ type hchan struct {
 ```
 
 hchan 的結構中，包含了一個儲存資料的 circular queue(`buf`) 以及其他相關 variable(`qcount`, `dataqsiz`, `elemsize`, `sendx` 以及 `receivex`)\
-以及兩個 sender/receiver 的 wait queue(以 linked list 實做)\
+以及兩個 sender/receiver 的 wait queue(以 linked list 實作)\
 最後則是配上一個 mutex lock 保護 hchan 的資料
 
 ### Ring Buffer
-channel 儲存資料的方式是使用一個 circular queue 進行實做，也就是 ring buffer\
+channel 儲存資料的方式是使用一個 circular queue 進行實作，也就是 ring buffer\
 不使用 linked list 之類的結構而是使用 ring buffer 的原因是
 + 存取的時間複雜度為 $O(1)$, 而 linked list 則為 $O(n)$
 + ring buffer 空間大小固定，可以較省空間
 + 當取出 data, 其餘的資料不需要做移動
 
-因此 buffer 通常都會以 circular queue 的形式實做\
+因此 buffer 通常都會以 circular queue 的形式實作\
 golang 的 buf 是一個指向實際 ring buffer 的指標
 ![](https://www.readfog.com/assets/7f/02/7156a8f553394b4338589b1d2d4d.jpg)
 > ref: [深入理解 Golang Channel 結構](https://www.readfog.com/a/1651951565605539840)
 
-ring buffer 由於頭尾相連的特性，因此在實做上需要注意一個細節\
+ring buffer 由於頭尾相連的特性，因此在實作上需要注意一個細節\
 也就是我要怎麼分別 queue 是滿的還是空的 的情況\
 因為這兩種情況，他的 head 是等於 tail 的\
 這裡有幾個不一樣的判斷方法供參考
@@ -277,7 +277,7 @@ func makechan(t *chantype, size int64) *hchan {
     ...
 }
 ```
-> makechan 的詳細實做可參考 [src/runtime/chan.go](https://github.com/golang/go/blob/master/src/runtime/chan.go#L71)
+> makechan 的詳細實作可參考 [src/runtime/chan.go](https://github.com/golang/go/blob/master/src/runtime/chan.go#L71)
 
 make 一個 channel 相對的簡單\
 從上述可以看得出來，首先先計算出總共需要多少的記憶體，接下來 switch case 就是分別 malloc\
@@ -543,7 +543,7 @@ func main() {
 }
 ```
 
-這是一個簡單版本的 producer consumer 的 goroutine 與 channel 的實做\
+這是一個簡單版本的 producer consumer 的 goroutine 與 channel 的實作\
 其中，producer 負責生成一個 task 而 consumer 要嘗試解決這個 task\
 為了簡化程式，在 consumer 當中，透過簡單的擲骰子用以判斷 task 成功被解決與否
 

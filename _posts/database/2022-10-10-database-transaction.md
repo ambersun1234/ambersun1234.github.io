@@ -371,7 +371,7 @@ MySQL 8.0 InnoDB 預設 shared lock 以及 exclusive lock 都是以 row-level lo
 由於 acquire/release lock 的過程是很耗費時間的\
 再加上若是並發寫入，`n - 1` 個 tx 都要等待，所以他的效能很差
 
-> 可以用 [Predicate Lock](#predicate-lock) 或 [Index Range Lock](#index-range-lock) 實做\
+> 可以用 [Predicate Lock](#predicate-lock) 或 [Index Range Lock](#index-range-lock) 實作\
 > 多數因為效能問題而普遍採用 [Index Range Lock](#index-range-lock)
 
 ## Snapshot
@@ -423,7 +423,7 @@ transaction 在交易期間會拿住 read lock 以及 write lock
 [Phantom Read](#phantom-read), [Write Skew](#write-skew) 也有可能會出現
 
 > 由於 SQL standard 並未定義 [Snapshot](#snapshot)\
-> 後來的實做有的稱之為 [Repeatable Reads](#repeatable-reads)，但它可能代表 Snapshot 或 Serializable
+> 後來的實作有的稱之為 [Repeatable Reads](#repeatable-reads)，但它可能代表 Snapshot 或 Serializable
 
 ## Read Committed
 其餘 transaction 只能看到已經被 commit 過得資料(transaction 在交易期間會拿住 write lock)\

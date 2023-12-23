@@ -75,7 +75,7 @@ index 我們之前就有講過，詳細可以參考 [資料庫 - Index 與 Histo
 PostgreSQL 在使用 Fuzzy search 的時候，有兩個特別的 index 類型可以加速這種計算
 
 ## GiST(Generalized Search Tree based Index)
-tree based index 亦即 GiST index 可以使用 B+ tree, R tree 等自平衡樹實做\
+tree based index 亦即 GiST index 可以使用 B+ tree, R tree 等自平衡樹實作\
 所以你可以期待他的搜尋 **速度是比較快的**\
 除了本身資料結構的特性使得它速度快\
 另一個原因是，GiST index 將資料進行一定程度的壓縮，將它縮小至 n bit 的 signature\

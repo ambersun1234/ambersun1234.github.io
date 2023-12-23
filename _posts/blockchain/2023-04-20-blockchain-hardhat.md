@@ -174,7 +174,7 @@ export const config
 
 ## Path
 Hardhat 各項預設路徑分別為以下
-+ `contracts`: 存放所有 smart contract 的實做
++ `contracts`: 存放所有 smart contract 的實作
 + `deploy`: 預設 deploy script 位置
 + `test`: 預測測試 source code 位置
 
@@ -345,7 +345,7 @@ async (args: any, hre: HardhatRuntimeEnvironment) => {
 
 如果你要使用 ethers，一般都會 `import { ethers } from "hardhat"`, 但是 task 沒辦法這樣做因為 hardhat 需要初始化，還沒初始化完成就使用 instance 是辦不到的\
 [@nomiclabs/hardhat-ethers](https://www.npmjs.com/package/@nomiclabs/hardhat-ethers) 套件會將 ethers object 注入 HardhatRuntimeEnvironment 讓我們可以取得並使用\
-task function 的參數實做定義是有一定規則的，如以下所示
+task function 的參數實作定義是有一定規則的，如以下所示
 ```typescript
 (taskArgs: TaskArgumentsT, env: HardhatRuntimeEnvironment, runSuper: RunSuperFunction<TaskArgumentsT>)
 ```

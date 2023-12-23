@@ -106,7 +106,7 @@ JWT 定義於 [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519)\
 > claim 裡面的 key/value pair, key 必須要是 unique 的\
 > 如果有出現重複的 key, 他要馬解析失敗，不然就是取最後一個 key 的值
 
-JWT 有兩種主要實做方式，[JWS](#jwsjson-web-signature) 與 [JWE](#jwejson-web-encryption)
+JWT 有兩種主要實作方式，[JWS](#jwsjson-web-signature) 與 [JWE](#jwejson-web-encryption)
 
 ## JWS(JSON Web Signature)
 JWS 定義於 [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515)
@@ -378,7 +378,7 @@ signature 的計算是使用存在 server 上的 signing key 加上前面 header
 如果兩個一樣，就代表資料沒有被竄改過
 
 # Is JWT Safe?
-看了以上兩種 JWT 的實做，你應該有發現\
+看了以上兩種 JWT 的實作，你應該有發現\
 [JWS](#jwsjson-web-signature) 並沒有針對 payload 進行加密，等同於他是裸奔在網路上的\
 那這樣是不是就等於 JWS 其實不怎麼安全？
 
@@ -423,12 +423,12 @@ client 必須在每一次的 request 都帶著 token 進行請求\
 因為狀態完全由 client 管理，我 server 根本不知道目前誰可以存取，自然也就不知道怎麼設定黑名單了
 
 難道我只能眼睜睜看著他的 token 到期才有辦法嗎？\
-所以現今的實做依然有保留 session 的 **概念**(注意是概念而已)\
+所以現今的實作依然有保留 session 的 **概念**(注意是概念而已)\
 也就是說我伺服器上面同時紀錄著當前登入的人，那這樣我就可以隨時把他的權限移除(server side)\
 下次 client 再跑來請求的時候，當我發現 server 上面已經把它 revoke 它就無法存取\
 也就達到主動踢人的方法了
 
-> 這部份可以考慮用 Redis 實做
+> 這部份可以考慮用 Redis 實作
 
 # HTTP Authorization Header
 前面講了這麼多的 JWT token, 實際使用的時候\

@@ -30,10 +30,10 @@ math: true
 
 網站的同源政策主要就是為了避免不同來源能夠透過 [Document Object Model(DOM)](https://en.wikipedia.org/wiki/Document_Object_Model) 存取機密資料(e.g. cookies, session)
 
-> 因此可以得知 Same Origin Policy 主要是實做在瀏覽器上面的
+> 因此可以得知 Same Origin Policy 主要是實作在瀏覽器上面的
 
 你說為什麼不同來源能夠存取 cookie?\
-那是因為早期的瀏覽器實做，即使是不同來源，它依然會帶 cookie 過去\
+那是因為早期的瀏覽器實作，即使是不同來源，它依然會帶 cookie 過去\
 就也因此可能會造成一些資安風險
 
 > 延伸閱讀 [[Day 26] Cookies - SameSite Attribute](https://ithelp.ithome.com.tw/articles/10251288)
@@ -55,7 +55,7 @@ CORS **不是一種安全機制**，相反的，他是一種能夠突破 [Same O
 > ref: [跨來源資源共用（CORS）](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/CORS)
 
 # How does CORS Work
-前面有提到，普遍瀏覽器為了安全問題，都有實做 [Same Origin Policy](#same-origin-policy)\
+前面有提到，普遍瀏覽器為了安全問題，都有實作 [Same Origin Policy](#same-origin-policy)\
 為了有效的放寬此政策，便引入 CORS 的機制\
 允許部份的 origin 可以存取
 
@@ -180,7 +180,7 @@ HTTP 的 request 當中，不受限於 [Same Origin Policy](#same-origin-policy)
 你的 web browser 就會放行，進行真正的 request
 
 # CORS in Postman?
-CORS 的問題基本上是為了解決瀏覽器實做的 [Same Origin Policy](#same-origin-policy)\
+CORS 的問題基本上是為了解決瀏覽器實作的 [Same Origin Policy](#same-origin-policy)\
 也因此，在你 debug 的時候使用 [postman](https://www.postman.com/) 或是 [curl](https://curl.se/)\
 CORS 的問題基本上不會出現(因為它不在瀏覽器裡面跑)
 

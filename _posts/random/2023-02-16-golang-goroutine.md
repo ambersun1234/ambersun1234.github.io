@@ -66,14 +66,14 @@ thread A 正在執行一個任務，突然它需要進行 I/O\
 基本上 coroutine 共享的資料與 thread 無異，主要的差異是在\
 coroutine 是採用 [cooperatively scheduled](https://en.wikipedia.org/wiki/Cooperative_multitasking) 跟 process 還有 thread 的 [preemptively scheduled](https://en.wikipedia.org/wiki/Preemption_(computing)) 是不一樣的
 
-cooperatively schedule 是 programmer 或語言實做決定何時要讓出 CPU time(user space context switch)
+cooperatively schedule 是 programmer 或語言實作決定何時要讓出 CPU time(user space context switch)
 
 > 根據現有的資料，有的說 coroutine 共享的資料與 thread 一致\
 > 有的則說 coroutine 擁有自己的 stack\
 > 目前我並沒有找到一個完美的結論或證明
 
 由於 coroutine 基本上都是在 user-space, kernel 對此可謂是毫不知情\
-亦即 coroutine 的排程是 **不會被 kernel scheduler** 影響的，而前面提到的 cooperatively scheduled 則是你可以自己管控何時要進行 context switch(這裡指的是語言實做自己的排程，而非 kernel scheduler)\
+亦即 coroutine 的排程是 **不會被 kernel scheduler** 影響的，而前面提到的 cooperatively scheduled 則是你可以自己管控何時要進行 context switch(這裡指的是語言實作自己的排程，而非 kernel scheduler)\
 這樣的好處是，你不會因為做事情做到一半就突然 timeout 而被 kernel swap out\
 壞處是，由於讓出 CPU time 這件事情必須是 **主動且願意**, 要是其中一個 coroutine 不願意 release CPU 那就會導致 starving 的問題
 
@@ -185,7 +185,7 @@ scheduler 會隨機挑選一個 goroutine 將它 map 到 kernel-level thread 之
 > [Java’s Thread Model and Golang Goroutine](https://tech-blog.cymetrics.io/posts/genchilu/javas-thread-model-and-golang-goroutine-zh/)
 
 `p` 代表著需要執行 goroutine 的必要 resource\
-`p`(process) 的架構，大概會依照以下這個下去實做
+`p`(process) 的架構，大概會依照以下這個下去實作
 ```go
 struct P
 {
@@ -260,7 +260,7 @@ m 上面就不會包含太多不相關的 cache data, 就可以提升 locality
 所以只要我們搞定 `p` 跟 `g` 就行了\
 最簡單的方式就是將它捆綁在一起
 
-所以 golang 的實做方式是，將 goroutine(`g`) 塞到 process(`p`) 的 local run queue(`p.gFree`)裡面排隊等資源\
+所以 golang 的實作方式是，將 goroutine(`g`) 塞到 process(`p`) 的 local run queue(`p.gFree`)裡面排隊等資源\
 再來就非常簡單了，我只要將 kernel-level thread(`m`) 發給 process(`p`) 執行就好了\
 而第一點提到的 scheduler global mutex lock 的問題就可以得到緩解(global lock 的問題被簡化成了 per-`p` lock)\
 所以整體的架構是長這樣

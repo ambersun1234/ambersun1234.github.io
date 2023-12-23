@@ -117,7 +117,7 @@ Cache Aside 在大多數情況下都是很好的解決辦法\
 唯一算是缺點的，兩邊的資料可能會 **不一致**(可參考上圖)\
 為什麼？\
 我們的好朋友 [Atomic Operation](../../random/python-gil/#atomic-operation) 解釋了一切\
-重新審視 cache aside 的實做，你會發現\
+重新審視 cache aside 的實作，你會發現\
 當 cache miss 的時候，你會 query 資料庫，然後再寫入 cache\
 問題出在這裡，多執行緒的狀況下，你沒辦法保證他是 unit of work\
 所以會出現 inconsistency 的狀況
@@ -191,7 +191,7 @@ write 永遠寫入 database, read 永遠讀 cache\
 
 |Strategy|Pros|Cons|
 |:--|:--|:--|
-|[Cache Aside](##cache-asideread-aside)|容易實做，增加 read 效率|資料可能不一致|
+|[Cache Aside](##cache-asideread-aside)|容易實作，增加 read 效率|資料可能不一致|
 |[Read Through](#read-through)|架構簡單，可增加 read 效率|資料可能不一致|
 |[Write Through](#write-through)|解決資料不一致的問題|速度偏慢|
 |[Write Back](#write-backwrite-behind)|可增加 write 效率|資料可能會遺失|

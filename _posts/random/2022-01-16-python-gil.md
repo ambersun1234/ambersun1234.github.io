@@ -215,7 +215,7 @@ ProfiledThread(target=mysum, args=(int(start), int(end), ))
 
 ## What does Thread Waiting for?
 
-讓我們來仔細看看 Cython 實做程式碼是怎麼做的
+讓我們來仔細看看 Cython 實作程式碼是怎麼做的
 
 [Lib/threading.py#34](https://github.com/python/cpython/blob/3.8/Lib/threading.py#L34)
 
@@ -420,9 +420,9 @@ if __name__ == "__main__":
 # Eliminate GIL
 
 如果要完全避開討人厭的 GIL\
-現今除了 Cython 的實做之外，也是有其他實做像是 Jython, IronPython 等等的可以使用
+現今除了 Cython 的實作之外，也是有其他實作像是 Jython, IronPython 等等的可以使用
 
-不過也是有人提出了可以完全去除 GIL 的實做，就列出來當作參考\
+不過也是有人提出了可以完全去除 GIL 的實作，就列出來當作參考\
 [colesbury/nogil](https://github.com/colesbury/nogil)
 
 # Reference
