@@ -47,9 +47,21 @@ layout: default
 
             <br>
 
-            <nav class="sidebar__top">
-              <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
-            </nav>
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
           </aside>
         {% endif %}
         {{ content }}
