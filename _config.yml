@@ -18,9 +18,9 @@ minimal_mistakes_skin    : "mint" # "air", "aqua", "contrast", "dark", "dirt", "
 locale                   : "en-US"
 title                    : "Shawn Hsu"
 title_separator          : "|"
-subtitle                 : "Personal study blog" # site tagline that appears below site title in masthead
+subtitle                 : "Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain" # site tagline that appears below site title in masthead
 name                     : "Shawn Hsu"
-description              : "Personal study blog"
+description              : "This website is a personal study blog of Shawn Hsu. I am a software engineer who is interested in backend, cloud native and blockchain."
 url                      : "https://ambersun1234.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "ambersun1234/ambersun1234.github.io" # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
