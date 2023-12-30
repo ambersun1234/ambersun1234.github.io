@@ -95,6 +95,8 @@ cache miss 的情況下，很明顯的會比 cache hit 的 `反應時間還要�
 可以把它切成一小塊一小塊，中間擺一個 message queue, 資料塞進去\
 兩邊同時作業(i.e. [producer consumer problem](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem))，可以更快完成
 
+> 有關 message queue 的討論，可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../database-message-queue)
+
 # Cache Strategies
 ## Cache Aside(Read Aside)
 ![](https://www.prisma.io/dataguide/static/ef9dda8c508f666cdb64e3e67b12f27c/d880f/cache-aside.png)

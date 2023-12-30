@@ -214,8 +214,9 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
     + 其中 ***資料庫*** 也是屬於隨機讀寫
 
 值得注意的是\
-傳統硬碟 HDD，針對隨機讀寫，會有一點點影響\
-主要的原因是因為 HDD 採用機械結構，每一次的移動讀寫頭都是需要時間的，也就是
+傳統硬碟 HDD，針對隨機讀寫，會有影響\
+主要的原因是因為 HDD 採用機械結構，每一次的移動讀寫頭都是需要時間的\
+Disk Seek 在 HDD 幾乎不可能平行運算，因為機械裝置只有一個
 1. Seek Time :arrow_right: 尋找 Track 的時間
 2. Rotational Latency :arrow_right: 尋找 Sector 的時間
 3. Transfer Time :arrow_right: 資料傳輸至記憶體的時間
