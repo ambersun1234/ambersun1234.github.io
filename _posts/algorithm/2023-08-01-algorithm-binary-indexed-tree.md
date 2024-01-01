@@ -117,6 +117,70 @@ BIT 借用了二進位的特性，亦即，***所有正整數都可以以二進�
 如果往下重建資料，它會連 `1 ~ 9` 都被 + 1\
 很明顯這不是正確的結果
 
+# [LeetCode 1854. Maximum Population Year](https://leetcode.com/problems/maximum-population-year)
+```go
+var (
+    offset = 1949
+    size = 110
+)
+
+func sum(binaryIndexedTree []int, index int) int {
+    mysum := 0
+    for i := index; i >= 1; i -= (i & -i) {
+        mysum += binaryIndexedTree[i]
+    }
+    return mysum
+}
+
+func update(binaryIndexedTree []int, index, value int) {
+    for i := index; i < size; i += (i & -i) {
+        binaryIndexedTree[i] += value
+    }
+}
+
+func maximumPopulation(logs [][]int) int {
+    binaryIndexedTree := make([]int, size + 1)
+
+    if len(logs) == 1 {
+        return logs[0][0]
+    }
+
+    for _, log := range logs {
+        update(binaryIndexedTree, log[0] - offset, 1)
+        update(binaryIndexedTree, log[1] - offset, -1)
+    }
+    
+    maxYear := 0
+    maxPopulation := 0
+    for i := 1950; i <= 2050; i++ {
+        population := sum(binaryIndexedTree, i - offset)
+        if population > maxPopulation {
+            maxPopulation = population
+            maxYear = i
+        }
+    }
+
+    return maxYear
+}
+```
+
+1854 這一題其實也可以使用 binary indexed tree 解\
+題目要求是要求出人口最多的所在年份是哪一年\
+然後他有提供每一個人的出生以及死亡日期
+
+所以我的想法是，建立一個 array，每個欄位都儲存該年份，有多少人\
+因為 binary indexed tree 的特性，他是更新 `n ~ size` 的資料欄位\
+每個人的資料時長不同，僅會存在於 `birth ~ dead` 之間，因此我們要把這個操作改成
+1. birth ~ size 是 1
+2. dead ~ size 是 -1(要把它扣回來)
+
+> 其中 birth < dead
+
+最後當我們把陣列建立完成之後，在從頭掃過一遍就好了
+
+> 因為實際上的資料維度只有 100(1950 ~ 2050)\
+> 所以實際上不用將陣列大小開到 2000
+
 # References
 + [树状数组（Binary Indexed Tree），看这一篇就够了](https://blog.csdn.net/Yaokai_AssultMaster/article/details/79492190)
 + [Binary Indexed Tree or Fenwick Tree](https://www.geeksforgeeks.org/binary-indexed-tree-or-fenwick-tree-2/)
