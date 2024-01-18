@@ -210,6 +210,17 @@ E2E 的全名是 End 2 End，也就是端到端\
 
 > 可以回顧一下 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../devops-unit-test/#issues-that-i-have-when-writing-tests)
 
+## Time is Unreliable
+假設你想要測試某個 test case 有沒有在規定的時間內跑完\
+第一直覺當然是直接算 time diff\
+得出結果
+
+但是時間本身是一個很不精準的東西\
+即使跑測試的時候，每個 test 都會獨立執行不會互相影響\
+時間仍然是擁有許多變因的\
+舉例來說，context switch\
+如果測試要求的精準度很高，那它更不可能成為一個良好的評斷依據
+
 ## Don't Setup Test with Your Implementation
 測試當然是一次測試一個 functionality\
 不過有時候你會需要做一些 setup test 之類的動作\
