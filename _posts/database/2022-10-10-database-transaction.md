@@ -61,6 +61,42 @@ transaction 多數情況下只用於 2 個以上的 sql statement\
 
 > [What does a transaction around a single statement do?](https://stackoverflow.com/questions/1171749/what-does-a-transaction-around-a-single-statement-do)
 
+## Can Transaction Prevent Data Race?
+會不會遇到 data race 取決於 [Isolation Level](#isolation-level)\
+但是 如果設定成 [Serializable](#serializable) 就不會有問題了嗎？
+
+我最近在工作上就遇到這個問題了\
+我們的 code 有許多的測試進行保護，包含了 unit test 以及 integration test\
+其中我們發現，integration test 的部份近期突然開始出現 unique constraint 的錯誤\
+而這個很明顯的是，隔離機制沒有做好\
+其實我們很早就有發現這個問題，並將測試限制成單執行緒(從 jest 下手)\
+當時我們認為已經處理完成了，不過現在問題依然存在
+
+我們使用的是 PostgreSQL\
+預設的隔離機制是 [Read Commited](#read-committed)(可參考 [SET TRANSACTION](https://www.postgresql.org/docs/current/sql-set-transaction.html))\
+提高到 [Serializable](#serializable) 不太能解決這個問題，尤其是 PostgreSQL
+
+根據 [13.2.3. Serializable Isolation Level](https://www.postgresql.org/docs/current/transaction-iso.html#XACT-SERIALIZABLE) 所述
+> However, like the Repeatable Read level, \
+> applications using this level must be prepared to retry transactions due to serialization failures. \
+> In fact, this isolation level works exactly the same as Repeatable Read except that \
+> it also monitors for conditions which could make execution of a concurrent set of serializable transactions behave in a manner inconsistent with all possible serial (one at a time) executions of those transactions.
+
+也就是說，如果偵測到類似 unique constraint 這種 inconsistent\
+它仍然會失敗，它並不像我們所認知的，它會等到其他 transaction 執行完接著跑\
+所以回答這個小節的標題，`使用 transaction 並沒有辦法保證不會出現 data race`
+
+> 當然這取決於不同資料庫的實作，有些是真的一個一個跑
+
+<hr>
+
+至於我們最後採取了何種作法\
+我們選擇在 seed db 的時候，讓他的 id 是隨機產生的\
+雖說寫測試的時候，我們希望資料本身是 fixed data 而不是 random 的\
+但是對於測試 API 本身，我其實不太關心 id 是多少\
+id 本身就是 auto increment 或者是 [UUID](https://en.wikipedia.org/wiki/Universally_unique_identifier), [ULID](https://github.com/ulid/spec) ... 這種的\
+所以他不會對你的測試有任何影響，就算要 trace 也很好追
+
 # ACID
 ACID 是一系列描述 transaction 該滿足的屬性, 他是由 4 個屬性組合而成\
 一個提供資料一致、穩定的系統 他的條件必定符合 ACID 原則\
@@ -481,3 +517,4 @@ read committed level 的隔離機制沒辦法防止 [Non-repeatable Read(Read Sk
 + [What is thread contention?](https://stackoverflow.com/questions/1970345/what-is-thread-contention)
 + [Snapshot isolation](https://en.wikipedia.org/wiki/Snapshot_isolation)
 + [what are range-locks?](https://stackoverflow.com/questions/12179130/what-are-range-locks)
++ [Do database transactions prevent race conditions?](https://stackoverflow.com/questions/6477574/do-database-transactions-prevent-race-conditions)
