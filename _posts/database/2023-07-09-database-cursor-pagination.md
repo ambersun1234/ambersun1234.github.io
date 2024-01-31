@@ -121,7 +121,7 @@ username 靠前的 id 不一定小於 7\
 
 這樣就正確了
 
-> 詳細的實作細節，可以在 [ambersun1234/blog-labs/simple-restful-lab](https://github.com/ambersun1234/blog-labs/tree/master/simple-rest-lab) 找到
+> 詳細的實作細節，可以在 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination) 找到
 
 ### Sort with Non-unique Field
 對於可能有重複值的欄位該怎麼辦
@@ -175,14 +175,14 @@ uuid, ulid 因為它們不會透漏太多訊息(亦即你看它就像個 random 
 
 <hr>
 
-![](https://github.com/ambersun1234/blog-labs/blob/master/simple-rest-lab/benchmark.png?raw=true)
+![](https://github.com/ambersun1234/blog-labs/blob/master/cursor-based-pagination/benchmark.png?raw=true)
 
 上圖，是使用 [offset](#page-number--page-offset) 與 [Cursor Based Pagination](#cursor-based-pagination) 的執行速度對比\
 y 軸為執行速度(單位為 millisecond), x 軸則為資料起始點(i.e. 從第 n 筆資料開始往後拿 m 筆)\
 從上圖可以看到，使用 offset 的方法，它會隨著資料起始點的位置不同，而大幅度的增加查詢時間\
 而另一個方法，則是大約都維持在同一個水平
 
-> 詳細的實驗細節，可以在 [ambersun1234/blog-labs/simple-restful-lab](https://github.com/ambersun1234/blog-labs/tree/master/simple-rest-lab) 找到
+> 詳細的實驗細節，可以在 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination) 找到
 
 ## Offset Based faster than Cursor Based
 ![](/assets/img/posts/cursor.jpg)
@@ -195,7 +195,7 @@ y 軸為執行速度(單位為 millisecond), x 軸則為資料起始點(i.e. 從
 另外我想測試的一個東西是，如果排序的欄位變多\
 效能影響有多大
 
-![](https://github.com/ambersun1234/blog-labs/blob/master/simple-rest-lab/benchmark-sort.png?raw=true)
+![](https://github.com/ambersun1234/blog-labs/blob/master/cursor-based-pagination/benchmark-sort.png?raw=true)
 
 排序的兩個測試，其欄位為 `username` 以及 `created_at`\
 都沒有 index, 而 without sort 則是使用 primary key
