@@ -221,6 +221,8 @@ module.export = {
 但是它會造成一點問題，可以參考 [TypeError: argument entity must be string, Buffer, or fs.Stats](#typeerror-argument-entity-must-be-string-buffer-or-fsstats)\
 有一個更簡單的方法，只要將 `target` 設為 `node` 即可
 ```javascript
+// webpack.config.js
+
 module.export = {
     target: 'node',
 }
