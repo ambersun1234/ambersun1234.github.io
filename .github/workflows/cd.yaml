@@ -3,9 +3,17 @@ name: Build and Deploy to Github Pages
 on:
   push:
     branches:
-      - master  # Here source code branch is `master`, it could be other branch
+      - master # Here source code branch is `master`, it could be other branch
 
 jobs:
+  image_cors_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ambersun1234/image-cors-checker@v1.0.0
+        with:
+          check_path: ${{ github.workspace }}/_posts
+          formats: 'jpg,jpeg,png,gif,webp'
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
@@ -25,5 +33,5 @@ jobs:
       # For latest version: `jeffreytse/jekyll-deploy-action@master`
       - uses: jeffreytse/jekyll-deploy-action@v0.5.1
         with:
-          provider: 'github'         # Default is github
+          provider: "github" # Default is github
           token: ${{ secrets.GITHUB_TOKEN }} # It's your Personal Access Token(PAT)
