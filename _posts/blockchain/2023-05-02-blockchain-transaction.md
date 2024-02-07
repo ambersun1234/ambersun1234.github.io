@@ -14,7 +14,7 @@ blockchain 是由多個節點所組成的分散式計算網路\
 詳細的簡介，可以回去複習 [從 0 認識 Blockchain - 區塊鏈基礎 \| Shawn Hsu](../../blockchain/blockchain-basics)
 
 # Introduction to Transactions
-![](https://ethereum.org/static/570dedb843948d6bef5e21a6769d5c35/302a4/tx.png)
+![](https://ethereum.org/_next/image?url=%2Fcontent%2Fdevelopers%2Fdocs%2Ftransactions%2Ftx.png&w=828&q=75)
 > ref: [TRANSACTIONS](https://ethereum.org/en/developers/docs/transactions/)
 
 就如同基礎篇所提到的，每一次與區塊鏈的互動，都是一次的交易\
@@ -68,7 +68,7 @@ POS 的獎勵為 priority fee
 因為 EVM 是負責處理運算 Transaction，還記得我們說過交易有可能會改變區塊鏈的狀態嗎？\
 由於 EVM 是主要做這些狀態改變的人，因此 EVM 也被視為是 **state machine**, 負責將區塊鏈的狀態更新到新版
 
-![](https://ethereum.org/static/9628ab90bfd02f64cf873446cbdc6c70/302a4/gas.png)
+![](https://ethereum.org/_next/image?url=%2Fcontent%2Fdevelopers%2Fdocs%2Fevm%2Fevm.png&w=828&q=75)
 > ref: [ETHEREUM VIRTUAL MACHINE (EVM)](https://ethereum.org/en/developers/docs/evm/)
 
 值得一提的是，EVM 是採用 **stack-based approach** 實作的，並且為 big endian\
@@ -201,7 +201,7 @@ blockchain 顧名思義是由一堆 block 所構成的 chain\
 + 若干個 Transaction
 + 前一個 block 的 hash
 
-![](https://ethereum.org/static/85d784391401f89209d3bcc51e0ea677/302a4/tx-block.png)
+![](https://ethereum.org/_next/image?url=%2Fcontent%2Fdevelopers%2Fdocs%2Fblocks%2Ftx-block.png&w=828&q=75)
 > ref: [BLOCKS](https://ethereum.org/en/developers/docs/blocks/)
 
 ![](https://i.stack.imgur.com/ukuq0.png)

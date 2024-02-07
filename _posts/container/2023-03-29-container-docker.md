@@ -45,7 +45,7 @@ Docker 擁有更快的啟動速度、對系統資源的極低要求以及輕量�
 藉由使用 Linux Kernel 提供的 system call，我們可以很容易地建立一個類似於 Docker 的虛擬環境
 
 # Container and Layers
-![](https://docs.docker.com/storage/storagedriver/images/sharing-layers.jpg)
+![](https://docs.docker.com/storage/storagedriver/images/sharing-layers.webp?w=600&h=300)
 > ref: [Container and Layers](https://docs.docker.com/storage/storagedriver/#container-and-layers)
 
 考慮以下 Dockerfile
@@ -63,7 +63,7 @@ Docker 的運作方式是，將每一行指令都疊加在先前的 layer 上面
 聰明的你必然得出一個結論，每一次的疊加都會增加 image 大小
 
 所以以上的 Dockerfile 他的層數總共有 4 層
-![](https://docs.docker.com/storage/storagedriver/images/container-layers.jpg)
+![](https://docs.docker.com/build/guide/images/layers.png)
 
 那我就好奇了\
 單純的減少層數，能夠縮減多少？\

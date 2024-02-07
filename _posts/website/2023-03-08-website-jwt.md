@@ -117,7 +117,7 @@ JWS 是使用數位簽章(digital signature)或者 Message Authenticate Codes(MA
 > 因為如果有別人知曉了你們之間的 shared key, 它也可以造出一樣的 MACs, 但來源是不可靠的\
 > 可參考 [message authentication code (MAC)](https://www.techtarget.com/searchsecurity/definition/message-authentication-code-MAC)
 
-![](https://blog.miniorange.com/wp-content/uploads/sites/19/2021/12/jwt-structure.webp)
+![](https://www.miniorange.com/blog/assets/2023/jwt-structure.webp)
 > ref: [What is JWT (JSON Web Token)? How does JWT Authentication work?](https://blog.miniorange.com/what-is-jwt-json-web-token-how-does-jwt-authentication-work/)
 
 整個 JWS 由三個部份構成，並以 `.`(dot) 分開，且每一個部份都由 base64 做 url encode

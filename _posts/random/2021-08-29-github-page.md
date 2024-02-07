@@ -41,8 +41,9 @@ GitHub 提供了一個免費的服務 - Github Pages，可以讓開發者建立�
 # Customize GitHub Pages
 如同一般撰寫網站一樣，我們也可以客製化網站的樣貌，github page 有預設一些模板可以供你使用\
 你可以在 `settings->pages` 裡面找到\
-![](https://docs.github.com/assets/images/help/pages/select-theme.png)
-其實官方提供的選擇不多，如果你想要自己寫或是其他人寫的模板該怎麼辦?\
+
+> 現在 GitHub 已經正式的將 theme picker 移除了，可以參考 [GitHub Pages: Deprecating the theme picker](https://github.blog/changelog/2022-08-22-github-pages-deprecating-the-theme-picker/)
+
 [Jekyll Themes](http://jekyllthemes.org/) 裡面有很多種選擇，你可以依照自己的喜好套用模板\
 
 # Jekyll Chirpy

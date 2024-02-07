@@ -74,13 +74,17 @@ if __name__ == "__main__":
 
 ## Concurrency
 
-![](https://www.loginradius.com/blog/async/static/985e45ca5bbc05c69e2adbd7e98b5f00/e5715/concurrent-diagram.png)
+![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*HCZSJX-XJxrOvQlKcabvmQ.png)
 concurrency 是將 `一個切成不同的子部份`，將這些 `子部份` 給不同 worker, 每個 worker 各司其職, 負責完成 ***不同部分***
+
+> ref: [Concurrency與Parallelism的不同之處](https://medium.com/mr-efacani-teatime/concurrency%E8%88%87parallelism%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E8%99%95-1b212a020e30)
 
 ## Parallelism
 
-![](https://www.loginradius.com/blog/async/static/08ab182d7686d7804387a0f4172f70af/e5715/parallel-diagram.png)
+![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*_CVfYVLNSrpzZhwwB4D1pg.png)
 parallelism 是將 n 個 task 分割給多個 worker, 每個 worker 都執行 **_完整的 task_** 內容
+
+> ref: [Concurrency與Parallelism的不同之處](https://medium.com/mr-efacani-teatime/concurrency%E8%88%87parallelism%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E8%99%95-1b212a020e30)
 
 # Why Multicore Slower than Single Core
 

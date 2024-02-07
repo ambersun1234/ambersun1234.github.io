@@ -206,7 +206,7 @@ HTTP/1.1 新增了不少的 method
 + DELETE 同理，刪都刪掉了，再多執行一次也不會刪更多東西
 
 ## Cache
-![](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching/http_cache_type.png)
+![](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Caching/type-of-cache.png)
 
 cache 的目的就是為了要提高 performance, 有了 cache 的機制，我們可以
 + 減少 network round-trips
