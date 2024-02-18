@@ -10,6 +10,13 @@ serve:
                         --livereload \
                         --force_polling true"
 
+build:
+	docker run -it --rm \
+                --volume="$(shell pwd):/srv/jekyll" \
+                jekyll/jekyll \
+                sh -c "git config --system --add safe.directory '*' && \
+                        jekyll build --trace"
+
 docker-up:
 	sudo service docker start || true
 

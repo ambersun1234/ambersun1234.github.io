@@ -13,9 +13,38 @@ jobs:
       - uses: ambersun1234/image-cors-checker@v1.0.0
         with:
           check_path: ${{ github.workspace }}/_posts
-          formats: 'jpg,jpeg,png,gif,webp'
+          formats: "jpg,jpeg,png,gif,webp"
+
+  autogen_og_image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: mujo-code/puppeteer-headful@16.6.0
+      - name: Install Chinese Font
+        run: |
+          sudo apt update
+          sudo apt install -y fonts-noto
+      - uses: ambersun1234/autogen-og-image@c13603afd6947b4a6d42a1aa1c1739e51a356feb
+        with:
+          input_dir: ${{ github.workspace }}/_posts
+          output_dir: ${{ github.workspace }}/assets/img/og
+          author: "Shawn Hsu"
+          avatar: "https://avatars.githubusercontent.com/u/13270428?v=4"
+      - name: Commit og image and Push
+        run: |
+          git config --local user.name 'Shawn Hsu'
+          git config --local user.email 'ambersun1234@users.noreply.github.com'
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Working directory clean. Nothing to commit."
+            exit 0
+          fi
+          git add .
+          git commit -m "Update og image"
+          git push
+
   build_and_deploy:
     runs-on: ubuntu-latest
+    needs: [autogen_og_image]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -31,6 +60,7 @@ jobs:
 
       # Use GitHub Deploy Action to build and deploy to Github
       # For latest version: `jeffreytse/jekyll-deploy-action@master`
+      # This is a specific version for supporting og:image with libpng pre installed
       - uses: jeffreytse/jekyll-deploy-action@v0.5.1
         with:
           provider: "github" # Default is github
