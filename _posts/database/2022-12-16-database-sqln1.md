@@ -2,11 +2,11 @@
 title: 資料庫 - SQL N + 1 問題
 date: 2022-12-16
 categories: [database]
-tags: [orm]
+tags: [orm, sql, n+1, temp table, temporary table]
 math: true
 ---
 
-# Introduce to SQL N + 1 Problem
+# Introduction to SQL N + 1 Problem
 在使用 ORM 套件下，開發程式的過程中 你可能會不小心踩到所謂的 SQL N + 1 問題\
 假設你在開發一個社群網站 使用者可以發佈文章\
 現在你要實作一個功能 是要撈出所有符合條件的文章以及作者資訊(假設你想知道點讚數超過 10 的所有文章)\
@@ -129,6 +129,43 @@ func optimize(db *gorm.DB) error {
 可見，使用了 N + 1 的寫法，當資料越多的情況下，他的速度是成倍數下降的
 
 詳細的測試程式碼可以參考 [ambersun1234/blog-labs/sql-n1-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/sql-n1-benchmark)
+
+# Different Ways to Solve N + 1 Issue
+## PostgreSQL Temporary Table
+上面我們提到的 N + 1 狀況屬於典型的新手錯誤\
+但是有時候你遇到的狀況，可能是必須要使用 N + 1 才可以解決的\
+什麼意思呢
+
+比如說你的資料本身是放在兩個或以上的獨立資料庫\
+跨資料庫，當然是沒辦法做到 `LEFT JOIN` 這種東西的\
+那你可能就會使用 N + 1 query 去做了
+
+不過聰明的開發者們提出了一個解法\
+既然它是因為跨資料庫受限，那我能不能把它塞到同一個資料庫裡面呢？
+
+我們一樣用 `user` 跟 `post` 舉例\
+假設他們是在不同的資料庫上面\
+然後你得到一個需求是說 `提供一隻熱門創作者的 API, 它會根據使用者文章的按讚數量排名`\
+所以你要找出每一個 `user` 它所有文章的按讚數，在進行排名
+
+[PostgreSQL](https://www.postgresql.org/) 中有一個東西叫做 [Temporary Table](https://www.postgresql.org/docs/current/sql-createtable.html)\
+他的用處呢，就是建立一個暫存的資料表\
+其生命週期僅存在於當前 session 當中(亦即當 session close 的時候 temporary table 就會被刪除)
+
+> 當 temporary table 與實際的 table 撞名的時候\
+> 會優先選擇 temporary table
+
+基本的語法是
+```sql
+CREATE TEMPORARY TABLE (
+    userId int
+)
+```
+其實就跟一般 SQL 建立 table 一樣
+
+那你會問說 temporary table 為什麼能解決 N + 1 問題？\
+因為我們可以把 `user` 的資料塞到 temporary table 裡面\
+這樣 `user` 跟 `post` 是不是就在同一個資料庫裡面，就可以用一個 `JOIN` query 解決了？
 
 # References
 + [[科普文]什么是ORM中的N+1](https://zhuanlan.zhihu.com/p/27323883)
