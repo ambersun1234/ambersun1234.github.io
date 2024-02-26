@@ -1,6 +1,7 @@
 ---
 title: 網頁程式設計三兩事 - RESTful API
 date: 2022-01-25
+description: RESTful API 是一種風格，我們能不能夠用更簡單的方式來設計 API 呢？
 categories: [website]
 tags: [api]
 math: true

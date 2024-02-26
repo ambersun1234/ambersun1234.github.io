@@ -1,6 +1,7 @@
 ---
 title: 網頁程式設計三兩事 - 萬惡的 Same Origin 與 CORS
 date: 2023-03-10
+description: 不同的網站是否可以互相存取資源？ CORS 的機制就可以解決這個問題！。本篇文章將會介紹 Same Origin Policy 以及 CORS 的概念
 categories: [website]
 tags: [cors, website]
 math: true

@@ -1,6 +1,7 @@
 ---
 title: 淺談 Polling, Long Polling 以及其他即時通訊方法論
 date: 2024-01-18
+description: 即時通訊是一個很有趣的議題，本文將會介紹 Polling, Long Polling 以及 WebSocket 的各個特性，並且會分析他們的優缺點
 categories: [random]
 tags: [polling, long polling, webhook, webrtc, websocket, tcp, file descriptor, socket]
 math: true

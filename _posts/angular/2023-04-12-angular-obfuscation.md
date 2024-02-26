@@ -1,6 +1,7 @@
 ---
 title: 邁向 Angular 前端工程師之路 - Obfuscation
 date: 2023-04-12
+description: Obfuscation 是一種將 source code 進行混淆的技術，目的是為了避免 source code 被輕易的破解，本文將介紹如何在 Angular 專案中使用 obfuscation
 categories: [angular]
 tags: [typescript, obfuscation, webpack]
 math: true

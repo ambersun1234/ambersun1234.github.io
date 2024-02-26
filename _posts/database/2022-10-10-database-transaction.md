@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - Transaction 與 Isolation
 date: 2022-09-28
+description: Transaction 的出現是為了保證 unit of work 的完整性，而 Isolation Level 則是為了保證資料一致性。本文著重在 Isolation Level 以及各種 Read Write Phenomena
 categories: [database]
 tags: [database, transaction, isolation level]
 math: true

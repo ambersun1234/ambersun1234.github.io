@@ -1,6 +1,7 @@
 ---
 title: 從 0 認識 Blockchain - Scaling Blockchain
 date: 2023-04-25
+description: 區塊鏈的共識機制對於整體網路效能有著很大的影響，本文將會介紹一些 layer 2 的加速手法以及一些 scaling 的技術
 categories: [blockchain]
 tags: [blockchain, ethereum]
 math: true

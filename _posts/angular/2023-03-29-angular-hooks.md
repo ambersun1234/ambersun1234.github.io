@@ -1,6 +1,7 @@
 ---
 title: 邁向 Angular 前端工程師之路 - Lifecycle Hooks
 date: 2023-03-29
+description: 了解 Angular 的 lifecycle hook 有助於我們更好的掌握 component 的生命週期，進而更好的控制 component 的行為。本文將會涵蓋基本的 lifecycle hook 以及他們的使用情境
 categories: [angular]
 tags: [typescript, hooks]
 math: true

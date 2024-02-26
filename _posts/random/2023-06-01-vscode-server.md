@@ -1,6 +1,7 @@
 ---
 title: 設定你的 Remote VS Code Server
 date: 2023-06-01
+description: 本文將教你如何設定你的遠端開發環境，並且使用 Remote VS Code Server 進行開發
 categories: [random]
 tags: [vscode, linux, ssh]
 math: true

@@ -1,6 +1,7 @@
 ---
 title: 設計模式 101 - Decorator Pattern
 date: 2023-06-15
+description: Decorator Pattern 可以讓你在不大幅度改變原本的實作下，動態的新增功能。本文將會介紹 Decorator Pattern 的基本觀念，並且會以 Python 實作一個簡單的例子
 categories: [design pattern]
 tags: [decorator, python]
 math: true

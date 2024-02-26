@@ -1,6 +1,7 @@
 ---
 title: 浮點數 - 如何解決精度問題以及其原理
 date: 2023-11-14
+description: 為什麼 0.1 + 0.2 不等於 0.3? 本文將會複習一遍浮點數的概念以及其原理，並透過實際的例子觀察其特性。以及如何使用定點數來解決精度問題
 categories: [random]
 tags: [fixed point, ieee754, floating point, binary, overflow, underflow]
 math: true

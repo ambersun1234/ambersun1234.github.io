@@ -1,6 +1,7 @@
 ---
 title: Goroutine 與 Golang Runtime Scheduler
 date: 2023-02-16
+description: Goroutine 是 Golang 中的一個重要概念，Golang Runtime Scheduler 透過 cooperative scheduling 的方式執行不同的 Goroutine 具體來說是怎麼做的？。本文將會介紹 goroutine 的基本概念以及 Golang Runtime Scheduler 的運作方式
 categories: [random]
 tags: [golang, coroutine, thread, scheduler, parallelism, concurrency]
 math: true

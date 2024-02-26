@@ -1,6 +1,7 @@
 ---
 title: 神奇的演算法 - Backtracking 與 Divide and Conquer
 date: 2023-11-06
+description: Backtracking 常常與 Divide and Conquer 一起被提及，Divide and Conquer 是一種將大問題切割成小問題，再將小問題的解合併成大問題的方法論，而 Backtracking 則是一種提早終止無效計算的方法，本文將介紹這兩種方法論的概念以及如何實作
 categories: [algorithm]
 tags: [backtracking, divide-and-conquer, recursion]
 math: true

@@ -1,6 +1,7 @@
 ---
 title: Linux Kernel - Clock
 date: 2021-09-20
+description: 電腦系統中的時鐘在現今系統當中扮演了相當重要的角色，從單純的時間到網路校時，都需要時鐘的協助。本文將會介紹硬體時鐘以及系統時鐘的差異，並且會介紹 Linux Kernel 中的時鐘以及 NTP 的使用
 categories: [linux-kernel]
 tags: [clock]
 math: true

@@ -1,6 +1,7 @@
 ---
 title: Container 技術 - runC, containerd 傻傻分不清
 date: 2021-09-04
+description: 隨著 microservice 的發展，容器化技術在近幾年受到了廣大的歡迎。本文將會探討 container 背後的故事
 categories: [container]
 tags: [docker, kubernetes, linux]
 math: true

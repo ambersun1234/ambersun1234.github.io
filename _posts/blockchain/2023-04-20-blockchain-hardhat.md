@@ -1,6 +1,7 @@
 ---
 title: 從 0 認識 Blockchain - Hardhat 全攻略
 date: 2023-04-20
+description: Hardhat 是一個用於開發以太坊智能合約的開發框架，它提供了一個完整的開發環境，包括測試、部署、debug 等等。本文將會介紹 Hardhat 的基本使用以及一些進階功能
 categories: [blockchain]
 tags: [blockchain, ethereum, hardhat]
 math: true

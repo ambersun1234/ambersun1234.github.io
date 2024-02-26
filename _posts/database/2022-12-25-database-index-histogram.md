@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - Index 與 Histogram 篇
 date: 2022-12-25
+description: 本文會介紹 Index 如何對你的效能產生重大的影響。我們會一一檢視各種 index 的實作方式，並且探討它們的優缺點
 categories: [database]
 tags: [index, histogram]
 math: true

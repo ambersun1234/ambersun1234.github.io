@@ -1,6 +1,7 @@
 ---
 title: Git 進階使用 - Git Rebase
 date: 2022-01-05
+description: Rebase 在 Git 裡面是一個很常見的技巧，透過 rebase 可以更改 commit message, re-order commits, squash commits 以及 pull base branch 的 changes。本文將會介紹 rebase 的基本概念以及如何使用 rebase 進行操作
 categories: [git]
 tags: [linux, version control]
 math: true

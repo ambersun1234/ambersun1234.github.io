@@ -1,6 +1,7 @@
 ---
 title: DevOps - 整合測試 Integration Test
 date: 2023-10-25
+description: 整合測試相較於單元測試，測試的範圍更大，跨越了 function 之間的整合。本文將會介紹整合測試的範圍以及如何利用 Dependency Injection、Docker Container 的使用，打造一個完整的整合測試環境
 categories: [devops]
 tags: [integration test, mock, e2e test, docker]
 math: true

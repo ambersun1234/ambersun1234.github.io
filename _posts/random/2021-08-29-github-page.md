@@ -1,6 +1,7 @@
 ---
 title: 自架部落格 - 使用 GitHub Pages 以及 Jekyll Chirpy 為例
 date: 2021-08-29
+description: 本篇文章將介紹如何使用免費的 GitHub Pages 搭配主題模板 Jekyll Chirpy 來建立自己的第一個部落格！
 categories: [random]
 tags: [github, blog]
 math: true

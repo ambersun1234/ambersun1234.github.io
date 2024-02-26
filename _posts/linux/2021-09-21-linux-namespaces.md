@@ -1,6 +1,7 @@
 ---
 title: Linux Kernel - namespaces
 date: 2021-09-20
+description: namespaces 是 linux kernel 的一種資源隔離機制，用以防止不同 process 看到不同資源。這篇文章將會介紹 namespaces 的基本概念以及其生命週期
 categories: [linux-kernel]
 tags: [namespaces]
 math: true

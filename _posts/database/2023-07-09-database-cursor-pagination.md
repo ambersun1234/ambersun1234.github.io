@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - 更好的分頁機制 Cursor Based Pagination
 date: 2023-07-09
+description: 傳統的 Limit 以及 Offset 分頁機制，在資料量大的時候常常效能不佳。本文將會檢視傳統方法的缺點，並且嘗試學習 Cursor Based Pagination 的機制
 categories: [database]
 tags: [sql, database, query, pagination]
 math: true

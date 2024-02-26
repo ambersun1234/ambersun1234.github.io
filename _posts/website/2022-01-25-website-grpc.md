@@ -1,5 +1,6 @@
 ---
 title: 網頁程式設計三兩事 - gRPC
+description: gRPC 是 google 基於 rpc 所開發的一套 library。本文將會探討 RPC 與 RESTful API 的差異，並且會介紹 gRPC 的使用方式以及 Protocol Buffer 的使用
 date: 2022-01-25
 categories: [website]
 tags: [api, grpc, rpc, design pattern, protobuf]

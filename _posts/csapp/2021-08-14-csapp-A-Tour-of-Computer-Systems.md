@@ -1,6 +1,7 @@
 ---
 title: CS:APP - A Tour of Computer Systems
 date: 2021-08-14
+description: CS:APP 的學習筆記
 categories: [csapp]
 tags: [operating system, c]
 math: true

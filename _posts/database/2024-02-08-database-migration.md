@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - 新手做 Data Migration 資料遷移
 date: 2024-02-08
+description: 隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題
 categories: [database]
 tags: [data migration, sql, prisma]
 math: true

@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - PostgreSQL 使用 Fuzzy Search 的效能測試
 date: 2023-09-27
+description: 搜尋的實作效能對於整體系統可用度有很大的影響，PostgreSQL 有兩種 index 可以加速 Fuzzy search，這篇文章除了會介紹基本的 GIN, GiST index 之外，還會對其進行效能測試用以比較
 categories: [database]
 tags: [postgresql, index, prisma, typescript, gin, gist, pg_trgm, fuzzy search]
 math: true

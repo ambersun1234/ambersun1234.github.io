@@ -1,6 +1,7 @@
 ---
 title: Container 技術 - 理解 Docker Container
 date: 2021-09-20
+description: 你已經使用 Docker 一段時間了，但是你真的了解他嗎？本文將會探討 Docker 的運作原理
 categories: [container]
 tags: [docker, linux]
 math: true

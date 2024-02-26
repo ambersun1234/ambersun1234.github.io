@@ -1,6 +1,7 @@
 ---
 title: DevOps - 單元測試 Unit Test
 date: 2022-05-09
+description: 測試在軟體開發當中是很重要的一環，它可以確保程式不會因為不當的輸入而產生不如預期的結果。本文將會介紹單元測試的基本觀念，並且提供一些簡單的例子
 categories: [devops]
 tags: [unit test, mock, TDD, dependency injection]
 math: true

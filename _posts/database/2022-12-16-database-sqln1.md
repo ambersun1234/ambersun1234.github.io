@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - SQL N + 1 問題
 date: 2022-12-16
+description: 剛接觸 ORM 的開發者們，很容易踩到的一個坑就是 N + 1 問題。這篇文章會介紹 N + 1 問題，並且透過實驗來看看 N + 1 問題對效能的影響有多大
 categories: [database]
 tags: [orm, sql, n+1, temp table, temporary table]
 math: true

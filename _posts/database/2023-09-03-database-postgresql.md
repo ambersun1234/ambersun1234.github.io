@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - 從 MySQL 到 PostgreSQL 一些新手會遇到的問題
 date: 2023-09-03
+description: 本篇文章將以一個新手的角度，來介紹 MySQL 與 PostgreSQL 之間的差異，並且會紀錄一開始遇到的問題以及解決方法
 categories: [database]
 tags: [database, postgresql, mysql, sql standard, sql]
 math: true

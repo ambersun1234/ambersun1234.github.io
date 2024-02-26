@@ -1,6 +1,7 @@
 ---
 title: Prisma + Webpack + Docker 踩坑筆記
 date: 2023-07-04
+description: 本篇文章將會記錄我一開始在使用 Prisma + Webpack + Docker 過程中遇到的問題以及解決方法
 categories: [random]
 tags: [prisma, webpack, docker]
 math: true

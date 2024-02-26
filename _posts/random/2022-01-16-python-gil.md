@@ -1,6 +1,7 @@
 ---
 title: 關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock)
 date: 2022-01-16
+description: 為什麼在 python 中多執行緒會比較慢？ 這是因為 GIL 的存在所導致。這篇文章將會介紹 GIL 的概念以及歷史以及在多執行緒下的一些問題
 categories: [random]
 tags: [python, gil, atomic operation, parallelism, concurrency, race condition]
 math: true

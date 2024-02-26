@@ -1,6 +1,7 @@
 ---
 title: 設計模式 101 - Observer Pattern
 date: 2023-05-17
+description: Observer Pattern 是設計模式中最簡單的一個，它允許一個物件訂閱另一個物件的特定事件，當事件發生時，訂閱者會自動收到通知。本文將會介紹 Observer Pattern 的基本觀念，並且會與 Publisher-Subscriber 以及 Producer-Consumer 進行比較
 categories: [design pattern]
 tags: [observer, observable, subject, publisher, subscriber, topic]
 math: true

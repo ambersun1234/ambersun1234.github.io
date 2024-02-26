@@ -1,6 +1,7 @@
 ---
 title: Kubernetes 深入淺出 (1) - Overview
 date: 2021-10-24
+description: 本文將會介紹 kubernetes 的基本概念以及架構，並且會介紹 kubernetes 的基本組成元件
 categories: [kubernetes]
 tags: [container]
 math: true

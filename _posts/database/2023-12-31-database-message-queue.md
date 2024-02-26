@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - 從 Apache Kafka 認識 Message Queue
 date: 2023-12-31
+description: 本文將會藉由導讀 JMS, MQTT 以及 AMQP 的標準，理解 Apache Kafka 以及 RabbitMQ 的基本概念
 categories: [database]
 tags: [distributed, cluster, message queue, publisher, consumer, producer, subscriber, event, kafka, amqp, mqtt, jms, rabbitmq, dlq]
 math: true

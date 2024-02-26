@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - 最佳化 Read/Write 設計(硬體層面)
 date: 2023-08-11
+description: 除了 Index, Cache 之外，我們能不能夠從硬體層面來提升效能呢？這篇文章將會介紹一些硬體層面的最佳化設計
 categories: [database]
 tags: [database, distributed, cluster, CAP]
 math: true
@@ -157,6 +158,13 @@ Values(1, "ambersun1234", "2023-08-07 15:40:06")
 write 只找 leader, 而 read 可以隨便找任意一個都行\
 這樣的好處在於說它可以 **提昇讀取的效率**\
 壞處也很明顯 **寫入的速度會被受限(但寫入不會有衝突)**
+
+遇到節點損壞的時候，勢必要將其中一個 follower 升格為 leader\
+升格的過程你可能會遇到一些問題，舉例來說，有可能 old leader 沒有意識到它已經被降級了\
+它仍然在執行 leader 的功能，這就會造成同一時間有兩個 leader 存在的問題\
+而這稱為 `Byzantine fault`
+
+> 有關 Byzantine fault 的討論，可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue#byzantine-fault)
 
 ### Multi Leader
 ![](https://media.licdn.com/dms/image/C5112AQE4giiXdpATXQ/article-cover_image-shrink_600_2000/0/1578341090265?e=1704931200&v=beta&t=ApZ2UYzCbBeG58Y7HT-bSQdEWcAbuarI7uMRqvy5trc)

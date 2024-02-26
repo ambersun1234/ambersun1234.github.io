@@ -1,6 +1,7 @@
 ---
 title: 從 0 認識 Blockchain - 區塊鏈基礎
 date: 2023-04-24
+description: 區塊鏈技術近年來備受矚目，本文將會介紹區塊鏈的基礎概念，Ethereum 的運作原理以及基本的智能合約觀念
 categories: [blockchain]
 tags: [blockchain, ethereum]
 math: true

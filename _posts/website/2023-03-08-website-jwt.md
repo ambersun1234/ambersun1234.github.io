@@ -1,6 +1,7 @@
 ---
 title: 網頁程式設計三兩事 - 不一樣的驗證思維 JWT(JSON Web Token)
 date: 2023-03-08
+description: JWT 作為近年來相當流行的驗證方式，本文將會介紹 JWT 的基本概念以及其原理，並且會介紹如何使用 JWT 來進行驗證
 categories: [website]
 tags: [jwt, session, jws, jwe, jwk, golang, oauth, realm]
 math: true

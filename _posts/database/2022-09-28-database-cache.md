@@ -1,6 +1,7 @@
 ---
 title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
+description: 本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情
 categories: [database]
 tags: [cache, redis, transaction]
 math: true

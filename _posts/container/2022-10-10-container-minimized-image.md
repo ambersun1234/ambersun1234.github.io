@@ -1,6 +1,7 @@
 ---
 title: Container 技術 - 最小化 Docker Image
 date: 2022-12-04
+description: Image 的大小對開發本身來說有很大的影響嗎？ 我想答案是肯定的。本文將會探討如何最小化 Docker Image，包含最佳實踐以及一些技巧
 categories: [container]
 tags: [docker, linux]
 math: true

@@ -1,6 +1,7 @@
 ---
 title: DevOps - 從 GitHub Actions 初探 CI/CD
 date: 2022-02-08
+description: GitHub Actions 是一個可以讓你自動化 CI/CD 的服務，它可以讓你在特定事件發生時，自動執行一些任務，比如說測試、部屬等等。本文將會介紹 GitHub Actions 的基本觀念，並且會以實際的例子來說明如何使用
 categories: [devops]
 tags: [github action, ci, cd]
 math: true

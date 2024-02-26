@@ -1,6 +1,7 @@
 ---
 title: 從 0 認識 Blockchain - Transaction 以及你該知道的一切
 date: 2023-05-02
+description: 了解 Transaction 是如何運作對於理解區塊鏈有著很大的幫助，本文將會介紹 Transaction 的基本概念以及更深入的探討網路運作機制
 categories: [blockchain]
 tags: [blockchain, ethereum, transaction, block]
 math: true
