@@ -24,7 +24,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y fonts-noto
-      - uses: ambersun1234/autogen-og-image@c13603afd6947b4a6d42a1aa1c1739e51a356feb
+      - uses: ambersun1234/autogen-og-image@12ff44c911d50503e18f4a3a7b52683cbe71ec2d
         with:
           input_dir: ${{ github.workspace }}/_posts
           output_dir: ${{ github.workspace }}/assets/img/og
