@@ -201,13 +201,9 @@ subarray 是由一個以上的**連續元素**所組成的，而 subarray sum �
 1. 如果 `num[n]` 小於 `num[0 ~ n]`, 那 maximum subarray sum 就是 `num[0 ~ n]`
 2. 如果 `num[n]` 大於 `num[0 ~ n]`, 那 maximum subarray sum 就是 `num[n]`
 
-<hr>
-
 所以目前最大區間和，取決於 `之前的最大區間和`\
 這就是動態規劃(dynamic programming)\
 因為要我算出最大區間和實在是太困難了，當我知道之前的最大區間和(n-1)，在加上目前的數字，我可以很輕易的判斷現在的區間最大和為多少(n)
-
-<hr>
 
 所以實作就很簡單了
 ```go
@@ -224,6 +220,48 @@ func maxSubArray(nums []int) int {
     }
 
     return maxSubSum
+}
+
+func max(a, b int) int {
+    if a > b {
+        return a
+    }
+    return b
+}
+```
+
+<hr>
+
+另一種寫法一樣是使用累進的概念\
+定義一個 cumulative array\
+它負責的就是紀錄累進數字
+
+區間和的寫法可以寫成 cumulative[j] - cumulative[i - 1]\
+所以換句話說，當前累進 - 最小的累進就是最大的區間和\
+只不過你還要跟 nums[i] 比較，因為有可能 nums[i] 比之前的區間和還大
+
+```go
+func maxSubArray(nums []int) int {
+    size := len(nums)
+    cumulative := make([]int, size + 1)
+    cumulative[0] = 0
+
+    result := nums[0]
+    cumulativeMin := cumulative[0]
+    for i := 1; i <= size; i++ {
+        cumulative[i] = cumulative[i - 1] + nums[i - 1]
+        result = max(nums[i - 1], max(result, cumulative[i] - cumulativeMin))
+        cumulativeMin = min(cumulativeMin, cumulative[i])
+    }
+
+    return result
+}
+
+func min(a, b int) int {
+    if a < b {
+        return a
+    }
+    return b
 }
 
 func max(a, b int) int {
