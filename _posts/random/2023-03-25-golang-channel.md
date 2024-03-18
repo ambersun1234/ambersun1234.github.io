@@ -7,6 +7,10 @@ tags: [golang, coroutine]
 math: true
 ---
 
+# Preface
+在了解 Channel 之前，我們需要先了解一些基本的概念\
+如果你已經很熟悉這些概念，可以直接跳到 [Introduction to Golang Channel](#introduction-to-golang-channel) 部分
+
 # Synchronous vs. Asynchronous I/O
 ## Blocking Send
 在 receiver 收到資料之前，sender 不能在傳資料
@@ -108,7 +112,7 @@ P 將資料放到 mailbox 裡面，Q 則從 mailbox 裡將資料取出\
 |Speed|快|慢|
 |kernel Intervention|kernel 不介入|kernel 每次都介入處理|
 
-# Channel
+# Introduction to Golang Channel
 多執行緒下溝通的方式，就如同前面所提到的 [shared memory](#shared-memory) 或者是 [message passing](#message-passing)\
 Golang 作為一個強大的語言，它建議我們，可以採用 channel 的方式進行溝通，共享資料\
 接下來讓我們看看作為與 goroutine 相輔相成的 channel 實際上是如何運作的吧

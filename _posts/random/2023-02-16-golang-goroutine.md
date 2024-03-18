@@ -483,7 +483,7 @@ if s == _Prunning || s == _Psyscall {
 被拿走的 `p`, [findRunnable()](https://github.com/golang/go/blob/master/src/runtime/proc.go#L2672) 會幫你找一個讓你可以執行\
 幫你找伴侶的事情不是 sysmon 的職責
 
-## How to Use Goroutine
+# How to Use Goroutine
 說了這麼多都沒有講到他的寫法\
 其實只要關鍵字 `go` 後面接 function 就可以了\
 比如說
@@ -503,7 +503,7 @@ go func() {
 
 > 有關 channel 的介紹可以參考 [Goroutine 與 Channel 的共舞 \| Shawn Hsu](../../random/golang-channel)
 
-### WaitGroup
+## WaitGroup
 來看個簡單的程式範例
 ```go
 package main
@@ -550,7 +550,7 @@ Hello 5
 如果你沒有使用 wait group，隨著 main goroutine 的結束，所有的 child 也會一併結束的\
 那這樣的結果就會是輸出會來不及，導致你的 console 會是空的
 
-### Empty Select
+## Empty Select
 另一個方法是使用 select\
 select 的用途是為了要處理 channel 的資料\
 不過空的 select 可以用於 **阻塞目前 goroutine**\
@@ -588,7 +588,54 @@ exit status 2
 > 3. Circular wait
 > 4. Mutual Exclusion
 
-## Memory Usage of Goroutine
+# Goroutine Execution Sequence
+考試的時候很常考一種問題，就是給定一段程式碼，問你輸出結果是什麼
+
+```go
+func printNumbers() {
+    for i := 1; i <= 5; i++ {
+        time.Sleep(100 * time.Millisecond)
+        fmt.Printf("%d ", i)
+    }
+}
+
+func printChars() {
+    for i := 'a'; i <= 'e'; i++ {
+        time.Sleep(40 * time.Millisecond)
+        fmt.Printf("%c ", i)
+    }
+}
+
+func main() {
+    go printNumbers()
+    go printChars()
+    time.Sleep(time.Second)
+    fmt.Println("main terminated")
+}
+```
+
+記住一件事情，goroutine 的執行是屬於 `非同步的`\
+剩下的變因就是時間而已
+
+兩個 goroutine 會同時執行，但是因為他們各自的等待時間並不同\
+所以你的輸出結果會是不一樣的\
+main goroutine 會等待 1 秒之後才會結束\
+所以 `printNumbers` 會執行 10 次，而 `printChars` 只會執行 25 次
+
+畫出來會長這樣
+```
+t             40 80 100 120 160 200 300 400 500
+printChars:   a   b       c   d   e
+printNumbers:         1           2   3   4   5
+```
+因為 for loop 只有跑到 `e` 跟 `5` 而已，所以即使還有時間也不會有任何輸出\
+答案有兩種
+1. `ab1cde2345 main terminated`
+2. `ab1cd2e345 main terminated`
+
+因為我們無法確定在 t = 200 的時候 goroutine 的執行順序
+
+# Memory Usage of Goroutine
 > to be continued
 
 # References
