@@ -179,7 +179,7 @@ uuid, ulid 因為它們不會透漏太多訊息(亦即你看它就像個 random 
 ![](https://github.com/ambersun1234/blog-labs/blob/master/cursor-based-pagination/benchmark.png?raw=true)
 
 上圖，是使用 [offset](#page-number--page-offset) 與 [Cursor Based Pagination](#cursor-based-pagination) 的執行速度對比\
-y 軸為執行速度(單位為 millisecond), x 軸則為資料起始點(i.e. 從第 n 筆資料開始往後拿 m 筆)\
+y 軸為執行速度(單位為 nanosecond), x 軸則為資料起始點(i.e. 從第 n 筆資料開始往後拿 m 筆)\
 從上圖可以看到，使用 offset 的方法，它會隨著資料起始點的位置不同，而大幅度的增加查詢時間\
 而另一個方法，則是大約都維持在同一個水平
 
