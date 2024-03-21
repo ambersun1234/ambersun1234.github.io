@@ -18,11 +18,11 @@ math: true
 
 # Introduction
 
-python 擁有不只一套實作，包含 [Jython](https://www.jython.org/), [IronPython](https://ironpython.net/), [Cython](https://cython.org/) 等等的\
+python 擁有不只一套實作，包含 [Jython](https://www.jython.org/), [IronPython](https://ironpython.net/), [Cpython](https://github.com/python/cpython) 等等的\
 就如同 C 語言有不同的實作一樣 [GCC](https://gcc.gnu.org/), [Visual c++](https://docs.microsoft.com/zh-tw/cpp/windows/latest-supported-vc-redist?view=msvc-170) 等等的
 
 GIL, Global Interpreter Lock 是一個 **_類_** [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)，用於保護在多執行緒之下的物件
-而他目前僅存在於 Cython 的實作當中(因為 Cython 的記憶體管理實作並非是 thread-safe 的)
+而他目前僅存在於 Cpython 的實作當中(因為 Cpython 的記憶體管理實作並非是 thread-safe 的)
 
 ![](https://www.w3.org/People/Frystyk/thesis/MultiStackThread.gif)
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     dis.dis(add)
 ```
 
-考慮以上程式碼，如果我們將上述 add 程式碼進行反組譯成 Cython bytecode 我們可以得到以下
+考慮以上程式碼，如果我們將上述 add 程式碼進行反組譯成 python bytecode 我們可以得到以下
 
 ```
   4           0 LOAD_FAST                0 (num)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
              10 RETURN_VALUE
 ```
 
-第一列數字對應到原始程式碼行數 第二列是 Cython bytecode 的執行指令\
+第一列數字對應到原始程式碼行數 第二列是 python bytecode 的執行指令\
 你可以很輕易的看到 在短短的 `num += 1` 這行裡面它實際上執行了 **_4 條指令_**\
 那有沒有可能你在執行到 `INPLACE_ADD` 的時候，中間被 thread1 被 swap out 然後換 thread2 執行，就拿到錯誤的資料了呢?\
 答案很明顯 如果沒有做適當的處理, 100% 一定會遇到這個問題(然後你的程式就出錯 你就會被老闆臭罵一頓)
@@ -67,6 +67,11 @@ if __name__ == "__main__":
 > 有些 compiler 或 interpreter 在執行的時候會為了最佳化而移動指令順序\
 > 這種貼心的舉動有時候會造成問題\
 > 這時候就需要 [memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
+
+題外話，這些 python byte code 是透過 python virtual machine(PVM) 所執行的(跟 Java 一樣)\
+Cpython 的實作包含了一個 virtual machine 用以執行上面我們看到的 python byte code
+
+> 注意到 Cpython 是 interpreter，Cython 是一種語言
 
 # Concurrency vs. Parallelism
 
@@ -220,7 +225,7 @@ ProfiledThread(target=mysum, args=(int(start), int(end), ))
 
 ## What does Thread Waiting for?
 
-讓我們來仔細看看 Cython 實作程式碼是怎麼做的
+讓我們來仔細看看 Cpython 實作程式碼是怎麼做的
 
 [Lib/threading.py#34](https://github.com/python/cpython/blob/3.8/Lib/threading.py#L34)
 
@@ -313,7 +318,7 @@ event object 的 condition lock 實際上是 low-level 的 threading lock [\_thr
 
 # GIL - Global Interpreter Lock
 
-既然 Cython 的實作並不保證 thread-safe，那麼最簡單的作法是甚麼呢? 加上一道鎖(鑰匙) `lock`
+既然 Cpython 的實作並不保證 thread-safe，那麼最簡單的作法是甚麼呢? 加上一道鎖(鑰匙) `lock`
 
 ㄟ等等 全域的 lock ?
 
@@ -330,7 +335,7 @@ event object 的 condition lock 實際上是 low-level 的 threading lock [\_thr
 >  \* pthread mutexes are designed for serializing threads over short pieces\
 >  \* of code anyway, so wouldn't be an appropriate implementation of\
 >  \* Python's locks regardless.\
->  [Cython/Python/thread_pthread.h#177](https://github.com/python/cpython/blob/313f92a57bc3887026ec16adb536bb2b7580ce47/Python/thread_pthread.h#L177)
+>  [Cpython/Python/thread_pthread.h#177](https://github.com/python/cpython/blob/313f92a57bc3887026ec16adb536bb2b7580ce47/Python/thread_pthread.h#L177)
 
 ```c
 typedef struct {
@@ -350,19 +355,23 @@ typedef struct {
 最直覺的想法，當當前 thread 執行結束之後就會 release GIL\
 但如果你的計算要持續一段時間呢？
 
-所以一般來說 GIL 會有兩種時機會自動釋放 GIL
+所以一般來說 GIL 會有兩種時機會自動釋放 GIL, `I/O` 與 `timeout`
 
-- `I/O`
-  - 當你在做 I/O 的時候，你就不會動到 python object 了，所以就可以 release GIL
-- `timeout`
-  - 為了鼓勵 thread 可以自動 release GIL, python 內部有所謂的 timeout 機制
-  - 預設的 timeout 時間是 **_0.005 second_**(你可以用 `sys.{get,set}switchinterval()` 來查詢以及設定 timeout 時間)
-  - 當 timeout 到了的時候，它也 <font color="red">不一定會理你</font>
-    > 你可以用 `FORCE_SWITCHING` 來強制 scheduler 進行排程
-  - 那為什麼 timeout 到了不一定有用？
-    - 因為 `opcodes can take an arbitrary time to execute`(待釐清)
-      > [GIL implementation note](https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Python/ceval_gil.h#L33)
-    - 因為如今 I/O 都有 buffering 的機制，即使 timeout 被 swap out，有了 buffer 的機制讓 I/O 的時間 **_短到可以再重新 acquire lock_**，造成其他 thread 等待 GIL 的時間越來越長(starving)
+### I/O
+當你在做 I/O 的時候，你就不會動到 python object 了，所以就可以 release GIL
+
+### timeout
+為了鼓勵 thread 可以自動 release GIL, python 內部有所謂的 timeout 機制\
+預設的 timeout 時間是 **_0.005 second_**(你可以用 `sys.{get,set}switchinterval()` 來查詢以及設定 timeout 時間)\
+當 timeout 到了的時候，它也不一定會理你(你可以用 `FORCE_SWITCHING` 來強制 scheduler 進行排程)\
+那為什麼 timeout 到了不一定有用？
+
+根據 [GIL implementation note](https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Python/ceval_gil.h#L33), `opcodes can take an arbitrary time to execute`\
+因為 python bytecode 並不能很好的反應到每一台機器的 machine code, 也因為 bytecode 可能包含 I/O 所以每個指令執行起來的時間都不盡相同\
+上面我們有稍微提到，python 是執行在 PVM(Python Virtual Machine) 之上的，而這個 VM 他是採用 **cooperative scheduling** 的方式\
+所以這就是為什麼當 timeout 的時候，thread 是有可能不理你的，cooperative scheduling 講究的是主動放棄 lock(以 python 來說是透過 `yield`)
+
+另外就是如今 I/O 都有 buffering 的機制，即使 timeout 被 swap out，有了 buffer 的機制讓 I/O 的時間 **_短到可以再重新 acquire lock_**，造成其他 thread 等待 GIL 的時間越來越長(starving)
 
 # Why do we Need threading.Lock if we have GIL
 
@@ -425,7 +434,7 @@ if __name__ == "__main__":
 # Eliminate GIL
 
 如果要完全避開討人厭的 GIL\
-現今除了 Cython 的實作之外，也是有其他實作像是 Jython, IronPython 等等的可以使用
+現今除了 Cpython 的實作之外，也是有其他實作像是 Jython, IronPython 等等的可以使用
 
 不過也是有人提出了可以完全去除 GIL 的實作，就列出來當作參考\
 [colesbury/nogil](https://github.com/colesbury/nogil)
