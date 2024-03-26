@@ -143,7 +143,7 @@ non-clustered index 又稱 secondary index
 
 |Index Type|Description|
 |:--|:--|
-|Primary Index|等於 [Clustered Index](#clustered-index)|
+|Primary Index|不完全等於 [Clustered Index](#clustered-index)|
 |Secondary Index|等於 <a href="#non-clustered-index" class="anchor">Non-clustered index</a>|
 |Bitmap Index|針對特定欄位做個 bitmap<br>用性別舉例, 男的 1 女的是 0<br>這時候如果要對性別 query, DBMS 可以很快的 apply bitmap 上去取得結果(bitwise operation)|
 |Dense Index|儲存所有 record 的 pair(1 對 1)|
