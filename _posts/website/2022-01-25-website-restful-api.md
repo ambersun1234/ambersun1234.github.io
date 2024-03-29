@@ -100,6 +100,26 @@ client 端就勢必要儲存必要資訊(e.g. 使用者登入與否?)\
 
 > 這兩種做法並沒有好壞之分，單純是作法不同
 
+> 有關 HTTP 的討論，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../http/networking-http1)
+
+# Version Control
+隨著系統升級改版，API 也會隨之改變\
+這時候就會有一個問題，新版的 API 跟舊版的 API 該怎麼區分?
+
+常見的一種作法是在 URI 中加入版本號\
+也就是 `v1`, `v2` 這樣的方式\
+這樣的好處是可以讓 client 端自行選擇要使用哪一個版本的 API\
+不過壞處是，當 API 版本越來越多的時候，管理維護的成本會越來越高\
+並且 version number 並不是強制性的
+
+## Backward Compatibility
+即使 API endpoint 擁有不同的版本號做出別，我們仍然沒辦法阻止 client 呼叫舊版本 API\
+因此維持好向後相容性就很重要了
+
+新的 API 實作出來之後，我們仍然可以保留舊版 API 的功能，只不過可以在 response body 中提及 deprecate 相關的訊息\
+注意到，`做 301 redirect 不是一個好方法`, 因為 redirect 指的只是單純 endpoint 搬家\
+但是新版 API 可能有新增欄位，導致 client 期待的回傳值不一致的行為
+
 # References
 + [REST Architectural Constraints](https://restfulapi.net/rest-architectural-constraints/)
 + [gRPC vs REST: Understanding gRPC, OpenAPI and REST and when to use them in API design](https://cloud.google.com/blog/products/api-management/understanding-grpc-openapi-and-rest-and-when-to-use-them)
