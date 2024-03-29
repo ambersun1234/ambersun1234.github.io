@@ -400,7 +400,10 @@ session 逐漸式微的原因，有幾個面向可以討論
 
 主要的原因是，現如今系統規模都不單只是一台伺服器的架構，你可能會跑 micro service 對吧？\
 那你要怎麼同步 session 就是一個大問題了\
-你的 token 可能在 A server 上，但是下一次 request 過來可能是 B server 處理，這時候你的 session 就不見了\
+你的 token 可能在 A server 上，但是下一次 request 過來可能是 B server 處理，這時候你的 session 就不見了
+
+> 這時候你就需要 **sticky session** 了，可參考 [Container 技術 - 從 Docker 到 Kubernetes，你能獲得什麼？ \| Shawn Hsu](../../container/container-docker-to-k8s#sticky-session)
+
 二來是，根據 [RFC 1945](https://www.rfc-editor.org/rfc/rfc1945), HTTP 1.0 的文件就已經開宗明義表明，HTTP 是屬於無狀態的 protocol
 
 >  The Hypertext Transfer Protocol (HTTP) is an application-level\
