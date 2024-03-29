@@ -61,7 +61,8 @@ jobs:
       # Use GitHub Deploy Action to build and deploy to Github
       # For latest version: `jeffreytse/jekyll-deploy-action@master`
       # This is a specific version for supporting og:image with libpng pre installed
-      - uses: jeffreytse/jekyll-deploy-action@v0.5.1
+      # - uses: jeffreytse/jekyll-deploy-action@v0.5.1
+      - uses: ambersun1234/jekyll-deploy-action@3389950e5ae48bfbae3570f7b8dc45c1271dc527
         with:
           provider: "github" # Default is github
           token: ${{ secrets.GITHUB_TOKEN }} # It's your Personal Access Token(PAT)
