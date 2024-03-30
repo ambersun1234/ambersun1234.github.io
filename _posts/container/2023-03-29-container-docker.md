@@ -20,7 +20,8 @@ Docker 擁有更快的啟動速度、對系統資源的極低要求以及輕量�
 也就是說，Docker Container 是屬於一個 OS-level 的 user-space process\
 而 container 與 host machine 共享同一個 kernel
 
-![](https://images.contentstack.io/v3/assets/blt300387d93dabf50e/bltb6200bc085503718/5e1f209a63d1b6503160c6d5/containers-vs-virtual-machines.jpg)
+![](https://www.docker.com/wp-content/uploads/2022/12/containers-and-vms-together-1.png.webp)
+> ref: [Containers and VMs Together](https://www.docker.com/blog/containers-and-vms-together/)
 
 <hr>
 在這裡做一個小小的表格比較一下
