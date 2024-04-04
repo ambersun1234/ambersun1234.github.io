@@ -1,7 +1,7 @@
 all: serve
 
 serve:
-	docker run -it --rm \
+	docker run -it \
                 --volume="$(shell pwd):/srv/jekyll" \
                 -p 4000:4000 -p 35729:35729 jekyll/jekyll \
                 sh -c "git config --system --add safe.directory '*' && \
