@@ -7,9 +7,9 @@ tags: [polling, long polling, webhook, webrtc, websocket, tcp, file descriptor, 
 math: true
 ---
 
-<!-- # Preface
+# Preface
 ![](https://www.helpshift.com/wp-content/uploads/2022/04/Screen20Shot202017-07-1420at2011.26.2420AM.png)
-> [A Little Bit of Background on Our New Typing Indicator](https://www.helpshift.com/a-little-bit-of-background-on-our-new-typing-awareness-indicator/) -->
+> [A Little Bit of Background on Our New Typing Indicator](https://www.helpshift.com/a-little-bit-of-background-on-our-new-typing-awareness-indicator/)
 
 # Polling
 polling 輪詢是最為簡單的一種作法\
@@ -71,6 +71,19 @@ while (timeout !== 0) {
 
 > Long Polling 的實作不需要管 client 多久 call 一次\
 > timeout 是設定 server 要 hold 住 connection 多長的時間
+
+# Long Polling is just moving Timeout from Client to Server?
+考慮以下例子
+
+假設我用 [Polling](#polling), client 每隔 5 秒詢問一次\
+跟使用 [Long Polling](#long-polling), client 每隔 1 秒問一次，然後 server timeout 為 5 秒
+
+這樣是不是看起來改用 Long Polling 並沒有任何好處\
+當然不是
+
+這一切取決於 client 要如何呼叫 server\
+如果 client 仍然每隔 1 秒就問一次 server, 那麼確實使用 [Long Polling](#long-polling) 並不會帶來任何好處\
+因為你呼叫的次數還是那麼多，它並不會減少
 
 # Why does Long Polling Exists
 Long Polling 是一種介於 [WebSocket](#websocket) 以及 [Polling](#polling) 的方法論\
