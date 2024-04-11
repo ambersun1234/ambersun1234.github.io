@@ -72,11 +72,12 @@ while (timeout !== 0) {
 > Long Polling 的實作不需要管 client 多久 call 一次\
 > timeout 是設定 server 要 hold 住 connection 多長的時間
 
-# Long Polling is just moving Timeout from Client to Server?
+# Long Polling vs Polling
 考慮以下例子
 
 假設我用 [Polling](#polling), client 每隔 5 秒詢問一次\
-跟使用 [Long Polling](#long-polling), client 每隔 1 秒問一次，然後 server timeout 為 5 秒
+跟使用 [Long Polling](#long-polling), client 每隔 1 秒問一次，然後 server timeout 為 5 秒\
+這兩種方法是不是結果都一樣？
 
 這樣是不是看起來改用 Long Polling 並沒有任何好處\
 當然不是
@@ -85,18 +86,33 @@ while (timeout !== 0) {
 如果 client 仍然每隔 1 秒就問一次 server, 那麼確實使用 [Long Polling](#long-polling) 並不會帶來任何好處\
 因為你呼叫的次數還是那麼多，它並不會減少
 
-# Why does Long Polling Exists
-Long Polling 是一種介於 [WebSocket](#websocket) 以及 [Polling](#polling) 的方法論\
-在通訊的世界裡，使用 TCP 傳輸協定是常見的一種方法\
-你會問說這跟 TCP 有什麼關係呢？ 以下是我的理解
+<hr>
 
 [Polling](#polling) 我們知道，它會 **一直** 詢問 server\
 而這個一直的過程，是不斷的 TCP 建立/中斷 連線\
 正因為這個建立刪除的過程，使得使用 polling 的方法，他的 overhead 會比較高\
 因為 TCP 建立連線會需要進行 `Three-way handshake`(三方交握)
 
-[WebSocket](#websocket) 在這一方面可謂完美的解決了建立連線的巨大成本帶來的 overhead\
-一旦連線建立，就會一直維持住\
+> 使用 [Long Polling](#long-polling) 一樣會有握手的情況發生\
+> 但這個次數相對 Polling 來說是減少的
+
+<hr>
+
+雖然以結果來說\
+兩者方法能達到的結果都是相同的\
+只不過如果你把 client [Polling](#polling) 的時間調得很長\
+**那就不即時了吧?**
+
+timeout 設定成一分鐘的情況下\
+有可能在這一分鐘內就有新的資料，不過因為 client 還在 timeout 的時間內，client 端對新資料是一無所知的\
+只有當下一次 request 的時候才會包含 "幾秒鐘前的新資料"
+
+> [Long Polling](#long-polling) 跟 [Websocket](#websocket) 這種真正即時的還是有差\
+> 不過還是比 Polling 更好
+
+# Websocket Overhead
+[WebSocket](#websocket) 一旦連線建立，就會一直維持住\
+在這一方面可謂完美的解決了 [Polling](#polling) 以及 [Long Polling](#long-polling) 建立連線的巨大成本帶來的 overhead\
 看似完美的解決方案，但是它會遇到另一個問題，file descriptor 數量限制
 
 <hr>
