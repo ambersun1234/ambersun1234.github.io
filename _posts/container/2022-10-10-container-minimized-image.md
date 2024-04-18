@@ -150,9 +150,26 @@ $ docker inspect alpine:latest
 
 實驗程式碼可以參考 [ambersun1234/blog-labs/minimized-docker-image-lab](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab)
 
+# exec: no such file or directory
+在執行 [Multi-stage Build](#multi-stage-build) 的時候需要特別注意一件事情(一般的 dockerfile 也需要注意就是)\
+每一種 base image(e.g. [alpine](https://hub.docker.com/_/alpine)) 它底層提供的 standard library runtime 都不盡相同\
+因此，你可以會遇到很奇怪的錯誤\
+例如 `exec /app/server: no such file or directory`
+
+明明你有正確的檔案路徑，但是 docker 怎麼樣都是啟動不了的狀態\
+而系統一直跟你說找不到檔案，實際上的問題其實是底層 runtime 不同的問題\
+你卻花了不少的時間在調試，尋找看似遺失的檔案
+
+像是我在打包 golang 的小程式的時候，在 build 裡面我忘記指定 `CGO_ENABLED=0`\
+所以我在 build 的時候就會出現 `exec /app/server: no such file or directory`
+
+這種小細節，在平常打包的時候要特別小心就是
+
 # References
 + [Docker Image Size - Does It Matter?](https://semaphoreci.com/blog/2018/03/14/docker-image-size.html)
 + [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/#use-multi-stage-builds)
 + [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#minimize-the-number-of-layers)
 + [About storage drivers](https://docs.docker.com/storage/storagedriver/)
 + [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/#use-multi-stage-builds)
++ [When using CGO_ENABLED is must and what happens](https://stackoverflow.com/a/61515424)
++ [exec /app/backendApp: no such file or directory in docker container](https://stackoverflow.com/a/75703902)
