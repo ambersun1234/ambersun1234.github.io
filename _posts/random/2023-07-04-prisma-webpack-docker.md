@@ -115,7 +115,7 @@ $ npx prisma migrate dev --name init --schema schema.prisma
 # Prisma Architecture
 在眾多 Node.js ORM 框架裡，[Prisma](https://www.prisma.io/) 是稍微年輕的後起之秀\
 而他的架構，是由 client 以及 server 所組成的，如下所示
-![](https://www.prisma.io/docs/static/f7f69d7ae3a122fcbb8dea030d70807b/d880f/query-engine-node-js-at-runtime.png)
+![](https://www.prisma.io/docs/assets/images/typical-flow-query-engine-at-runtime-73ffdee4acc20a853bbd431dc12fb64f.png)
 > ref: [The query engine at runtime](https://www.prisma.io/docs/concepts/components/prisma-engines/query-engine)
 
 Prisma 透過 JavaScript client 與 Query Engine 進行溝通，然後才到資料庫進行查詢\
