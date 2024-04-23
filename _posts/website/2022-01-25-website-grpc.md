@@ -1,9 +1,9 @@
 ---
-title: 網頁程式設計三兩事 - gRPC
-description: gRPC 是 google 基於 rpc 所開發的一套 library。本文將會探討 RPC 與 RESTful API 的差異，並且會介紹 gRPC 的使用方式以及 Protocol Buffer 的使用
+title: 網頁程式設計三兩事 - gRPC 與 JSON-RPC
+description: Remote Procedure Call 是一種傳輸協定，本文將會探討 RPC 與 RESTful API 的差異，並且會介紹 gRPC 以及 JSON-RPC 的使用方式以及 Protocol Buffer 的使用。最後會以實際的 benchmark 結果更直觀的說明
 date: 2022-01-25
 categories: [website]
-tags: [api, grpc, rpc, design pattern, protobuf]
+tags: [api, grpc, rpc, json-rpc, design pattern, protobuf]
 math: true
 ---
 
@@ -54,6 +54,60 @@ RPC 的呼叫流程如下
 |虛擬代理|控制與 `成本高昂的物件` 的互動|
 |保護代理|控制用戶端與物件的接觸，通常與權限有關|
 
+# Schema Evolution
+資料格式可能會因為需求的改變而改變\
+這時候格式的變更可能會造成一些不相容的問題\
+而相容格式的情況包含兩種
+
+## Backward Compatibility
+向後相容(Backward Compatibility)亦即 `新 code 可以讀取舊的 format`\
+因為你有辦法明確的處理舊的格式，你甚至知道它長怎樣
+
+## Forward Compatibility
+向前相容(Forward Compatibility)的定亦是 `舊的 code 有辦法讀取新的 format`\
+這裡指的是即使遇到新的格式，我仍有辦法 **不出錯**\
+代表它可以忽略新格式裡的新東西
+
+# JSON-RPC
+JSON-RPC 是一個輕量的 RPC 協定，其主要使用的資料格式是 `JSON`\
+它可以執行在 HTTP 或者是 websocket 之上
+
+使用著方法滿簡單的，就像是一般呼叫 RESTful API 一樣\
+我們將要呼叫的 function name 指定在 body 裡面，並使用 **POST** method 送到伺服器上即可
+
+```json
+{
+  "jsonrpc" : "1.0",
+  "method" : "Server.Function",
+  "params" : [
+      {
+        "hello": "world"
+      }
+  ],
+  "id": 1
+}
+```
+以上是一個簡單的 JSON-RPC 呼叫範例，可以看到 JSON 裡面包含了 4 個欄位
++ `jsonrpc` 是 `1.0` 代表是 JSON-RPC 的版本，現在到 `2.0` 了
++ `method` 是呼叫的 function name
++ `params` 是呼叫的參數
++ `id` 是 client 的 id, 如果為空則代表為通知訊息
+
+server 回傳的格式也類似
+```json
+{
+  "jsonrpc" : "1.0",
+  "result" : {
+	"hello": "world"
+  },
+  "error" : null,
+  "id": 1
+}
+```
+
+server 回傳的 id 需要跟 client 發起的 id 一樣\
+格式方面則是多了 `result` 和 `error`
+
 # gRPC
 gRPC 是 google 基於 rpc 所開發的一套 library, 其支援超過十幾種語言(包含 [C++](https://github.com/grpc/grpc/tree/master/src/cpp), [Python](https://github.com/grpc/grpc/tree/master/src/python), [Go](https://github.com/grpc/grpc-go) ... etc.)\
 所以你可以作到像是 server side 用 GoLang 跑, client side 用 Python 跑這種\
@@ -62,20 +116,6 @@ gRPC 是 google 基於 rpc 所開發的一套 library, 其支援超過十幾種�
 定義好了傳輸方式之後，資料傳輸格式以及 [Interface Definition Language - IDL](https://en.wikipedia.org/wiki/Interface_description_language) 的部份 gRPC 是使用 [protocol buffer](https://developers.google.com/protocol-buffers)，其擁有以下特性
 + 跨平台 跨語言
 + 更快速 - 自行 encode 有可能會增加 run time cost
-
-## Schema Evolution
-資料格式可能會因為需求的改變而改變\
-這時候格式的變更可能會造成一些不相容的問題\
-而相容格式的情況包含兩種
-
-### Backward Compatibility
-向後相容(Backward Compatibility)亦即 `新 code 可以讀取舊的 format`\
-因為你有辦法明確的處理舊的格式，你甚至知道它長怎樣
-
-### Forward Compatibility
-向前相容(Forward Compatibility)的定亦是 `舊的 code 有辦法讀取新的 format`\
-這裡指的是即使遇到新的格式，我仍有辦法 **不出錯**\
-代表它可以忽略新格式裡的新東西
 
 # Protocol Buffer
 Protocol Buffer 是一種資料編碼格式\
@@ -374,22 +414,22 @@ $ curl localhost:6666/api/user/1
 
 # Compare with Traditional RESTful-API
 
-||REST|gRPC|
-|:--|:--:|:--:|
-|Method|HTTP|HTTP2|
-|Data Exchange Format|JSON, XML|Binary|
-|Addressable Entities|Resource|Behaviour|
-|Speed|Slow|Fast|
-|Readable|Yes|No|
+||REST|gRPC|JSON-RPC|
+|:--|:--:|:--:|:--:|
+|Method|HTTP|HTTP2|HTTP<br>websocket
+|Data Exchange Format|JSON, XML|Binary|JSON|
+|Addressable Entities|Resource|Behaviour|Functions|
+|Speed|Slow|Fast|Fast|
+|Readable|Yes|No|Yes|
 
-看到上面的比較圖，你可能會好奇為什麼 gRPC 會比 RESTful-API 還要來的快\
+看到上面的比較圖，你可能會好奇為什麼 RPC 會比 RESTful-API 還要來的快\
 更重要的問題是，快了多少？
 
 ## Benchmark
 為了使得效能測量誤差值不要太大，實驗準備如下
 + 準備一個 echo api(執行簡單的操作，將其他 I/O 影響降到最低)
-+ 分別準備原生 server 接口與 grpc server 接口
-+ 分別進行 100000 次測量
++ 分別準備原生 server 接口與 rpc server 接口
++ 分別進行 10000 次測量
 
 我原本想要用 curl, grpcurl 進行 benchmark 測試\
 無奈 grpcurl 似乎並沒有提供 [-w, --write-out](https://curl.se/docs/manpage.html) 可以更好的進行測試\
@@ -439,26 +479,29 @@ go versi9on go1.17.6 linux/amd64
 ```
 
 ### Description
-首先使用 Golang 分別架設 gRPC 與 RESTful server\
-client 端使用 Python 分別對其進行 十萬次的 benchmark testing
+首先使用 Golang 分別架設 gRPC, JSON-RPC 與 RESTful server\
+client 端使用 Python 分別對其進行 一萬次的 benchmark testing
 
 值得注意的是，gRPC 的部份 server 與 client 端分別使用 Golang 與 Python 實作\
 跨語言的支援同時也是 gRPC 的一大強項\
 就我這幾天的撰寫而言，就上手程度而言沒有太大的難度，基本上只要能夠順利 generate proto 就沒太大問題了
 
-實驗相關程式碼可以在 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark) 中找到
+實驗相關程式碼可以在 [ambersun1234/blog-labs/RESTful_gRPC_JSON-RPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful_gRPC_JSON-RPC-benchmark) 中找到
 
 ### Result
-![](https://github.com/ambersun1234/blog-labs/blob/master/RESTful-vs.-gRPC-benchmark/benchmark.png?raw=true)
+![](https://github.com/ambersun1234/blog-labs/blob/master/RESTful_gRPC_JSON-RPC-benchmark/benchmark.png?raw=true)
 
-上述 benchmark 結果為 gRPC vs. RESTful API 的速度測試\
-其中綠色線代表 RESTful, 紫色線代表 gRPC\
-這裡總共進行了 十萬次 的測試，y 軸代表執行時間(nanoseconds)
+上述 benchmark 結果為 gRPC, JSON-RPC 與 RESTful API 的速度測試\
+其中綠色線代表 JSON-RPC, 藍色代表 RESTful, 紫色線代表 gRPC\
+這裡總共進行了 一萬次 的測試，y 軸代表執行時間(nanoseconds)
 
 從上圖你可以很清楚的看到\
-gRPC 平均呼叫時間 250000 nanoseconds\
-RESTful 平均呼叫時間 2000000 nanoseconds\
-可以看到 相比 REST **快了將近 8 倍的呼叫時間**
+JSON-RPC 跟 RESTful 平均呼叫時間都幾乎在 $1 \times 10^6$ nanoseconds\
+但是你可以很明顯的看到，他們之間仍然有差別\
+即使兩者皆走 HTTP 協議，JSON-RPC 還是快那麼一點點
+
+而 gRPC 則是完勝以上\
+根據 [實驗數據](https://github.com/ambersun1234/blog-labs/blob/master/RESTful_gRPC_JSON-RPC-benchmark/benchmark.txt), gRPC 相對 JSON-RPC 快了 **5.77 倍**
 
 會有這樣的結果其實是因為 gRPC 是基於於 HTTP2\
 所以在速度上與傳統 API call(i.e. HTTP) 有著本質上的差異
@@ -481,3 +524,4 @@ RESTful 平均呼叫時間 2000000 nanoseconds\
 + [gnuplot 語法解說和示範](https://hackmd.io/@sysprog/Skwp-alOg)
 + [The state of gRPC in the browser](https://grpc.io/blog/state-of-grpc-web/)
 + [Core concepts, architecture and lifecycle](https://grpc.io/docs/what-is-grpc/core-concepts/)
++ [JSON-RPC](https://zh.wikipedia.org/zh-tw/JSON-RPC)

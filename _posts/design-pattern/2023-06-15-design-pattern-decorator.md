@@ -46,7 +46,7 @@ if __name__ == "__main__":
 這個篇章我們將一窺 [Decorator Pattern](#decorator-pattern) 可以如何解決這個問題
 
 > 有關 gRPC 的相關介紹，可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../../website/website-grpc)\
-> 詳細的實作程式碼可以參考 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark)
+> 詳細的實作程式碼可以參考 [ambersun1234/blog-labs/RESTful_gRPC_JSON-RPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful_gRPC_JSON-RPC-benchmark)
 
 # Open-Closed Principle
 > Class should be open for extension, but closed for modification
@@ -181,7 +181,7 @@ if __name__ == "__main__":
                 benchmark()
 ```
 
-> 詳細的實作程式碼可以參考 [ambersun1234/blog-labs/RESTful-vs.-gRPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful-vs.-gRPC-benchmark)
+> 詳細的實作程式碼可以參考 [ambersun1234/blog-labs/RESTful_gRPC_JSON-RPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful_gRPC_JSON-RPC-benchmark)
 
 採用 [Decorator Pattern](#decorator-pattern) 之後，我既不會更改原本的實作，但我仍然可以擴充它，是不是很漂亮呢？
 
