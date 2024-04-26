@@ -75,14 +75,17 @@ JSON-RPC 是一個輕量的 RPC 協定，其主要使用的資料格式是 `JSON
 使用著方法滿簡單的，就像是一般呼叫 RESTful API 一樣\
 我們將要呼叫的 function name 指定在 body 裡面，並使用 **POST** method 送到伺服器上即可
 
+詳細的 spec 可以參考 [JSON-RPC 1.0 Specification](https://www.jsonrpc.org/archive_json-rpc.org/specification.html) 以及 
+[JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
+
+> 需要注意的是如果你用的是 [gorilla/rpc](https://github.com/gorilla/rpc)，他的 param 欄位長的不太一樣
+
 ```json
 {
   "jsonrpc" : "1.0",
   "method" : "Server.Function",
   "params" : [
-      {
-        "hello": "world"
-      }
+    "hello", "world"
   ],
   "id": 1
 }
