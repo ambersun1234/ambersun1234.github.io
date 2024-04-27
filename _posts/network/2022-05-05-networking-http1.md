@@ -2,8 +2,8 @@
 title: 重新認識網路 - HTTP1 與他的小夥伴們
 date: 2022-05-05
 description: HTTP 是一個應用層協議，它是一個 client-server 協議，client 通常是瀏覽器，server 通常是一個 web server。本文將會介紹 HTTP 的發展史以及其技術細節
-categories: [http]
-tags: [network, http0.9, http1.0, http1.1, cache, etag, nginx]
+categories: [network]
+tags: [http0.9, http1.0, http1.1, cache, etag, nginx]
 math: true
 ---
 

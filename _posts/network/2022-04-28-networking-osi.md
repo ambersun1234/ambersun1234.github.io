@@ -2,8 +2,8 @@
 title: 重新認識網路 - OSI 七層模型
 date: 2022-04-28
 description: 現今的網路世界中，OSI 七層模型是一個非常重要的概念，它將網路的運作分成了七個層次，每一層都有自己的功能。本文將會介紹 OSI 七層模型的基本概念，並且會以 RFC 1122 作為參考，進行討論
-categories: [http]
-tags: [network, osi, rfc, endian]
+categories: [network]
+tags: [osi, rfc, endian]
 math: true
 ---
 
