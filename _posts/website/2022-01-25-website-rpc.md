@@ -4,6 +4,8 @@ description: Remote Procedure Call 是一種傳輸協定，本文將會探討 RP
 date: 2022-01-25
 categories: [website]
 tags: [api, grpc, rpc, json-rpc, design pattern, protobuf]
+redirect_from:
+  - /website/website-grpc/
 math: true
 ---
 
