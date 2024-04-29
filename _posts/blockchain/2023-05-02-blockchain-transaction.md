@@ -76,7 +76,7 @@ POS 的獎勵為 priority fee
 亦即他的資料都是存在 stack 當中的，當有需要的時候使用 push, pop 就可以拿取以及儲存資料了\
 而這個 stack 大小為 `1024`, 每個 element 大小為 `256 bit`
 
-> 有關 endian 的介紹可以參考 [重新認識網路 - OSI 七層模型 - Endian \| Shawn Hsu](../../http/networking-osi/#endian)
+> 有關 endian 的介紹可以參考 [重新認識網路 - OSI 七層模型 - Endian \| Shawn Hsu](../../http/networking-osi#endian)
 
 常見的 EVM 實作有
 + [go-ethereum](https://geth.ethereum.org/)
