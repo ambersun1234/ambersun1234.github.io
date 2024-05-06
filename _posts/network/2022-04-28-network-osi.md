@@ -71,7 +71,7 @@ OSI 七層模型是由 [國際電信聯盟電信標準化部門 - ITU-T](https:/
 <hr>
 
 常見的協議如 [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) 以及 [UDP](https://en.wikipedia.org/wiki/User_Datagram_Protocol) 都是跑在傳輸層之上的協議
-<!-- > 詳細的討論可以參考 [重新認識網路 - TCP/IP \| Shawn Hsu](../networking-tcp) 以及 [重新認識網路 - UDP \| Shawn Hsu](../networking-udp) -->
+> 詳細的討論可以參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics)
 
 ## Network Layer - 3
 網路層主要是作 routing 的功能\
@@ -117,7 +117,7 @@ hop 這個東西簡單講就是，`經過的中繼站點個數`, 它也可以用
 layer 3 switch 以及 IP 分享器 都是網路層的設備
 
 除此之外，[Internet Protocol IP](https://en.wikipedia.org/wiki/Internet_Protocol) 也是跑在網路層的上的協議
-<!-- > 詳細關於 TCP/IP 的討論可以參考 [重新認識網路 - TCP/IP \| Shawn Hsu](../networking-tcp) -->
+> 詳細的討論可以參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics)
 
 ## Data Link Layer - 2
 資料連結層為了提供 [connectionless-mode](https://en.wikipedia.org/wiki/Connectionless_communication) 以及 connection-mode，所以它必須提供了一系列的連線建立、維護\

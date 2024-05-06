@@ -115,42 +115,7 @@ timeout 設定成一分鐘的情況下\
 在這一方面可謂完美的解決了 [Polling](#polling) 以及 [Long Polling](#long-polling) 建立連線的巨大成本帶來的 overhead\
 看似完美的解決方案，但是它會遇到另一個問題，file descriptor 數量限制
 
-<hr>
-
-> In UNIX, Everything is a File
-
-事情還得要從作業系統說起\
-UNIX 的設計哲學是，Everything is a File\
-每個東西都是檔案，什麼意思？\
-檔案不就是檔案嗎？ 那麼網路，印表機這些也算檔案嗎？\
-依照作業系統的邏輯，如果要詳細區分這些東西為各種不同的類別，那麼實作起來將會無比困難\
-因此，就算是印表機這種東西，底層實作也會將它視為是 **檔案**
-
-建立網路連線，它分成大約兩步驟
-1. 建立 socket(i.e. file descriptor)，建立好一個對接的端口
-2. 建立連線(並且透過 socket 進行資料的傳輸)
-
-而 socket 就是那個 **檔案**\
-每個應用程式都擁有自己的 socket 接口\
-你可以使用 [lsof](https://linux.die.net/man/8/lsof) 這個指令查看當前 internet file descriptor 的狀況\
-執行 `$ sudo lsof -i` 你會看到類似這張圖的輸出
-![](/assets/img/posts/lsof.png)
-可以很清楚的看到，chrome 瀏覽器開了許多的 socket
-
-> 你應該還會看到其他應用程式，像我的還有 telegram, docker ... etc.
-
-<hr>
-
-socket 有沒有數量限制呢？ 或者說比較 general 一點\
-file descriptor 有沒有上限？\
-我想答案很明顯是有的
-
-```shell
-$ ulimit -n
-1024
-```
-
-> 可參考 [man ulimit](https://linuxcommand.org/lc3_man_pages/ulimith.html)
+> 有關 socket 的介紹可參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics#socket)
 
 我的電腦，預設 file descriptor 上限數量為 `1024`\
 也就是說一個 process 的 file descriptor 上限就那麼多\

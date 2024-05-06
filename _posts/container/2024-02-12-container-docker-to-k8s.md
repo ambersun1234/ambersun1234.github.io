@@ -155,6 +155,9 @@ docker 有自己內建的 dns server, 這也解釋了為什麼我們可以單純
 而你每一次呼叫 "web" service 的時候，dns server 都要決定要給你哪一個 ip 對吧\
 所以負載平衡這段其實是由 docker 內建的 dns server 幫你做掉了
 
+> 有關 DNS load balancing\
+> 可參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics)
+
 你說可是上面我們還是使用了 nginx 阿\
 那是因為每一個 replica service 都使用了相同的 port number(這個會造成 error), 我們需要一個統一的進入點存取\
 所以這裡才使用了 nginx

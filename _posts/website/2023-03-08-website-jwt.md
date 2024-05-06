@@ -312,8 +312,11 @@ client 要驗證的唯一方式 是不是用金鑰下去算算看？\
 就代表這個 token 來源被驗證了！  嗎
 
 記不記得在前面 [JWS(JSON Web Signature)](#jwsjson-web-signature) 有提到\
-簽章有兩種方式, digital signature 跟 Message Authentication Codes(MACs)\
-其中 MACs 是沒辦法驗證來源的
+簽章有兩種方式, digital signature 跟 Message Authentication Codes(MACs)
+
+> 數位簽章(digital signature) 可以驗證 1. 資料完整性 2. 來源合法性\
+> Message Authentication Codes(MACs) 可以驗證 1. 資料完整性\
+> 其中 MACs 是沒辦法驗證來源的
 
 道理倒也淺顯易懂\
 如果第三方取得你的 signing key, 我是不是也能偽造簽章了？
@@ -385,6 +388,8 @@ signature 的計算是使用存在 server 上的 signing key 加上前面 header
 
 如果真的有傳送機密訊息的需求，使用 [JWE](#jwejson-web-encryption) 是最好的選擇\
 不過普遍來說，我們認為 http 的 TLS 已經足夠應付大多數的場景了
+
+> 有關 TLS 的介紹可以參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics#ssl---secure-sockets-layertls)
 
 既然 JWS 沒有進行加密\
 一般來說是不建議在上面塞入任何敏感資訊\
