@@ -5,8 +5,8 @@ description: HTTP 是一個應用層協議，它是一個 client-server 協議�
 categories: [network]
 tags: [http0.9, http1.0, http1.1, cache, etag, nginx]
 redirect_from:
-    - /http/networking-http1
-    - /network/networking-http1
+    - /http/networking-http1/
+    - /network/networking-http1/
 math: true
 ---
 

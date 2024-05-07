@@ -5,8 +5,8 @@ description: 現今的網路世界中，OSI 七層模型是一個非常重要的
 categories: [network]
 tags: [osi, rfc, endian]
 redirect_from:
-    - /http/networking-osi
-    - /network/networking-osi
+    - /http/networking-osi/
+    - /network/networking-osi/
 math: true
 ---
 
