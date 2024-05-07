@@ -44,12 +44,13 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y fonts-noto
-      - uses: ambersun1234/autogen-og-image@v1.0.0
+      - uses: ambersun1234/autogen-og-image@v1.0.1
         with:
           input_dir: ${{ github.workspace }}/_posts
           output_dir: ${{ github.workspace }}/assets/img/og
           author: "Shawn Hsu"
           avatar: "https://avatars.githubusercontent.com/u/13270428?v=4"
+          force_regenerate: ${{ env.REGENERATE }}
       - name: Commit og image and Push
         run: |
           git config --local user.name 'Shawn Hsu'
