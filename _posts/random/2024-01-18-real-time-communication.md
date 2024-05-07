@@ -7,10 +7,6 @@ tags: [polling, long polling, webhook, webrtc, websocket, tcp, file descriptor, 
 math: true
 ---
 
-# Preface
-![](https://www.helpshift.com/wp-content/uploads/2022/04/Screen20Shot202017-07-1420at2011.26.2420AM.png)
-> [A Little Bit of Background on Our New Typing Indicator](https://www.helpshift.com/a-little-bit-of-background-on-our-new-typing-awareness-indicator/)
-
 # Polling
 polling 輪詢是最為簡單的一種作法\
 其核心概念為定時的發出 request 確認
