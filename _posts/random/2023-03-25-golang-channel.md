@@ -47,6 +47,97 @@ unbounded buffer 的大小為無上限(端看你機器有多大的 memory size)\
 
 在這個情況下，sender 是不需要進行等待的
 
+# Ring Buffer
+ring buffer 是一種特殊的資料結構，用以處理固定大小的資料\
+其實作通常是使用 circular queue，並頭尾相連
+
+ring buffer 的好處如下
++ 存取的時間複雜度為 $O(1)$, 而 linked list 則為 $O(n)$
++ ring buffer 空間大小固定，可以較省空間
++ 當取出 data, 其餘的資料不需要做移動
+
+ring buffer 由於頭尾相連的特性，因此在實作上需要注意一個細節\
+也就是我要怎麼分別 queue 是滿的還是空的 的情況\
+因為這兩種情況，他的 head 是等於 tail 的\
+這裡有幾個不一樣的判斷方法供參考
+
+## Counter Approach
+最簡單的方法之一，既然 ring buffer 是固定大小的，那我加一個 counter variable 紀錄當前有多少 data 在 buffer 裡面就可以判斷是否為空值或者是已經滿了\
+唯一的缺點就是，多執行緒的情況下 counter variable 需要注意 race condition(可以用 mutex lock)
+
+另一種的計數方法是分別紀錄讀寫次數，相差多少即為目前資料數量\
+不過我覺的既然都要記次數了，就沒必要紀錄兩次就是
+
+## Last Operation Approach
+當 read/write index 相等的同時，我們知道會有兩種狀況\
+而紀錄最後的操作為何可以幫助我們分辨
+
++ 最後的操作為 write :arrow_right: buffer 滿了
++ 最後的操作為 read :arrow_right: buffer 為空
+
+不難想到它也需要一個 variable 紀錄 last op\
+缺點也同上一個，多執行緒下需要進行 lock 保護資料
+
+## Store only Size - 1 Element
+ring buffer 一定會有的資料結構是，一個 read index 一個 write index\
+基本的 ring buffer 概念, 有資料才能讀 :arrow_right: write index 相較於 read index 一定會比較後面(資料寫進去之後你才能讀取)\
+當 write index 超過 read index 的時候，就代表滿了 嗎\
+對 但是 buffer 滿的同時，你也不小心蓋掉了一個 element，而且是還沒有讀取過的
+
+所以我們只能在它滿之前判斷出來，阿我們也不能用 read index == write index(因為它包含了兩種語意)\
+所以，要在 buffer 還剩一個空位的時候判斷，這時候 `write index + 1 = read index`\
+公式為 `(read index - 1) % length == write index`\
+而此時 write index 上面是沒有資料的\
+只能儲存 size - 1 個資料的原因在這
+
+舉個例子, ring buffer 的大小為 5
+
+||start||||
+|:--|:--:|:--:|:--:|:--:|:--:|
+|index|0|1|2|3|4|
+||read<br>write|||||
+
+寫了 4 筆資料之後，圖會長這樣
+
+||start||||
+|:--|:--:|:--:|:--:|:--:|:--:|
+|index|0|1|2|3|4|
+||read||||write|
+
+注意到此時 index 4 上面是沒有資料的\
+用公式計算是否已經滿了 `(0 - 1) % 5 == 4` :arrow_right: true
+
+> 也可以動手算算看，把 start 位置定在任意位置，ring buffer 不限制你從哪裡開始寫資料
+
+## Mirror Approach
+維基百科上面寫的太難了\
+想的簡單點，它跟 [Counter Approach](#counter-approach) 很像\
+除了 read/write index 以外，它引入了 read/write pointer 分別紀錄目前寫到了哪裡\
+你說 index 不就可以紀錄當前位置了嗎？ 問題是 read index == write index 的判斷是語意不清楚的
+
+Mirror Approach 說，我讓 pointer 紀錄的位置長達 `2n`\
+也就是 read/write index 的區間為 `0 到 n - 1`，而 read/write pointer 的區間為 `0 到 2n - 1`\
+每次的寫入讀取，index 與 pointer 都往後移動一個位置\
+所以你可以把 pointer 想像成，目前寫了多少資料進去 ring buffer 裡面\
+亦即 read pointer 就是 `已經讀取個數`，而 write pointer 為 `已經寫入個數`\
+那麼，如果 read pointer == write pointer, 換成中文的意思就是，**已經讀取個數等於已經寫入個數**\
+不就是 counter approach 的思想了嗎
+
+> read/write pointer 只會一直遞增，當超過 2n 的時候，就回到 0\
+> read/write pointer 最多只會相差 n\
+> 實際上可用空間只有 0 ~ n - 1 而已，pointer 只是起到紀錄的作用，不代表可以用到 2n 這麼多空間
+
+兩個 condition 合併起來，當 `read index == write index && read pointer == write pointer` 的時候，是不是就表明，**ring buffer 已經滿了**\
+當 `read index != write index && read pointer == write pointer` 的時候，代表 **ring buffer 為空**
+
+如果 ring buffer 長度為 2 的次方，可以簡化判斷式為 `write pointer == (read pointer xor n)`
+> n 為 2 的次方，亦即在二進位表示法中，只會有一個 bit 會有資料而已，所以如果 read/write pointer 只差一個 bit 就代表目前讀寫相差 n 個 element
+
+這個方法的好處就是，不會像是 [Store only Size - 1 Element](#store-only-size---1-element) 有空間沒利用到\
+Mirror Approach 可以完整利用到全部空間
+
+> 可參考 [2020q1 Homework (期末專題)](https://hackmd.io/@ambersun1234/2021linux_final)
+
 # Inter-Process Communication
 ![](https://www.w3schools.in/wp-content/uploads/2017/10/communications-models.png)
 
@@ -145,103 +236,12 @@ hchan 的結構中，包含了一個儲存資料的 circular queue(`buf`) 以及
 以及兩個 sender/receiver 的 wait queue(以 linked list 實作)\
 最後則是配上一個 mutex lock 保護 hchan 的資料
 
-### Ring Buffer
-channel 儲存資料的方式是使用一個 circular queue 進行實作，也就是 ring buffer\
-不使用 linked list 之類的結構而是使用 ring buffer 的原因是
-+ 存取的時間複雜度為 $O(1)$, 而 linked list 則為 $O(n)$
-+ ring buffer 空間大小固定，可以較省空間
-+ 當取出 data, 其餘的資料不需要做移動
-
-因此 buffer 通常都會以 circular queue 的形式實作\
+channel 儲存資料的方式是使用一個 circular queue 進行實作，也就是 [Ring Buffer](#ring-buffer)\
 golang 的 buf 是一個指向實際 ring buffer 的指標
 ![](https://www.readfog.com/assets/7f/02/7156a8f553394b4338589b1d2d4d.jpg)
 > ref: [深入理解 Golang Channel 結構](https://www.readfog.com/a/1651951565605539840)
 
-ring buffer 由於頭尾相連的特性，因此在實作上需要注意一個細節\
-也就是我要怎麼分別 queue 是滿的還是空的 的情況\
-因為這兩種情況，他的 head 是等於 tail 的\
-這裡有幾個不一樣的判斷方法供參考
-
-#### Counter Approach
-最簡單的方法之一，既然 ring buffer 是固定大小的，那我加一個 counter variable 紀錄當前有多少 data 在 buffer 裡面就可以判斷是否為空值或者是已經滿了\
-唯一的缺點就是，多執行緒的情況下 counter variable 需要注意 race condition(可以用 mutex lock)
-
-另一種的計數方法是分別紀錄讀寫次數，相差多少即為目前資料數量\
-不過我覺的既然都要記次數了，就沒必要紀錄兩次就是
-
-#### Last Operation Approach
-當 read/write index 相等的同時，我們知道會有兩種狀況\
-而紀錄最後的操作為何可以幫助我們分辨
-
-+ 最後的操作為 write :arrow_right: buffer 滿了
-+ 最後的操作為 read :arrow_right: buffer 為空
-
-不難想到它也需要一個 variable 紀錄 last op\
-缺點也同上一個，多執行緒下需要進行 lock 保護資料
-
-### Store only Size - 1 Element
-ring buffer 一定會有的資料結構是，一個 read index 一個 write index\
-基本的 ring buffer 概念, 有資料才能讀 :arrow_right: write index 相較於 read index 一定會比較後面(資料寫進去之後你才能讀取)\
-當 write index 超過 read index 的時候，就代表滿了 嗎\
-對 但是 buffer 滿的同時，你也不小心蓋掉了一個 element，而且是還沒有讀取過的
-
-所以我們只能在它滿之前判斷出來，阿我們也不能用 read index == write index(因為它包含了兩種語意)\
-所以，要在 buffer 還剩一個空位的時候判斷，這時候 `write index + 1 = read index`\
-公式為 `(read index - 1) % length == write index`\
-而此時 write index 上面是沒有資料的\
-只能儲存 size - 1 個資料的原因在這
-
-舉個例子, ring buffer 的大小為 5
-
-||start||||
-|:--|:--:|:--:|:--:|:--:|:--:|
-|index|0|1|2|3|4|
-||read<br>write|||||
-
-寫了 4 筆資料之後，圖會長這樣
-
-||start||||
-|:--|:--:|:--:|:--:|:--:|:--:|
-|index|0|1|2|3|4|
-||read||||write|
-
-注意到此時 index 4 上面是沒有資料的\
-用公式計算是否已經滿了 `(0 - 1) % 5 == 4` :arrow_right: true
-
-> 也可以動手算算看，把 start 位置定在任意位置，ring buffer 不限制你從哪裡開始寫資料
-
-### Mirror Approach
-維基百科上面寫的太難了\
-想的簡單點，它跟 [Counter Approach](#counter-approach) 很像\
-除了 read/write index 以外，它引入了 read/write pointer 分別紀錄目前寫到了哪裡\
-你說 index 不就可以紀錄當前位置了嗎？ 問題是 read index == write index 的判斷是語意不清楚的
-
-Mirror Approach 說，我讓 pointer 紀錄的位置長達 `2n`\
-也就是 read/write index 的區間為 `0 到 n - 1`，而 read/write pointer 的區間為 `0 到 2n - 1`\
-每次的寫入讀取，index 與 pointer 都往後移動一個位置\
-所以你可以把 pointer 想像成，目前寫了多少資料進去 ring buffer 裡面\
-亦即 read pointer 就是 `已經讀取個數`，而 write pointer 為 `已經寫入個數`\
-那麼，如果 read pointer == write pointer, 換成中文的意思就是，**已經讀取個數等於已經寫入個數**\
-不就是 counter approach 的思想了嗎
-
-> read/write pointer 只會一直遞增，當超過 2n 的時候，就回到 0\
-> read/write pointer 最多只會相差 n\
-> 實際上可用空間只有 0 ~ n - 1 而已，pointer 只是起到紀錄的作用，不代表可以用到 2n 這麼多空間
-
-兩個 condition 合併起來，當 `read index == write index && read pointer == write pointer` 的時候，是不是就表明，**ring buffer 已經滿了**\
-當 `read index != write index && read pointer == write pointer` 的時候，代表 **ring buffer 為空**
-
-如果 ring buffer 長度為 2 的次方，可以簡化判斷式為 `write pointer == (read pointer xor n)`
-> n 為 2 的次方，亦即在二進位表示法中，只會有一個 bit 會有資料而已，所以如果 read/write pointer 只差一個 bit 就代表目前讀寫相差 n 個 element
-
-這個方法的好處就是，不會像是 [Store only Size - 1 Element](#store-only-size---1-element) 有空間沒利用到\
-Mirror Approach 可以完整利用到全部空間
-
-> 可參考 [2020q1 Homework (期末專題)](https://hackmd.io/@ambersun1234/2021linux_final)
-
-<hr>
-
-回到 hchan 的定義\
+所以回到 hchan 的定義\
 因此我們可以發現到，`sendx` 與 `receivex` 分別代表 send(write) index 與 receive(read) index
 
 ```go
@@ -452,6 +452,19 @@ if c.closed != 0 {
 我們可以發現，當 channel 被 closed 的時候，他的返回值會被清空(`typedmemclr`)\
 所以你讀到的數值就是空值(它會根據型態自動轉型, e.g. `false`, `0`)
 
+## Explicit Close Channel
+當你不需要 channel 的時候，可以使用 `close(channel)` 來關閉 channel\
+不過通常來說你不需要手動關閉 channel
+
+根據 [A Tour of Go - Range and Close](https://go.dev/tour/concurrency/4) 所述
+
+> Channels aren't like files; \
+> you don't usually need to close them. \
+> Closing is only necessary when the receiver must be told there are no more values coming, \
+> such as to terminate a range loop.
+
+所以你不用 close 它，GC 會處理的
+
 ## Share Memory by Communicating
 `Do not communicate by sharing memory; instead, share memory by communicating.`
 
@@ -627,3 +640,4 @@ for {
 + [7.1 channel](https://tiancaiamao.gitbooks.io/go-internals/content/zh/07.1.html)
 + [【我的架构师之路】- golang源码分析之channel的底层实现](https://blog.csdn.net/qq_25870633/article/details/83388952)
 + [2021q3 Homework3 (lfring)](https://hackmd.io/@RinHizakura/ryx18x4-t)
++ [Is it OK to leave a channel open?](https://stackoverflow.com/questions/8593645/is-it-ok-to-leave-a-channel-open)
