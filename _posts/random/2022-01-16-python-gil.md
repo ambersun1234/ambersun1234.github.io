@@ -439,6 +439,57 @@ if __name__ == "__main__":
 不過也是有人提出了可以完全去除 GIL 的實作，就列出來當作參考\
 [colesbury/nogil](https://github.com/colesbury/nogil)
 
+## PEP-703
+在 2023 年初，python 內部提出了 [PEP-703](https://peps.python.org/pep-0703)\
+旨在消滅 GIL, 而這項 proposal 已經被正式被接受了
+
+消滅 GIL 是好事嗎？\
+開發者現在必須要手動的控制各種 lock 的狀態避免 race condition\
+給了更大的彈性，能夠更好的處理多執行緒\
+同一時間，在撰寫上也必須要更加的小心了
+
+根據 [PEP-703 Container Thread Safety](https://peps.python.org/pep-0703/#container-thread-safety) 中所述
+
+> This PEP proposes using per-object locks to provide many of the same protections that the GIL provides. \
+> For example, every list, dictionary, and set will have an associated lightweight lock. \
+> All operations that modify the object must hold the object’s lock. \
+> Most operations that read from the object should acquire the object’s lock as well; \
+> the few read operations that can proceed without holding a lock are described below.
+
+想當然，沒有全局的 lock, 區域的 lock 的引入勢必是必要的\
+他們是說這個是一個 lightweight lock 就是\
+不過對於效能的影響性大嗎？
+
+根據 [PEP-703 Performance](https://peps.python.org/pep-0703/#performance) 的結果
+
+||Intel Skylake|AMD Zen 3|
+|:--|:--|:--|
+|One thread|6%|5%|
+|Multiple threads|8%|7%|
+
+它其實是增加 overhead 的！\
+因為引入了 per-object locks 的結果所以算是可以預期的
+
+但為什麼多執行緒的情況下反而更糟呢？
+
+> For thread-safety reasons, \
+> an application running with multiple threads will only specialize a given bytecode once; \
+> this is why the overhead for programs that use multiple threads is larger compared to programs that only use one thread.
+
+何謂 specialize?\
+根據 [PEP-659](https://peps.python.org/pep-0659/)
+
+> At runtime, Python will try to look for common patterns and type stability in the executing code. \
+> Python will then replace the current operation with a more specialized one.
+
+基本上因為 python 是動態語言，而 cpython 內部實作有針對那些常見的 pattern 做了處理，將它替換成 **specialized** 的實作\
+想當然是為了優化的那類東西
+
+而因為多執行緒的解放\
+同一段 code 的優化就不再只有單一解答\
+而是根據不同的 thread 處理的情況來做特別優化的處理(你怎麼拆 task 會導致優化出不同結果)\
+所以官方的 benchmark 結果，多執行緒下更慢
+
 # Reference
 
 - [The Python GIL (Global Interpreter Lock)](https://python.land/python-concurrency/the-python-gil)
