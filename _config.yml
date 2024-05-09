@@ -224,7 +224,7 @@ timezone: Asia/Taipei # https://en.wikipedia.org/wiki/List_of_tz_database_time_z
 
 # Plugins (previously gems:)
 plugins:
-  - jekyll-last-modified-at
+  # - jekyll-last-modified-at
   - jekyll-paginate
   - jekyll-sitemap
   - jekyll-gist
