@@ -460,6 +460,8 @@ if __name__ == "__main__":
 他們是說這個是一個 lightweight lock 就是\
 不過對於效能的影響性大嗎？
 
+> 一個簡單的概念就是盡量讓 critical section 小
+
 根據 [PEP-703 Performance](https://peps.python.org/pep-0703/#performance) 的結果
 
 ||Intel Skylake|AMD Zen 3|
