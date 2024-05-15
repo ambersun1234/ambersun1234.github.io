@@ -27,4 +27,4 @@ Hope you'll find something interesting in this blog
 也希望這裡的文章能帶給你一些幫助
 
 # Resume
-<iframe src="https://drive.google.com/file/d/1ag8KNak-MwvyMoR7g6ZblUiBZSrF6CKM/preview" width="100%" height="1160px" allow="autoplay"></iframe>
+<iframe src="https://drive.google.com/file/d/1ag8KNak-MwvyMoR7g6ZblUiBZSrF6CKM/preview" width="100%" height="1215px" allow="autoplay"></iframe>
