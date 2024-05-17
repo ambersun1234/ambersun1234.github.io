@@ -443,7 +443,232 @@ record protocol 主要是用於封裝高階 protocol 的資料\
 |Used Socket|2|1|
 
 # TCP/UDP Golang Example
-> to be continued
+詳細的程式碼可以參考 [ambersun1234/blog-labs/echo-tcp-udp](https://github.com/ambersun1234/blog-labs/tree/master/echo-tcp-udp)
+
+## TCP
+```go
+func tcpHandle(conn net.Conn) {
+    defer conn.Close()
+
+    scann := bufio.NewScanner(conn)
+    for scann.Scan() {
+        input := scann.Text()
+
+        logger.Println("Receive: ", input)
+        if _, err := conn.Write([]byte(fmt.Sprintf("%s\n", input))); err != nil {
+            logger.Fatalln(err)
+        }
+    }
+}
+
+func tcpServer() {
+    li, err := net.Listen("tcp", fmt.Sprintf(":%d", tcpPort))
+    if err != nil {
+        logger.Fatalln(err)
+    }
+    defer li.Close()
+    logger.Printf("Listening on: localhost:%v\n", tcpPort)
+
+    for {
+        conn, err := li.Accept()
+        if err != nil {
+            logger.Fatalln(err)
+        }
+        if err := conn.SetDeadline(time.Time{}); err != nil {
+            logger.Fatalln(err)
+        }
+
+        go tcpHandle(conn)
+    }
+}
+
+func tcpClient() {
+    host := os.Getenv("HOST")
+    conn, err := net.Dial("tcp", fmt.Sprintf("%v:%d", host, tcpPort))
+    if err != nil {
+        logger.Fatalln(err)
+    }
+
+    ticker := time.NewTicker(2 * time.Second)
+    for {
+        <-ticker.C
+
+        // send data
+        msg := "Hello World!"
+        logger.Println("Send: ", msg)
+        if _, err := conn.Write([]byte(fmt.Sprintf("%s\n", msg))); err != nil {
+            logger.Fatalln(err)
+        }
+
+        // receive data
+        data, err := bufio.NewReader(conn).ReadString('\n')
+        if err != nil {
+            logger.Fatalln(err)
+        }
+        logger.Printf("Server ACK with: '%v'\n", string(data))
+    }
+}
+```
+基本上需要注意的點是
+1. TCP 是以換行為分隔符號, 所以你送資料的時候記得加 `\n`
+
+其他就相對單純\
+用一個 for-loop 持續監聽連線\
+當新的連線進來的時候，就開啟 goroutine 來處理它(line 32)\
+這也是為什麼上面我們說 [TCP](#tcp---transmission-control-protocol) 需要兩個 sockets
+
+## UDP Unicast
+```go
+func udpUnicastHandle(conn *net.UDPConn) {
+    buf := make([]byte, 1024)
+
+    for {
+        n, adr, err := conn.ReadFromUDP(buf)
+        if err != nil {
+            logger.Fatalln(err)
+        }
+
+        data := string(buf[:n])
+        logger.Println("Receive: ", data)
+        if _, err := conn.WriteToUDP([]byte(fmt.Sprintf("%v\n", data)), adr); err != nil {
+            logger.Fatalln(err)
+        }
+    }
+}
+
+func udpUnicastServer() {
+    address := net.UDPAddr{
+        Port: udpUnicastPort,
+        IP:   net.ParseIP("0.0.0.0"),
+    }
+    li, err := net.ListenUDP("udp", &address)
+    if err != nil {
+        logger.Fatalln(err)
+    }
+    logger.Printf("Listening on: localhost:%v\n", udpUnicastPort)
+
+    udpUnicastHandle(li)
+}
+
+func udpUnicastClient() {
+    host := os.Getenv("HOST")
+    conn, err := net.Dial("udp", fmt.Sprintf("%v:%d", host, udpUnicastPort))
+    if err != nil {
+        logger.Fatalln(err)
+    }
+
+    ticker := time.NewTicker(2 * time.Second)
+    for {
+        <-ticker.C
+
+        // send data
+        msg := "Hello World!"
+        logger.Println("Send: ", msg)
+        if _, err := conn.Write([]byte(msg)); err != nil {
+            logger.Fatalln(err)
+        }
+
+        // receive data
+        data, err := bufio.NewReader(conn).ReadString('\n')
+        if err != nil {
+            logger.Fatalln(err)
+        }
+        logger.Printf("Server ACK with: '%v'\n", string(data))
+    }
+}
+```
+
+跟 [TCP](#tcp) 的實作可以說是一模一樣\
+差在它不會預先建立連線\
+然後一些 function 改成使用 UDP 版本的這樣而已
+
+## UDP Multicast
+```go
+func udpMulticastHandle(conn *net.UDPConn) {
+    address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%v:%v", udpMulticastHost, udpMulticastPort))
+    if err != nil {
+        logger.Fatalln(err)
+    }
+    buf := make([]byte, 1024)
+
+    for {
+        n, _, err := conn.ReadFromUDP(buf)
+        if err != nil {
+            logger.Fatalln(err)
+        }
+
+        data := string(buf[:n])
+        logger.Println("Receive: ", data)
+        if _, err := conn.WriteTo([]byte(fmt.Sprintf("%v\n", data)), address); err != nil {
+            logger.Fatalln(err)
+        }
+    }
+}
+
+func udpMulticastServer() {
+    address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%v:%v", udpMulticastHost, udpMulticastPort))
+    if err != nil {
+        logger.Fatalln(err)
+    }
+    li, err := net.ListenMulticastUDP("udp", nil, address)
+    if err != nil {
+        logger.Fatalln(err)
+    }
+    logger.Printf("Listening on: localhost:%v\n", udpMulticastPort)
+
+    udpMulticastHandle(li)
+}
+
+func udpMulticastClient() {
+    address, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%v:%v", udpMulticastHost, udpMulticastPort))
+    if err != nil {
+        logger.Fatalln(err)
+    }
+
+    conn, err := net.ListenMulticastUDP("udp", nil, address)
+    if err != nil {
+        logger.Fatalln(err)
+    }
+
+    ticker := time.NewTicker(2 * time.Second)
+    for {
+        <-ticker.C
+
+        // send data
+        msg := "Hello World!"
+        logger.Println("Send: ", msg)
+        if _, err := conn.WriteTo([]byte(msg), address); err != nil {
+            logger.Fatalln(err)
+        }
+
+        // receive data
+        data, err := bufio.NewReader(conn).ReadString('\n')
+        if err != nil {
+            logger.Fatalln(err)
+        }
+        logger.Printf("Server ACK with: '%v'\n", string(data))
+    }
+}
+```
+
+UDP Multicast 就有意思的多了\
+首先，你必須使用 `ListenMulticastUDP` 這個 function\
+不論 client 或 server\
+注意到不能使用 ListenUDP
+
+另外一個有趣的點是先前在 [Multicast](#multicast) 提到\
+群播發送訊息的人不會收到自己的訊息\
+根據 [https://pkg.go.dev/net#ListenMulticastUDP](https://pkg.go.dev/net#ListenMulticastUDP) 裡面提到
+
+> Note that ListenMulticastUDP will set the IP_MULTICAST_LOOP socket option to 0 under IPPROTO_IP, to disable loopback of multicast packets.
+
+而你在測試 Multicast 的時候就必須要使用不同的機器\
+才可以正確的讀取到群播的資料\
+並不需要手動撰寫過濾自身訊息的程式(你必須要使用 `ListenMulticastUDP` 這個 function)
+
+並且，server 寫資料的時候也要注意\
+因為是群播，所以你的 destination 也必須要是 `群播地址`(第 16 行)\
+不要寫成 client address 不然你會讀不到資料
 
 # References
 + 電腦網際網路(ISBN: 978-986-463-950-2)
