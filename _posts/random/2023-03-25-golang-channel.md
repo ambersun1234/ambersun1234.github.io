@@ -206,6 +206,7 @@ P 將資料放到 mailbox 裡面，Q 則從 mailbox 裡將資料取出\
 # Introduction to Golang Channel
 多執行緒下溝通的方式，就如同前面所提到的 [shared memory](#shared-memory) 或者是 [message passing](#message-passing)\
 Golang 作為一個強大的語言，它建議我們，可以採用 channel 的方式進行溝通，共享資料\
+所以 channel 本身是用來進行 **資料的傳遞**, 切記不要將它拿來當作 storage 用(會有效能問題而且它也不是設計來給你這樣用的)\
 接下來讓我們看看作為與 goroutine 相輔相成的 channel 實際上是如何運作的吧
 
 ## How does Channel Work
@@ -480,6 +481,9 @@ channel 在設計上，就根本的解決了 data race 的問題\
 這樣做有什麼好處嗎\
 我個人是覺的透過 channel 的機制，可以讓你撰寫出容易理解並維護的程式\
 可以參考 [Producer Consumer Example](#producer-consumer-example)
+
+> 注意到雖然 channel 可以避免 explicit locking\
+> 但未必 locking 是一個不好的選項，在實作時，應當就狀況考慮相關 trade-off
 
 # Select
 select 用於在多個 channel 之間，選擇其中一個並 process\
