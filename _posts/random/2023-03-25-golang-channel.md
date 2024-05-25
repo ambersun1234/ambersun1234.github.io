@@ -4,6 +4,8 @@ date: 2023-03-25
 description: 在不同的 process 之間進行溝通的方式有很多種，本篇文章將會介紹一些常見的溝通方式以及 golang 推崇的 channel 機制
 categories: [random]
 tags: [golang, coroutine]
+redirect_from:
+    - /posts/golang-channel/
 math: true
 ---
 
