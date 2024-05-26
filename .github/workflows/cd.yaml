@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ambersun1234/image-cors-checker@v1.0.1
+      - uses: ambersun1234/image-cors-checker@v1.0.2
         with:
           check_path: ${{ github.workspace }}/_posts
           formats: "jpg,jpeg,png,gif,webp"
