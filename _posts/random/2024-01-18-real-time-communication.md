@@ -11,6 +11,8 @@ math: true
 polling 輪詢是最為簡單的一種作法\
 其核心概念為定時的發出 request 確認
 
+> 又名 short polling
+
 ![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*YiWBVCm1Ge7LklMsOcZi2g.png)
 > ref: [HTTP Short vs Long Polling vs WebSockets vs SSE](https://medium.com/techieahead/http-short-vs-long-polling-vs-websockets-vs-sse-8d9e962b2ba8)
 
@@ -85,9 +87,15 @@ while (timeout !== 0) {
 <hr>
 
 [Polling](#polling) 我們知道，它會 **一直** 詢問 server\
-而這個一直的過程，是不斷的 TCP 建立/中斷 連線\
-正因為這個建立刪除的過程，使得使用 polling 的方法，他的 overhead 會比較高\
-因為 TCP 建立連線會需要進行 `Three-way handshake`(三方交握)
+而這個一直的過程，會導致不必要的 overhead\
+如果一直沒資料，每次問不會比較快
+
+TCP handshake 的 overhead 可能不需要考慮，因為 HTTP 支援 persistent connection\
+但是也是有可能對於網路造成壅塞
+
+> 可參考\
+> [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/network-http1)\
+> [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/network-basics)
 
 > 使用 [Long Polling](#long-polling) 一樣會有握手的情況發生\
 > 但這個次數相對 Polling 來說是減少的
@@ -103,7 +111,7 @@ timeout 設定成一分鐘的情況下\
 有可能在這一分鐘內就有新的資料，不過因為 client 還在 timeout 的時間內，client 端對新資料是一無所知的\
 只有當下一次 request 的時候才會包含 "幾秒鐘前的新資料"
 
-> [Long Polling](#long-polling) 跟 [Websocket](#websocket) 這種真正即時的還是有差\
+> [Long Polling](#long-polling) 跟 [Websocket](#websocket) 這種真正即時的比較還是有差\
 > 不過還是比 Polling 更好
 
 # Websocket Overhead
