@@ -50,6 +50,7 @@ message queue 顧名思義他是一個 queue，用來存放 message 的\
 7. 擁有 message persistence 的特性
     + 雖說 message queue 本身是以 highly reliable 為原則設計的，但它還是有機率掛掉，掛掉之後還沒被 consume 的 message 不能不見
 8. 一致性的 message format
+    + message queue 本身並沒有規定傳入的資料需要符合特定的資料格式(提供彈性)，對它來說都是 "資料"。
 
 ## Re-enqueue Message
 message queue 在某些狀況下，會需要重新將 message 放入 queue 當中\
@@ -86,6 +87,34 @@ retry 基本上有兩種作法
 如此一來便不會造成 high priority queue 的效能瓶頸\
 而每個 queue 可以對應到不同的 consumer 實作做最佳化
 
+# Publisher-Subscriber Pattern
+稍微複習一下 Publisher-Subscriber Pattern
+
+> 或者你可以到 [設計模式 101 - Observer Pattern \| Shawn Hsu](../../design%20pattern/design-pattern-observer#publisher-subscriber-pattern) 複習
+
+![](https://miro.medium.com/max/495/1*-GHFC93E4ODwNc98IE5_vA.gif)
+> ref: [Observer vs Pub-Sub Pattern](https://betterprogramming.pub/observer-vs-pub-sub-pattern-50d3b27f838c)
+
+publisher 將 message 放入一個空間內，通常是一個 queue\
+然後由 subscriber 根據資料的 **標籤**(i.e. topic) 自行取用需要的資料\
+這種方式，publisher, subscriber 雙方都不會知道對方是誰\
+而且你 ***哪時候*** 要拿，我也不 care
+
+# Pull/Push Protocol
++ server 直接往 client 丟資料，然後 client 沒有要求 :arrow_right: push protocol
++ client 向 server 主動要資料 :arrow_right: pull protocol
+
+push protocol 由於是 server 主動往 client 丟資料\
+一般來說，你會有很多個 client 同時處理資料\
+對於每一個 connection 都使用相同的發送速度顯然太不合理(而且也難以維護)\
+萬一有某個 client 它消化的速度跟不上怎麼辦？ 只好建立一個 buffer 留著，但這顯然沒意義(你都用 message queue 了)
+
+與其這樣不如讓 client 自己決定接收資料的速度\
+它可以根據自己處理的狀況動態的調整\
+但有一個缺點是，當 queue 是空的的情況下，client 的行為就會變成 polling 了
+
+> 可參考 [淺談 Polling, Long Polling 以及其他即時通訊方法論 \| Shawn Hsu](../../random/real-time-communication)
+
 # Protocols of Message Queue
 ## JMS
 現有的 RPC call 系統，要求 client 與 server 都同時在線才能進行通訊\
@@ -93,7 +122,7 @@ retry 基本上有兩種作法
 而這無疑阻礙了低耦合系統的開發
 
 JMS - Java Messaging Service 是為了克服以上問題而開發出的一套 messaging 系統\
-支援一般 p to p 以及 [Publisher-Subscriber Pattern](#publisher-subscriber-pattern) 的通訊模型\
+支援一般 P2P 以及 [Publisher-Subscriber Pattern](#publisher-subscriber-pattern) 的通訊模型\
 它包含了以下元件
 + `JMS provider` :arrow_right: 實作了 JMS specification 的 server
 + `JMS client`
@@ -157,7 +186,7 @@ exchange 主要負責執行 `routing` 的工作，負責將從 publisher 送過�
 > 所以 exchange 本身並不會儲存 message
 
 exchange 通常會檢查一個叫做 `routing key` 的欄位
-+ 在 p to p 的模式下，通常為 message queue 的名字
++ 在 P2P 的模式下，通常為 message queue 的名字
 + 在 pub/sub 的模式下，通常為 topic 的名字
 
 exchange 有 5 種模式(direct, topic, fanout, headers 以及 system)，但是下面兩種是最重要的
@@ -215,28 +244,6 @@ message queue 會在 **第一時間**，想辦法將訊息送到 consumer 手上
 |Asynchronous|:heavy_check_mark:|:x:|:heavy_check_mark:|
 |Multiple Language Support|:x:(Java)|:heavy_check_mark:|:heavy_check_mark:|
 
-# Publisher-Subscriber Pattern
-稍微複習一下 Publisher-Subscriber Pattern
-
-> 或者你可以到 [設計模式 101 - Observer Pattern \| Shawn Hsu](../../design%20pattern/design-pattern-observer#publisher-subscriber-pattern) 複習
-
-![](https://miro.medium.com/max/495/1*-GHFC93E4ODwNc98IE5_vA.gif)
-> ref: [Observer vs Pub-Sub Pattern](https://betterprogramming.pub/observer-vs-pub-sub-pattern-50d3b27f838c)
-
-publisher 將 message 放入一個空間內，通常是一個 queue\
-然後由 subscriber 根據資料的 **標籤**(i.e. topic) 自行取用需要的資料\
-這種方式，publisher, subscriber 雙方都不會知道對方是誰\
-而且你 ***哪時候*** 要拿，我也不 care
-
-<hr>
-
-而 [Kafka](#apache-kafka) 是 Publisher-Subscriber pattern 的實現\
-不同於 message queue 用於資料傳遞，[Kafka](#apache-kafka) 主要是用於 "事件串流"\
-只是它剛好也可以做資料傳遞
-
-> [RabbitMQ](#rabbitmq) 則是屬於 Producer-Consumer\
-> 因為它會確保 consumer 正確的收到資料
-
 # Apache Kafka
 根據 [Kafka](https://kafka.apache.org/) 官網，他是這麼定義自己的產品的
 
@@ -260,13 +267,15 @@ Apache Kafka 本質上是 [Publisher-Subscriber Pattern](#publisher-subscriber-p
 + topic(log-like structure) 負責儲存訊息
 + subscriber 負責消化訊息
 
-其中 topic 是主要儲存訊息的資料結構\
-它可以設定不同的名字，用以區分訊息種類，subscriber 再依據需要的主題進行監聽即可\
+### Data Store
+其中 topic 是主要儲存訊息的資料結構(N to N 的架構，可以有多個 publisher 也可以有多個 subscriber)\
+它可以設定不同的名字，用以區分訊息種類，subscriber 再依據需要的主題進行監聽即可
+
 topic 是一個 order sequence of event, 我們剛剛提到，事件是會分先後的\
-並且 topic 本身的資料是 durably stored 的，亦即它不會因為斷電等因素而掉資料\
+並且 topic 本身的資料是 **durably stored** 的，亦即它不會因為斷電等因素而掉資料\
 其中的原因為
-1. 他是儲存在 **硬碟** 裡面
-2. 資料會被拆成多份(partitioned)，並且擁有多個副本(replication)
+1. 他是儲存在 `硬碟` 裡面
+2. 資料會被拆成多份(partitioned)，並且擁有多個副本(replication), 可參考 [Partition and Replication](#partition-and-replication)
 
 儲存在硬碟裡，是可以避免掉資料的問題\
 但硬碟不是很慢嗎，Kafka 是如何維持高吞吐量的?\
@@ -281,6 +290,14 @@ sequential I/O 根據他們的說法，相對於 Random I/O 有高達 6000 倍�
 
 > 有關 cache 的討論，可參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../database-cache)
 
+將源源不斷的事件資料，透過適當的壓縮儲存\
+而這些原本屬於 random write 的資料，變成 linear write\
+也就是可以利用上面提到的 sequential I/O
+
+利用 page cache(disk cache) 搭配 [sendfile](https://man7.org/linux/man-pages/man2/sendfile.2.html) system call，更可以減少 overhead\
+在傳輸資料的時候，sendfile 系統呼叫能夠減少 copy buffer 的次數\
+使得 kernel-space 的資料可以直接透過 NIC buffer 傳到 consumer 手上(不用經過 user-space)
+
 <hr>
 
 另一個維持高吞吐量的重點在於儲存的資料結構\
@@ -294,8 +311,8 @@ Random I/O 必須要做 disk seek, 而這個操作幾乎不可能 parallel 執�
 因此採用 B-Tree 結構會有一些 overhead
 
 所以 Kafka 是使用 Queue 這個資料結構\
-它可以實現真正意義上的 $O(1)$ 寫入(e.g. doubly linked-list)\
-而這正好對應了 "事件" 本身的特性，Queue 本身可以維持一定的順序
+它可以實現真正意義上的 $O(1)$ 寫入\
+而 Kafka 你可以想像成是寫入 **檔案**, 一個 topic 對應到一個資料夾，裡面有若干個檔案
 
 > 另外就是，topic 裡面的資料不會因為已經被 consume 就把它刪掉\
 > 我們可以設定資料要被留存多久
@@ -303,9 +320,19 @@ Random I/O 必須要做 disk seek, 而這個操作幾乎不可能 parallel 執�
 ![](https://kafka.apache.org/images/streams-and-tables-p1_p4.png)
 > ref: [INTRODUCTION](https://kafka.apache.org/intro)
 
+<hr>
+
+稍早我們也提到，message queue 有自己的通用格式\
+Kafka 為了維持高吞吐量，也擁有自己的 binary message format\
+broker, producer, consumer 都共用，所以不需要額外的處理
+
 ### Partition and Replication
 Kafka 本身是分散式的系統\
 就我們目前知道的，Kafka 的 topic 是會被 partitioned，配合 replication 可以達到高可用性\
+每個 topic 裡面的資料都將被切分成若干個 partition(僅擁有部份 topic 的資料)\
+Kafka 的設計是在單位時間內只允許一個 consumer 讀取一個 partition\
+前面提到一個 topic 可以有很多個 consumer, 利用 partition 的方式可以達到高可用
+
 而 Kafka 是使用 single leader replication 的機制\
 亦即每個 partition 只有一個 node(leader) 負責寫入，剩下的 node(follower) 或是 leader 提供讀取的功能
 
@@ -327,6 +354,31 @@ Kafka 對於節點失效的定義有那麼一點點的不同\
 > ISR(In-Sync Replica) 指的是與 leader 同步的 replicas\
 > 新的 leader 只能從 ISR 裡面挑選
 
+### How to Consume Message
+使用哪一種的 [Pull/Push Protocol](#pullpush-protocol) 是個好問題
+
+以 Kafka 來說，是使用 pull based 的 protocol\
+client 透過 offset 指定要從哪一個位置開始讀取\
+因為資料的儲存方式是檔案，所以就是直接 seek 到指定位置，讀取一定數量的資料即可
+
+再來的問題是\
+即使資料是保存在硬碟當中的，我們不可能無限的永久的儲存\
+他在某一天肯定是會被刪除的
+
+確保資料被正確的 consume 是一件重要的事情\
+[RabbitMQ](#rabbitmq) 會透過 acknowledgement 來確保資料被正確的讀取以及處理\
+所以可以安全的刪除，但這會有問題
+1. consume 了，處理了但是失敗了，同一個資料會被重複處理
+2. 一筆資料現在必須包含 ack 的欄位，用以紀錄是否已經被正確的處理
+
+Kafka 的設計是這樣的\
+我一樣利用 ack 的概念，只不過我不需要每筆資料都紀錄\
+因為 "事件" 的概念是 Kafka 的核心，而又因為他是儲存在類似檔案的結構裡面，他是有序的\
+所以我只要紀錄該 consumer 的 offset 就好了(offset 以前的我就已經讀取完成了)\
+我只需要 maintain offset 就好了, 相比維護每筆資料的 ack 這顯然輕量多了
+
+> 此外透過 offset 我也可以讀取以前的資料(當你發現已經 consume 過的資料有錯誤的時候可以再次讀取)
+
 ## ZooKeeper and KRaft
 > To be continued
 
@@ -334,10 +386,24 @@ Kafka 對於節點失效的定義有那麼一點點的不同\
 提到 message queue\
 不免俗的還是要要介紹一下 RabbitMQ
 
+## Architecture
 RabbitMQ 是一套 open source 的 message broker\
 其實作了 [AMQP](#amqp), 提供了高可用性、且易於擴展的分散式 broker 架構
 
-## Installation
+其核心概念就如同我們上面討論過 [AMQP](#amqp) 一樣\
+這裡就不在贅述
+
+### How to Consume Message
+RabbitMQ 是採用 [Pull/Push Protocol](#pullpush-protocol) 中的 push protocol\
+亦即資料是由 server 主動推送至 client 的\
+而這些資料會需要進行 acknowledgement 的操作，所以 producer 是知道 consumer 拿資料了沒\
+並且這個資料不會像 Kafka 一樣是永久的儲存
+
+然後 1 個 topic 通常只會有 1 個 consumer\
+這點也是不同的
+
+## Example
+### Installation
 一樣使用 docker 將服務跑起來
 ```shell
 $ docker run -d \
@@ -355,7 +421,7 @@ container 需要使用兩個 port `5672` 與 `15672`\
 ![](https://www.cloudamqp.com/img/blog/rabbitmq-mngmt-overview.png)
 > ref: [Part 3: The RabbitMQ Management Interface](https://www.cloudamqp.com/blog/part3-rabbitmq-for-beginners_the-management-interface.html)
 
-## Hello world
+### Hello world
 ```go
 package main
 
@@ -485,6 +551,8 @@ RabbitMQ 有提供 message acknowledgement，亦即你可以確保 consumer 有�
 |Performance|Million messages per second|Thousands messages per second|
 |Authentication|:heavy_check_mark:|:heavy_check_mark:|
 |Fault Tolerance|:heavy_check_mark:|:heavy_check_mark:|
+|Data Persistence|:heavy_check_mark:(with delay)|:x:(delete on acknowledgement)|
+|Message Fetching|pull based|push based|
 
 # References
 + [Kafka 和 RabbitMQ 有何區別？](https://aws.amazon.com/tw/compare/the-difference-between-rabbitmq-and-kafka/)
