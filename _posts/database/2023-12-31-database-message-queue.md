@@ -539,6 +539,8 @@ RabbitMQ 有提供 message acknowledgement，亦即你可以確保 consumer 有�
 這個 acknowledgement 是由 consumer 送回 server 的\
 當 message 沒有被正確 receive，RabbitMQ 會自動將訊息重新 enqueue 確保資料不會消失
 
+> 如果 Consume 有設置 auto-ack, 你手動呼叫 `msg.Ack()` 會錯哦
+
 完整原始碼可以參考 [ambersun1234/blog-labs/message-queue](https://github.com/ambersun1234/blog-labs/tree/master/message-queue)
 
 # Differences between Kafka and RabbitMQ
