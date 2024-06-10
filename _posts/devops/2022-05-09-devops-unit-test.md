@@ -231,6 +231,8 @@ Test Double 內部又分五個種類
 
 ![](/assets/img/posts/dip.jpg)
 
+> 可參考 [如何寫出好的程式碼架構 \| Shawn Hsu](../../random/solid)
+
 # Issues that I have when Writing Tests
 到這裡你已經足夠了解如何撰寫測試了\
 不過在一開始我寫測試的時候，錯誤的實作了一些東西\
