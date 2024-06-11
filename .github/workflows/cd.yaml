@@ -97,3 +97,27 @@ jobs:
         with:
           provider: "github" # Default is github
           token: ${{ secrets.GITHUB_TOKEN }} # It's your Personal Access Token(PAT)
+
+  create_search_index:
+    runs-on: ubuntu-latest
+    needs: [build_and_deploy]
+    env:
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      CLIENT_EMAIL: ${{ secrets.CLIENT_EMAIL }}
+    steps:
+      - uses: actions/setup-node@v4
+      - name: create json file
+        run: |
+          mkdir ~/.gis
+          cat << EOF > ~/.gis/service_account.json
+          {
+            "private_key": "$(printenv PRIVATE_KEY)",
+            "client_email": "$(printenv CLIENT_EMAIL)"
+          }
+          EOF
+      - name: Install Google Indexing Script
+        run: |
+          npm install -g google-indexing-script
+      - name: Create Search Index
+        run: |
+          google-indexing-script https://ambersun1234.github.io
