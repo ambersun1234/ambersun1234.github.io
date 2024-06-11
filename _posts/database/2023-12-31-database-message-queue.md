@@ -66,6 +66,40 @@ retry 基本上有兩種作法
 如果是使用 for-loop retry, 網路的問題並不會被解決(中間網路斷線，rate limit 都是)\
 而如果你選擇重新 enqueue, 在多個 consumer 的情況下(執行在不同機器上)，可能就解決了
 
+另外，重新 enqueue 要實作在哪裡呢\
+像是 [RabbitMQ](https://www.rabbitmq.com/) 這種\
+如果是自己有額外包一層 helper, 那麼 consume message 通常我們都會傳一個 callback 進去 consume\
+有點像這樣
+```go
+for {
+    select {
+        case <-mq.ctx.Done():
+            return nil
+
+        case msg := <-queue:
+            mq.logger.Debug("Received message", zap.String("body", string(msg.Body)))
+
+            if err := callback(string(msg.Body)); err != nil {
+                mq.logger.Error("Failed to process message", zap.Error(err))
+            }
+        }
+    }
+```
+
+一直從 queue 裡面將 message 讀出來\
+在第 10 行做 re-enqueue 的實作你覺的如何?\
+hmmm 不好，其實應該要在 callback 裡面自己做 re-enqueue 的機制
+
+對 callback 是噴 error 出來沒錯\
+但是你沒辦法知道說它到底是什麼原因導致失敗的\
+如果是因為 message 本身就不合法，這個 case 算是正確的被 consume，而失敗是合理的\
+所以你應該要讓 caller 自己決定怎麼處理要不要 retry
+
+> message 不合法的情況，假設 mq 這裡是負責處理發送 email\
+> 但它收到的訊息可能 email 格式不對或是缺少必要的欄位(假設你 produce 的 code 改壞掉之類的)\
+> 你再怎麼 re-enqueue 都沒辦法解決問題，所以才要讓 caller 自己決定\
+> 當然你可以使用 [DLQ](#dlqdead-letter-queue) 放著好方便查看問題
+
 ## DLQ(Dead Letter Queue)
 前面我們提到，message 可能會執行失敗\
 為了解決這個問題，可以透過 `retry` 的機制重試
