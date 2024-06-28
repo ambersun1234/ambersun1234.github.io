@@ -364,18 +364,22 @@ broker, producer, consumer 都共用，所以不需要額外的處理
 Kafka 本身是分散式的系統\
 就我們目前知道的，Kafka 的 topic 是會被 partitioned，配合 replication 可以達到高可用性\
 每個 topic 裡面的資料都將被切分成若干個 partition(僅擁有部份 topic 的資料)\
-每個 topic partition 都可以使 **不同的 client 在不同的 broker 上面進行同步的讀寫**\
-前面提到一個 topic 可以有很多個 consumer, 利用 partition 的方式可以達到高可用
+每個 topic partition 都可以使 **不同的 client 在不同的 broker 上面進行同步的讀寫**
 
-> 針對每個 topic 的每個 partition, 其內部順序是有序的
+> 針對每個 topic 的每個 partition, 其內部順序是有序的\
+> partition 之間的順序不保證\
 
-> 資料成功寫入的判斷是用 quorum 的方式進行的\
-> 而同意寫入票數的人員必須要是 ISR(In-Sync Replicas) 裡面的人員
+當你的資料量大的時候，可以適度的增加 consumer 的數量\
+Kafka 會根據 consumer 的數量自動調整 partition 的數量\
+他會自動做 re-balancing，使得你可以即時處理更多的資料
 
 <hr>
 
 Kafka 是使用 single leader replication 的機制\
 亦即每個 partition 只有一個 node(leader) 負責寫入，剩下的 node(follower) 或是 leader 提供讀取的功能
+
+> 資料成功寫入的判斷是用 quorum 的方式進行的\
+> 而同意寫入票數的人員必須要是 ISR(In-Sync Replicas) 裡面的人員
 
 如同教科書上對於 single leader replication 的描述一樣\
 Kafka 一樣要處理節點失效的問題\
@@ -454,6 +458,133 @@ KRaft 是 Kafka 2.8 之後的新機制\
 讓 Kafka 自己可以管理自己的狀態，不需要依靠外部系統(ZooKeeper)\
 所以現在 Node 自己會跟其他節點同步所謂的 metadata，並且自己進行選舉\
 這樣就更輕量了
+
+## Example
+### Prerequisite
+我們可以使用 docker 將 Kafka 以及其他的資源在 local 跑起來\
+Kafka 本身很單純，因為已經有 KRaft 的了所以整個環境相對簡單
+
+```shell
+$ docker run --name kafka -d -p 9092:9092 apache/kafka:3.7.0
+```
+
+我們只需要將 9092 port forward 出來即可
+
+不同於 RabbitMQ 自己帶有漂亮的 GUI 介面\
+Kafka 這裡我們可以使用 [Redpanda](https://redpanda.com/)\
+他也可以使用 Docker
+
+```shell
+$ docker run -d -p 8080:8080 \
+		--network host \
+		--name kafka-ui \
+		-e KAFKA_BROKERS=localhost:9092 \
+		docker.redpanda.com/redpandadata/console:latest
+```
+
+主要就兩個點，一個是 Kafka broker 的位置，另一個是 GUI 的 port
+
+### Producer and Consumer
+這裡使用 confluent 提供的 go client 來進行操作
+
+```go
+var (
+    topic            = "test"
+    connectionString = "localhost:9092"
+)
+
+func producer() {
+    conn, err := kafka.NewProducer(&kafka.ConfigMap{
+        "bootstrap.servers": connectionString,
+    })
+    if err != nil {
+        panic(err)
+    }
+    defer conn.Close()
+
+    ticker := time.NewTicker(1 * time.Second)
+    for v := range ticker.C {
+        err := conn.Produce(&kafka.Message{
+            TopicPartition: kafka.TopicPartition{
+            Topic: &topic, Partition: kafka.PartitionAny,
+            },
+            Value: []byte(fmt.Sprintf("Hello Kafka %v", v)),
+        }, nil)
+
+        if err == nil {
+            fmt.Println("Produce message to topic: ", topic)
+        } else if err.(kafka.Error).IsTimeout() {
+            fmt.Println("Timeout")
+        } else {
+            fmt.Println("Producer error: ", err)
+        }
+    }
+}
+```
+
+producer 每一秒鐘都會產生一條新的資訊送到 Kafka 的 `test` topic 上面\
+這邊指定的 partition 為 any, 亦即 Kafka 會自己決定要送到哪個 partition 上面\
+這樣做的好處在於可以讓 Kafka 自己決定要怎麼分配資料，達到 load balance 的效果
+
+```go
+func consumer() {
+    conn, err := kafka.NewConsumer(&kafka.ConfigMap{
+        "bootstrap.servers": connectionString,
+        "group.id":          "test_group",
+        "auto.offset.reset": "earliest",
+    })
+    if err != nil {
+        panic(err)
+    }
+    defer conn.Close()
+
+    if err := conn.SubscribeTopics([]string{topic}, nil); err != nil {
+        panic(err)
+    }
+
+    for {
+        msg, err := conn.ReadMessage(time.Second)
+        if err != nil {
+            fmt.Println("Consumer error: ", err)
+            continue
+        }
+
+    fmt.Printf("Consumer(%v) message from topic(%v): %v\n", conn.String(), msg.TopicPartition, string(msg.Value))
+    }
+}
+```
+
+consumer 這裡有兩個東西滿有趣的\
+我們知道 Kafka 的 client 是依靠所謂的 offset 來記錄讀取的位置\
+那這個紀錄的位置是必須要由 client 提交的，一般來說 `enable.auto.commit` 預設是每 5 秒提交一次\
+這樣即使你關閉 consumer 重新開啟，你也會從上次的 offset 開始讀取
+
+> 可以使用 `auto.commit.interval.ms` 來調整提交的時間
+
+這裡你可以看到我們定義了 `auto.offset.reset`\
+指的是當沒有任何 offset 紀錄的時候，你要從哪裡開始讀取\
++ `earliest` 代表從最早的 offset 開始讀取
++ `latest` 代表從最新的 offset 開始讀取
+
+> 如果你在執行的五秒內退出程式，則現在不會有任何的 offset 紀錄\
+> 這時候 consumer 會根據 `auto.offset.reset` 來決定要從哪裡開始讀取
+
+另一個有趣的東西是 group\
+我們說過，一個 topic 可以有多個 partition\
+每一個 group 都負責讀取一個 partition\
+group 裡面可以擁有多個 consumer
+
+所以整體邏輯是，在單位時間內，只能有一個 consumer(在某一個 group 底下的)能夠讀寫一個 partition\
+group 裡面的 consumer 同一時間只能有一個對 partition 進行操作\
+我覺得好像哪裡怪怪的，group 這層的抽象的設計我沒有很懂
++ 為什麼一個 group 裡需要有多個 consumer
++ 為什麼需要有 group
+
+分散式系統需要考慮的除了效能之外還有錯誤處理以及恢復\
+擁有多個 consumer 可以讓你在某一個 consumer 出問題的時候，可以有其他的 consumer 來接手\
+group 的設計則是為了方便管理多個 consumer
+
+> 上述程式碼可以在 [ambersun1234/blog-labs/message-queue](https://github.com/ambersun1234/blog-labs/tree/master/message-queue/kafka) 中找到
 
 # RabbitMQ
 提到 message queue\
@@ -674,3 +805,4 @@ RabbitMQ 有提供 message acknowledgement，亦即你可以確保 consumer 有�
 + [[kafka]kafka中的zookeeper是做什么的？](https://blog.csdn.net/pmdream/article/details/119985882)
 + [KIP-500 Early Access Release](https://github.com/a0x8o/kafka/blob/master/KIP-500.md)
 + [KIP-500 Early Access Release](https://www.youtube.com/watch?v=vYp4LYbnnW8)
++ [Offset management configuration](https://docs.confluent.io/platform/current/clients/consumer.html#offset-management-configuration)
