@@ -1,0 +1,3143 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.10.0">Jekyll</generator><link href="https://ambersun1234.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://ambersun1234.github.io/" rel="alternate" type="text/html" /><updated>2024-07-01T15:35:07+08:00</updated><id>https://ambersun1234.github.io/feed.xml</id><title type="html">Shawn Hsu</title><subtitle>This website is a personal study blog of Shawn Hsu. I am a software engineer who is interested in backend, cloud native and blockchain.</subtitle><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><entry><title type="html">如何寫出好的程式碼架構</title><link href="https://ambersun1234.github.io/random/solid/" rel="alternate" type="text/html" title="如何寫出好的程式碼架構" /><published>2024-06-10T00:00:00+08:00</published><updated>2024-06-10T15:15:41+08:00</updated><id>https://ambersun1234.github.io/random/solid</id><content type="html" xml:base="https://ambersun1234.github.io/random/solid/"><![CDATA[<h1 id="preface">Preface</h1>
+<p>這個議題我覺的是軟體工程師的必經之路啦<br />
+本篇文章基本上就是紀錄我目前學到的一些東西以及方法</p>
+
+<h1 id="mindset">Mindset</h1>
+<p>有意識的要自己寫出良好的程式碼是個重要的事情<br />
+無論是多麼小的專案，你都必須要 “意識” 到自己在寫什麼<br />
+但是要自己意識到什麼是好的程式碼，什麼是壞的<br />
+需要一點練習</p>
+
+<h1 id="low-coupling-and-high-cohesion">Low Coupling and High Cohesion</h1>
+<p>一個基本的概念是 耦合性 與 聚合性</p>
+
+<p>剛開始寫程式的時候你可能會寫出耦合性很高的程式<br />
+意思指的是說，你寫出來的程式碼會有很多個相互依賴的東西<br />
+白話點就是，牽一髮動全身</p>
+
+<p>這種程式碼他的可維護性就會大幅度的降低<br />
+因為每一次的更改你都需要花時間修改大量的程式碼</p>
+
+<p>一個好的架構應該要是 <code class="language-plaintext highlighter-rouge">低耦合性 與 高聚合性</code><br />
+怎麼做到呢 一起看看吧</p>
+
+<blockquote>
+  <p>本文將專注在程式碼層級的解耦合，事實上還有部屬層級以及服務層級的解耦合</p>
+</blockquote>
+
+<h1 id="start-with-solid">Start with SOLID</h1>
+<blockquote>
+  <p>我稍微調整了一下 SOLID 的順序，這樣講起來比較簡單</p>
+</blockquote>
+
+<h2 id="dependency-inversion-principle">Dependency Inversion Principle</h2>
+<p>interface 是個很神奇的東西<br />
+學校教的時候你會覺的它沒啥用處<br />
+但工作上卻又用一大堆</p>
+
+<h3 id="example">Example</h3>
+<p>看回熟悉的例子<br />
+<code class="language-plaintext highlighter-rouge">In Unix, everything is a file</code><br />
+作業系統其中一個功能就是讀寫檔案<br />
+硬體在這幾十年間發生了許多的變化<br />
+從 磁帶、軟碟、硬碟再到固態硬碟，每個硬體的物理特性都有所不同<br />
+因此你可以期待它操作檔案的方式 “肯定是會有所不同的”</p>
+
+<p>這意味著，你需要使用不同的實作對吧<br />
+比方說硬碟需要 seek, 固態硬碟則不需要<br />
+檔案系統天生需要支援多種 “硬體” 的實作<br />
+但如果直接將檔案系統寫死，這將會是個很麻煩且災難的事情</p>
+
+<p>每新增一個不同的硬體，你都需要新增相對應的程式碼在 “檔案系統” 的實作當中<br />
+你可以預期程式碼的數量將會暴漲，維護會越加的困難</p>
+
+<p>取而代之的應該是<br />
+檔案系統 <strong>不應該需要知道你怎麼讀檔案，寫檔案，它甚至不應該關心你需不需要移動 “硬碟讀寫投”</strong><br />
+這就是 <code class="language-plaintext highlighter-rouge">抽象化</code> 的概念</p>
+
+<hr />
+
+<p>看完例子，你應該多少可以感受到 “抽象化” 的重要性<br />
+但在軟體工程裡面要怎麼做到抽象化？</p>
+
+<p>主要就是透過 <code class="language-plaintext highlighter-rouge">interface</code> 來實現了<br />
+兩個實體(class, object) 都必須依賴於 <code class="language-plaintext highlighter-rouge">interface</code><br />
+彼此之間不應該知道彼此的任何細節<br />
+這樣的好處是，他們兩個之間的 <strong>耦合性</strong> 會降低<br />
+我改我的，你改你的，都不會影響到彼此(只要介面沒有改變)</p>
+
+<p>軟體的演進是很快速的，所以實作是容易改變的<br />
+但是 <code class="language-plaintext highlighter-rouge">interface</code> 不應該被改變<br />
+所以你可以放心的隨便改你的 “實作”, 只要它符合 <code class="language-plaintext highlighter-rouge">interface</code> 的標準都是可以的</p>
+
+<p>舉個例子來說<br />
+你的 service layer 與 database layer 之間應該要有一層 <code class="language-plaintext highlighter-rouge">interface</code><br />
+這層 <code class="language-plaintext highlighter-rouge">interface</code> 就是兩個不同的實體的公約</p>
+
+<p><img src="/assets/img/posts/dip.jpg" alt="" /></p>
+
+<p>service layer 不會管你是怎麼 “儲存我的東西的”<br />
+你要用 database, redis cache 還是簡單的 in-memory cache 都跟我沒關係(I don’t care)<br />
+只要符合 interface 的標準，我 service layer 都能夠兼容</p>
+
+<p>實務上，你也看到了<br />
+這對測試是有極大的幫助的<br />
+在測試的時候我可以替換成 mock 的實作，這樣測試就會更輕鬆了(你不需要真的連線到資料庫)</p>
+
+<blockquote>
+  <p>有關測試的部份可以參考 <a href="../../devops/devops-unit-test">DevOps - 單元測試 Unit Test | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="openclosed-principle">Open/Closed Principle</h2>
+<p>在 <a href="#dependency-inversion-principle">Dependency Inversion Principle</a> 中我們提到<br />
+使用 interface 當成兩個實體之間的守則是個好的 practice<br />
+我們也提到，軟體開發常常會更改東西，只要改動符合 interface，我們就不需要更改太多部份的程式碼(因為低耦合)<br />
+實作很常會改動，但是 interface 不應該常常改變(應該說 modify)</p>
+
+<p>其實我已經講完 Open/Closed Principle 了</p>
+
+<p>他想表達的東西就如上所述<br />
+對於 <code class="language-plaintext highlighter-rouge">"新增" 功能</code>，我們是樂見的，因為軟體很常會有新的功能需要加入<br />
+但是對於 <code class="language-plaintext highlighter-rouge">"修改" 功能</code>，如果新增功能會 <strong>導致必須要修改現有的實作</strong>，我們是不樂見的</p>
+
+<p>修改指的是，refactor 現有的實作以兼容新的功能<br />
+好的架構應該是你可以在原本的基礎上直接擴充功能的<br />
+但這建立在這個基礎是好的<br />
+不過適度的重構我覺的並沒有違反這個原則(當然一次改一堆的不算就是)</p>
+
+<h2 id="interface-segregation-principle">Interface Segregation Principle</h2>
+<p>依賴於共同的 interface 的好處我們已經了解的差不多了<br />
+只不過要小心 interface 與實體之間的必要性</p>
+
+<p>簡單講就是，如果實體內部包含了一個它根本不需要的東西<br />
+我們就不應該去依賴於它</p>
+
+<p>好比說一個大學生的包包裡面帶了小學英文課本<br />
+這根本是不需要的，所以你可以把它拿掉</p>
+
+<p>interface 裡面包含了不必要的定義的時候<br />
+那就代表你應該定義一個新的 interface 而不是使用這個巨大的 interface</p>
+
+<h2 id="single-responsibility-principle">Single Responsibility Principle</h2>
+<p>一次只對一個人負責，什麼意思呢</p>
+
+<p>舉個我真實遇到的例子<br />
+我要替新的 API endpoint 撰寫 middleware 進行 validation<br />
+一開始我把全部的欄位的驗證都寫在一個 function 裡面<br />
+很明顯的他是有問題的<br />
+因為它對不只一個人負責<br />
+不同的欄位應該要由不同的驗證 function 進行處理</p>
+
+<p>分開寫好處當然就是好維護對吧<br />
+並且解耦合了</p>
+
+<h2 id="liskov-substitution-principle">Liskov Substitution Principle</h2>
+<p>這個原則相對起來我覺的比較抽象<br />
+不過他的重點在於，所有衍生的子類別，都必須要符合父類別所定義的 “正確行為”</p>
+
+<p>書中提到的例子是 <code class="language-plaintext highlighter-rouge">正方形</code> 與 <code class="language-plaintext highlighter-rouge">長方形</code><br />
+正方形是長方形的子類別，但是正方形的特性是 <code class="language-plaintext highlighter-rouge">四邊長相等</code><br />
+兩個不同的子類別，他們的特性是不同的<br />
+所以你不能夠將正方形當成長方形使用，因此不應該存在這樣的繼承關係</p>
+
+<p>如今這個原則已經不再限訂於 class 了<br />
+interface 也同樣試用</p>
+
+<h1 id="avoid-anti-pattern">Avoid Anti-pattern</h1>
+<p>我自己在寫 code 的時候，有時後會踩到一些 anti-pattern<br />
+簡單的方法是，閱讀其他人寫的 code<br />
+學習他們的寫法，你可以了解基本的 best practice</p>
+
+<blockquote>
+  <p>自己學很容易學歪，所以看別人的程式碼很重要<br />
+參與 open source 的專案也是一個方法</p>
+</blockquote>
+
+<p>像我自己有時後會誤用了某個東西<br />
+這很常是因為不足夠熟悉所造成的<br />
+除了多練習以外，你也應該要多唸書</p>
+
+<p>當然 code review 也能夠及早的發現這些 anti-pattern 的存在<br />
+並且能夠即時的修正</p>
+
+<h1 id="utilize-ai-tools">Utilize AI Tools</h1>
+<p>2024 的今天，已經有許多 AI 可以輔助我們寫程式了<br />
+善用工具除了可以提高開發速度之外，也能夠幫助我們寫出更好的程式碼<br />
+比如說我現在就在使用 <a href="https://github.com/features/copilot">GitHub Copilot</a> 自動補齊程式碼<br />
+也能夠利用它做基本的 code review<br />
+即使你是自己開發，也能夠有一個基本的 code review 功能</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>Clean Architecture 無瑕的程式碼(ISBN: 978-986-434-294-5)</li>
+  <li>Clean Code 無瑕的程式碼(ISBN: 978-986-201-705-0)</li>
+  <li>The Clean Coder 無瑕的程式碼(ISBN: 978-986-201-788-3)</li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="random" /><category term="solid" /><category term="architecture" /><category term="couple" /><category term="cohesion" /><summary type="html"><![CDATA[本文將介紹如何寫出好的程式碼架構，從 SOLID 中學習並且避免一些 anti-pattern]]></summary></entry><entry><title type="html">理解 Node.js 中非同步處理與 Event Loop 的關係</title><link href="https://ambersun1234.github.io/random/nodejs-event-loop/" rel="alternate" type="text/html" title="理解 Node.js 中非同步處理與 Event Loop 的關係" /><published>2024-06-06T00:00:00+08:00</published><updated>2024-06-06T11:15:35+08:00</updated><id>https://ambersun1234.github.io/random/nodejs-event-loop</id><content type="html" xml:base="https://ambersun1234.github.io/random/nodejs-event-loop/"><![CDATA[<h1 id="preface">Preface</h1>
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">setTimeout</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="p">})</span>
+  <span class="nb">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">().</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+  <span class="p">})</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="p">})()</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>工程師的面試，常常會遇到這種要求給出執行順序的考題<br />
+你能正確的判斷出他的順序嗎？</p>
+
+<h1 id="what-is-event-and-event-handler-in-javascript">What is Event and Event Handler in JavaScript</h1>
+<p>JavaScript 最早是用於網頁當中的腳本語言<br />
+它主要是為了處理 user 的 action, 像是 <code class="language-plaintext highlighter-rouge">onClick</code>, <code class="language-plaintext highlighter-rouge">onChange</code> 等等的事件<br />
+而這些事件，都需要特定的處理程式來進行處理<br />
+就是 Event Handler</p>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:640/format:webp/1*KGBiAxjeD9JT2j6KDo0zUg.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/sessionstack-blog/how-javascript-works-event-loop-and-the-rise-of-async-programming-5-ways-to-better-coding-with-2f077c4438b5">How JavaScript works: Event loop and the rise of Async programming + 5 ways to better coding with async/await</a></p>
+</blockquote>
+
+<p>即使你定義了 Event Handler，因為你無法預測使用者何時為動作<br />
+所以你實際上是定義了一個 callback function<br />
+當 <strong>事件</strong> 發生的時候，這個 callback 會負責處理所有相對應的動作</p>
+
+<h2 id="first-class-function">First Class Function</h2>
+<p>JavaScript 的 callback 其實是 first class function<br />
+簡單來說，first class function 就是 function 擁有跟 variable 一樣的地位<br />
+比如說</p>
+
+<ol>
+  <li>Function 可以被當作參數丟來丟去</li>
+  <li>Function 可以被當成 variable 被 assign</li>
+  <li>符合 <a href="#closure">Closure</a></li>
+</ol>
+
+<h2 id="closure">Closure</h2>
+<h3 id="lexical-scoping">Lexical Scoping</h3>
+<p>我們都知道！ local variable 是有特定的 scope 才能存取的<br />
+在 function 裡的 variable 也是有自己的 scope</p>
+
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td><td class="rouge-code"><pre><span class="kd">function</span> <span class="nx">createGreeter</span><span class="p">(</span><span class="nx">greeting</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="s2">`</span><span class="p">${</span><span class="nx">greeting</span><span class="p">}</span><span class="s2">, </span><span class="p">${</span><span class="nx">name</span><span class="p">}</span><span class="s2">!`</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">const</span> <span class="nx">morningGreeter</span> <span class="o">=</span> <span class="nx">createGreeter</span><span class="p">(</span><span class="dl">"</span><span class="s2">Good Morning</span><span class="dl">"</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">eveningGreeter</span> <span class="o">=</span> <span class="nx">createGreeter</span><span class="p">(</span><span class="dl">"</span><span class="s2">Good Evening</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">morningGreeter</span><span class="p">(</span><span class="dl">"</span><span class="s2">Alice</span><span class="dl">"</span><span class="p">));</span> <span class="c1">// Outputs "Good Morning, Alice!"</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">eveningGreeter</span><span class="p">(</span><span class="dl">"</span><span class="s2">Bob</span><span class="dl">"</span><span class="p">));</span>  <span class="c1">// Outputs "Good Morning, Bob!"</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>可以看到 <code class="language-plaintext highlighter-rouge">createGreeter</code> 裡面回傳了一個 function<br />
+但它會 access 外部的 variable <code class="language-plaintext highlighter-rouge">greeting</code><br />
+這個特性稱為 <strong>Lexical Scoping</strong></p>
+
+<hr />
+
+<p>Closure 的特性是結合了 function 以及 <a href="#lexical-scoping">Lexical Scoping</a><br />
+上述的例子，<code class="language-plaintext highlighter-rouge">createGreeter</code> 形成了一個 Closure<br />
+而任何 in-scope 的變數們都會存在於 Closure 之中(i.e. Lexical Scoping)<br />
+所以這就是為什麼當呼叫的時候，仍然可以存取 <code class="language-plaintext highlighter-rouge">greeting</code> 變數</p>
+
+<h1 id="nodejs-architecture">Node.js Architecture</h1>
+<p>JavaScript 最初是用於網頁的腳本語言<br />
+由於他是 single thread 的，他要怎麼處理 user 的相關 event 呢？<br />
+單一執行緒，勢必會 block 住整個網頁，整體的使用者體驗是不好的<br />
+瀏覽器有提供非同步的執行環境，所以不會被 block 住</p>
+
+<p>但 callback 其實是會造成所謂的波動拳<br />
+所以 Promise(ES6) 以及 Async/Await(ES2017) 被引入</p>
+
+<p><img src="https://pbs.twimg.com/media/DYsBhtdVwAA1Fak?format=jpg&amp;name=900x900" alt="" /></p>
+
+<h2 id="libuv">Libuv</h2>
+<p><img src="https://docs.libuv.org/en/v1.x/_images/architecture.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://docs.libuv.org/en/v1.x/design.html#design-overview">Design overview</a></p>
+</blockquote>
+
+<p>要把 JavaScript 搬到 server 上執行，對應的非同步 I/O 也需要一個環境<br />
+Node.js 為此也提供了一個由 <a href="https://github.com/libuv/libuv">libuv</a> 實現的 non-blocking I/O 的環境<br />
+它本身是屬於 event driven 的架構</p>
+
+<p>早期，在 node 0.4 的時候是透過 <a href="https://github.com/enki/libev">libev</a> 以及 <a href="http://software.schmorp.de/pkg/libeio.html">libeio</a> 實現的<br />
+但現在改為 <a href="https://github.com/libuv/libuv">libuv</a><br />
+主要原因是因為</p>
+
+<ol>
+  <li>libev 內部是使用 <a href="https://man7.org/linux/man-pages/man2/select.2.html">select</a> 系統呼叫，而開發團隊對於 select 的效能表現不滿意</li>
+  <li>libev 在當時對於 windows 的兼容性並不佳</li>
+</ol>
+
+<p><a href="https://github.com/libuv/libuv">libuv</a> 本身抽象化了不同系統平台的非同步操作，並提供統一界面<br />
+比如說 Linux 是用 <a href="https://man7.org/linux/man-pages/man7/epoll.7.html">epoll</a>, Mac 是用 <a href="https://man.freebsd.org/cgi/man.cgi?query=kqueue&amp;sektion=2">kqueue</a><br />
+在每個平台上使用各自最優秀的 polling mechanism 來達到最好的效果</p>
+
+<h3 id="handles-and-requests">Handles and Requests</h3>
+<p>libuv 的兩個核心概念是 handle 和 request</p>
+
+<p>基本上使用者可以透過這兩個概念來操作非同步 I/O<br />
+handles 是一個 long-lived 的物件<br />
+透過它去下 requests</p>
+
+<p>requests 就是你想要做的事情<br />
+比如說開啟一個檔案之類的</p>
+
+<p>之後就交給 libuv 去監控管理那些 file descriptor<br />
+當完成之後，callback 就會被呼叫</p>
+
+<h2 id="event-loop">Event Loop</h2>
+<p><img src="https://javascript.info/article/event-loop/eventLoop.svg" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://javascript.info/event-loop">Event loop: microtasks and macrotasks</a></p>
+</blockquote>
+
+<p>JavaScript 的 code 是跑在 Event Loop 上的<br />
+Event Loop 本質上會先註冊 event 的 callback(同步或者是非同步)<br />
+然後會依序執行 event queue 當中的 callback<br />
+並適時註冊新的 event callback</p>
+
+<p>除此之外，所有的 non-blocking asynchronous 操作都是在 Event Loop 上執行</p>
+
+<p>它真的只是一個無窮迴圈，根據 <a href="https://github.com/libuv/libuv/blob/v1.x/src/unix/core.c#L415">libuv/src/unix/core.c</a></p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+</pre></td><td class="rouge-code"><pre><span class="kt">int</span> <span class="nf">uv_run</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_run_mode</span> <span class="n">mode</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">timeout</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">can_sleep</span><span class="p">;</span>
+
+  <span class="n">r</span> <span class="o">=</span> <span class="n">uv__loop_alive</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">uv__update_time</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+  <span class="cm">/* Maintain backwards compatibility by processing timers before entering the
+   * while loop for UV_RUN_DEFAULT. Otherwise timers only need to be executed
+   * once, which should be done after polling in order to maintain proper
+   * execution order of the conceptual event loop. */</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">mode</span> <span class="o">==</span> <span class="n">UV_RUN_DEFAULT</span> <span class="o">&amp;&amp;</span> <span class="n">r</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">loop</span><span class="o">-&gt;</span><span class="n">stop_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">uv__update_time</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">uv__run_timers</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="k">while</span> <span class="p">(</span><span class="n">r</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">loop</span><span class="o">-&gt;</span><span class="n">stop_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">can_sleep</span> <span class="o">=</span>
+        <span class="n">uv__queue_empty</span><span class="p">(</span><span class="o">&amp;</span><span class="n">loop</span><span class="o">-&gt;</span><span class="n">pending_queue</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+        <span class="n">uv__queue_empty</span><span class="p">(</span><span class="o">&amp;</span><span class="n">loop</span><span class="o">-&gt;</span><span class="n">idle_handles</span><span class="p">);</span>
+
+    <span class="n">uv__run_pending</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">uv__run_idle</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">uv__run_prepare</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">mode</span> <span class="o">==</span> <span class="n">UV_RUN_ONCE</span> <span class="o">&amp;&amp;</span> <span class="n">can_sleep</span><span class="p">)</span> <span class="o">||</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">)</span>
+      <span class="n">timeout</span> <span class="o">=</span> <span class="n">uv__backend_timeout</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="n">uv__metrics_inc_loop_count</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="n">uv__io_poll</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">timeout</span><span class="p">);</span>
+
+    <span class="cm">/* Process immediate callbacks (e.g. write_cb) a small fixed number of
+     * times to avoid loop starvation.*/</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">r</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">8</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">uv__queue_empty</span><span class="p">(</span><span class="o">&amp;</span><span class="n">loop</span><span class="o">-&gt;</span><span class="n">pending_queue</span><span class="p">);</span> <span class="n">r</span><span class="o">++</span><span class="p">)</span>
+      <span class="n">uv__run_pending</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="cm">/* Run one final update on the provider_idle_time in case uv__io_poll
+     * returned because the timeout expired, but no events were received. This
+     * call will be ignored if the provider_entry_time was either never set (if
+     * the timeout == 0) or was already updated b/c an event was received.
+     */</span>
+    <span class="n">uv__metrics_update_idle_time</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="n">uv__run_check</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">uv__run_closing_handles</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="n">uv__update_time</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">uv__run_timers</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">uv__loop_alive</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mode</span> <span class="o">==</span> <span class="n">UV_RUN_ONCE</span> <span class="o">||</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">UV_RUN_NOWAIT</span><span class="p">)</span>
+      <span class="k">break</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="cm">/* The if statement lets gcc compile it to a conditional store. Avoids
+   * dirtying a cache line.
+   */</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">loop</span><span class="o">-&gt;</span><span class="n">stop_flag</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">loop</span><span class="o">-&gt;</span><span class="n">stop_flag</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="n">r</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h3 id="event-loop-phase">Event Loop Phase</h3>
+<p>上述程式碼實作，它執行了滿多東西的，但重點在所謂的 <code class="language-plaintext highlighter-rouge">phase</code><br />
+Event Loop 總共有 6 個 phase</p>
+
+<ol>
+  <li>timers(<code class="language-plaintext highlighter-rouge">uv__run_timers</code>)</li>
+  <li>pending(<code class="language-plaintext highlighter-rouge">uv__run_pending</code>)</li>
+  <li>idle, prepare(<code class="language-plaintext highlighter-rouge">uv__run_idle</code> and <code class="language-plaintext highlighter-rouge">uv__run_prepare</code>)</li>
+  <li>poll(<code class="language-plaintext highlighter-rouge">uv__io_poll</code>)</li>
+  <li>check(<code class="language-plaintext highlighter-rouge">uv__run_check</code>)</li>
+  <li>closing(<code class="language-plaintext highlighter-rouge">uv__run_closing_handles</code>)</li>
+</ol>
+
+<p>Event Loop 初始化的時候它會註冊所有 event 與其相對應的 callback<br />
+這些 callback 會放在各個 phase 自己獨立的 <strong>FIFO</strong> queue 當中<br />
+當執行到對應的 phase 的時候，Event Loop 會讀取 queue 中的 event 並執行相對應的 callback 直到</p>
+<ul>
+  <li>沒有任何的 callback 需要執行</li>
+  <li>callback 執行數量已經達到上限</li>
+  <li>timeout(preemption)</li>
+</ul>
+
+<p>注意到 Event Loop 是從 Poll phase 開始</p>
+<ol>
+  <li>讀取新的 I/O event, 並執行相對應的 callback(幾乎是全部的 callback, 但有例外)</li>
+  <li>執行 <code class="language-plaintext highlighter-rouge">setImmediate</code> 的 callback</li>
+  <li>執行 close callback</li>
+  <li>執行 <code class="language-plaintext highlighter-rouge">setTimeout</code> 以及 <code class="language-plaintext highlighter-rouge">setInterval</code> 的 callback</li>
+  <li>pending, idle, prepare</li>
+</ol>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">setTimeout</code> 與 <code class="language-plaintext highlighter-rouge">setImmediate</code> 如果都在 main module 裡面執行<br />
+他們的執行順序是未知的，可以確定的是他們都是執行在下一個 tick</p>
+</blockquote>
+
+<blockquote>
+  <p>一個完整的 Event Loop 稱為一個 tick</p>
+</blockquote>
+
+<h2 id="event-loop-tasks">Event Loop Tasks</h2>
+<p>因為 main thread 的職責是執行 JavaScript<br />
+當它遇到</p>
+<ol>
+  <li>同步的 task(作業系統底層沒有提供非同步版本)
+    <ul>
+      <li>舉例來說 <a href="https://nodejs.org/api/dns.html">DNS</a> 或是 <a href="https://nodejs.org/api/fs.html#fs_threadpool_usage">File System</a></li>
+    </ul>
+  </li>
+  <li>CPU-intensive 的 task
+    <ul>
+      <li><a href="https://nodejs.org/api/crypto.html">Crypto</a></li>
+    </ul>
+  </li>
+</ol>
+
+<p>的時候，就會將其交由其他人(<a href="#worker-poolthread-pool">Worker Pool(Thread Pool)</a> or <a href="#task-offloading">Task Offloading</a>)來執行</p>
+
+<p>Event Loop 的重點在於執行 JavaScript 的程式碼，如果遇到會卡住的 task<br />
+不論是需要等待抑或著是需要執行一段時間的程式碼，這些 task 都應該交由他人執行<br />
+不要去嘗試以任何方式卡住 Event Loop<br />
+當 Event Loop 執行順利的情況下 Node.js 就可以很好的 scale</p>
+
+<blockquote>
+  <p>callback 也要盡量的小，Event Loop 才能公平的 schedule callback</p>
+</blockquote>
+
+<h2 id="worker-poolthread-pool">Worker Pool(Thread Pool)</h2>
+<p>worker pool 顧名思義就是他有很多個 worker 等著執行工作<br />
+每一個 worker 都是一條 thread<br />
+你會問，可是 JavaScript 不是 single thread 的嗎？<br />
+對，但是 worker pool 這邊是 multi thread 的<br />
+只有執行 JavaScript(或者說執行 Event Loop) 的 main thread 是 single thread</p>
+
+<blockquote>
+  <p>為什麼不使用 child process?<br />
+因為光是維護那些 child process 的工作量就可能導致你沒時間去管理 worker pool<br />
+最終導致 <a href="https://en.wikipedia.org/wiki/Fork_bomb">fork bomb</a></p>
+</blockquote>
+
+<p>CPU 吃重的任務會交給 worker pool 執行(比如說數學計算)<br />
+它會透過內建的 C++ API 來做<br />
+這在某種程度上會增加 overhead(因為要從 JS 轉到 C++)<br />
+比如說 binding 的 overhead 以及溝通的成本(serialize 以及 deserialize)</p>
+
+<blockquote>
+  <p>針對內建沒有提供的 addon, 你也可以自己撰寫 C++ addons 來做</p>
+</blockquote>
+
+<h3 id="task-offloading">Task Offloading</h3>
+<p>檔案的操作通常我們可以讓作業系統幫我們監控<br />
+比如說當檔案開啟完成的時候通知我</p>
+
+<blockquote>
+  <p>透過比如說 Linux 的 <a href="https://man7.org/linux/man-pages/man7/epoll.7.html">epoll</a>, macOS 的 <a href="https://man.freebsd.org/cgi/man.cgi?query=kqueue&amp;sektion=2">kqueue</a></p>
+</blockquote>
+
+<p>當事情完成的時候，通知回 <a href="#event-loop">Event Loop</a> 並執行其對應的 callback</p>
+
+<blockquote>
+  <p>Event Loop 儲存的實際上是 file descriptor 而不是 events<br />
+所以才收的到 完成的訊號</p>
+</blockquote>
+
+<h2 id="task-queue">Task Queue</h2>
+<p>Event Loop 除了各自 phase 擁有自己的 callback queue 之外<br />
+還有另外三種 “task queue”，分別是 <code class="language-plaintext highlighter-rouge">nextTick Queue</code>, <code class="language-plaintext highlighter-rouge">microtask Queue</code> 和 <code class="language-plaintext highlighter-rouge">macrotask Queue</code></p>
+
+<p>我們在看 libuv 的程式碼的時候並沒有分的那麼細，甚至都沒看到他們在哪裡<br />
+libuv 本質上在處理的都是 macrotask(像是 I/O)<br />
+你在網路上看到在說 microtask queue 這種東西<br />
+在 Node.js 當中是他是由 V8 處理的(並不屬於 libuv)，所以當然在 libuv 裡面看不到</p>
+
+<blockquote>
+  <blockquote>
+    <p>So, only libuv provides the eventloop features in nodejs?</p>
+  </blockquote>
+
+  <p>Yes, the only exception being the microtask queue, i.e. what Promises, which is provided by V8, <br />
+but I think it would be odd to consider that an event loop or part of an event loop (in particular, <br />
+because it doesn’t actually involve events of any kind, it’s just a queue of code that should be run in the future).</p>
+</blockquote>
+
+<blockquote>
+  <p>ref: <a href="https://github.com/nodejs/help/issues/3124#issuecomment-744065582">event loop: which eventloop is used by nodejs? eventloop of v8 or eventloop of libuv?</a></p>
+</blockquote>
+
+<hr />
+
+<p>回到當初破題的問題，執行順序究竟為何</p>
+<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">setTimeout</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="p">})</span>
+  <span class="nb">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">().</span><span class="nx">then</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+  <span class="p">})</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="p">})()</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>根據 <a href="https://nodejs.org/en/learn/asynchronous-work/understanding-setimmediate#understanding-setimmediate">Understanding setImmediate()</a><br />
+Event Loop 執行的順序為 <code class="language-plaintext highlighter-rouge">nextTick queue</code> :arrow_right: <code class="language-plaintext highlighter-rouge">microtask queue</code> :arrow_right: <code class="language-plaintext highlighter-rouge">macrotask queue</code></p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">nextTick queue</code>
+    <ul>
+      <li>包含 <code class="language-plaintext highlighter-rouge">process.nextTick</code></li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">microtask queue</code>
+    <ul>
+      <li>包含 <code class="language-plaintext highlighter-rouge">promise</code></li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">macrotask queue</code>
+    <ul>
+      <li>包含 <code class="language-plaintext highlighter-rouge">setTimeout</code>, <code class="language-plaintext highlighter-rouge">setInterval</code>, <code class="language-plaintext highlighter-rouge">setImmediate</code></li>
+    </ul>
+  </li>
+</ul>
+
+<p>所以我們可以知道答案是 <code class="language-plaintext highlighter-rouge">3421</code></p>
+
+<p>首先，任何同步的 code 一定是優先執行的<br />
+因為第一行的 anonymous function 在它被定義的時候就被呼叫了(第九行)<br />
+然後最外層的同步 code 也會被執行<br />
+所以我們可以得出 <code class="language-plaintext highlighter-rouge">34</code> 這個部份答案</p>
+
+<p>再來就是裡面的 promise 以及 setTimeout<br />
+我們知道 microtask queue 一定會先被執行，所以 <code class="language-plaintext highlighter-rouge">2</code> 緊隨其後<br />
+最後才是 <code class="language-plaintext highlighter-rouge">setTimeout</code> 的 <code class="language-plaintext highlighter-rouge">1</code></p>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">setTimeout</code> 會在 Event Loop 的最後一個階段才被執行</p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://nodejs.org/en/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks">JavaScript Asynchronous Programming and Callbacks</a></li>
+  <li><a href="https://stackoverflow.com/questions/48092176/why-are-functions-not-considered-first-class-citizens-in-c">Why are functions not considered first class citizens in C</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Glossary/First-class_Function">First-class Function</a></li>
+  <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures">Closures</a></li>
+  <li><a href="https://www.youtube.com/watch?v=nGn60vDSxQ4">LXJS 2012 - Bert Belder - libuv</a></li>
+  <li><a href="https://docs.libuv.org/en/v1.x/design.html#design-overview">Design overview</a></li>
+  <li><a href="https://www.youtube.com/watch?v=zphcsoSJMvM">The Node.js Event Loop: Not So Single Threaded</a></li>
+  <li><a href="https://nodejs.org/en/learn/asynchronous-work/overview-of-blocking-vs-non-blocking">Overview of Blocking vs Non-Blocking</a></li>
+  <li><a href="https://www.youtube.com/watch?v=brYsDi-JajI">【python】asyncio的理解与入门，搞不明白协程？看这个视频就够了。</a></li>
+  <li><a href="https://www.youtube.com/watch?v=K0BjgYZbgfE">【python】await机制详解。再来个硬核内容，把并行和依赖背后的原理全给你讲明白</a></li>
+  <li><a href="https://github.com/nodejs/help/issues/3126">do promises get resolved between the end of eventloop phase and before the start Phase of the eventloop?</a></li>
+  <li><a href="https://github.com/nodejs/help/issues/3124">event loop: which eventloop is used by nodejs? eventloop of v8 or eventloop of libuv?</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="random" /><category term="nodejs" /><category term="javascript" /><category term="event" /><category term="queue" /><category term="event loop" /><category term="first class function" /><category term="closure" /><category term="callback" /><category term="microtask queue" /><category term="macrotask queue" /><category term="libuv" /><category term="libeio" /><category term="lexical scoping" /><summary type="html"><![CDATA[在 Node.js 中，非同步處理是由 Event Loop 來處理的，理解 Event Loop 有助於你寫出高效能的 Node.js Application。本文將會從頭介紹 Event Loop 的概念，並配合上一些例子讓你實際了解非同步處理的概念]]></summary></entry><entry><title type="html">神奇的演算法 - 動態規劃 Dynamic Programming</title><link href="https://ambersun1234.github.io/algorithm/algorithm-dynamic-programming/" rel="alternate" type="text/html" title="神奇的演算法 - 動態規劃 Dynamic Programming" /><published>2024-05-28T00:00:00+08:00</published><updated>2024-05-28T11:51:58+08:00</updated><id>https://ambersun1234.github.io/algorithm/algorithm-dynamic-programming</id><content type="html" xml:base="https://ambersun1234.github.io/algorithm/algorithm-dynamic-programming/"><![CDATA[<h1 id="preface">Preface</h1>
+<p>動態規劃一直是我覺的不容易掌握的演算法技巧，它不像其他演算法技巧有一個固定的模式，而是一種思維方式<br />
+題目的靈活性高，不太容易掌握</p>
+
+<h1 id="starting-from-fibonacci-sequence">Starting From Fibonacci Sequence</h1>
+<p>費氏數列是資工系學生一開始接觸到的題目<br />
+費氏數列的定義是 $F(n) = F(n-1) + F(n-2)$，而 $F(0) = 0, F(1) = 1$<br />
+所以寫起來基本上長這樣</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="m">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="m">0</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="m">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="m">1</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="m">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="m">2</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p>改寫成 tail recursion 也可以大幅度的提升速度</p>
+</blockquote>
+
+<p>你可能有聽過，這個版本的實作效率非常差<br />
+這是因為這個版本的實作會重複計算很多次相同的值<br />
+所以他的 time complexity 是 $O(2^n)$(i.e. <code class="language-plaintext highlighter-rouge">exponential</code>)</p>
+
+<p>所以更好的解法之一是使用動態規劃<br />
+基本上我們知道 fib(n) 等於前一項加上前兩項<br />
+所以你可以用一個 for loop 過去就解決了</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+    <span class="n">dp</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="n">n</span><span class="o">+</span><span class="m">1</span><span class="p">)</span>
+    <span class="n">dp</span><span class="p">[</span><span class="m">0</span><span class="p">]</span> <span class="o">=</span> <span class="m">0</span>
+    <span class="n">dp</span><span class="p">[</span><span class="m">1</span><span class="p">]</span> <span class="o">=</span> <span class="m">1</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">2</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="m">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="m">2</span><span class="p">]</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">dp</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>我們是逐步的建構出 fib(n) 的值，並且搭配上記憶化搜索，所以 time complexity 是 $O(n)$</p>
+
+<h1 id="introduction-to-dynamic-programming">Introduction to Dynamic Programming</h1>
+<p>DP 的心法是將一個大問題拆解成許多小問題，並且將小問題的解答記錄下來(記憶)<br />
+在解決小問題的時候，記憶化搜索可以幫助我們避免重複計算<br />
+當你解決完所有的小問題後，你就可以得到大問題的解答，答案就出來了</p>
+
+<p>只不過要如何找到解決小問題的公式，老實說這有點難<br />
+看幾個例子或許你會有所感覺</p>
+
+<h2 id="leetcode-322-coin-change"><a href="https://leetcode.com/problems/coin-change/description/">LeetCode 322. Coin Change</a></h2>
+<p>給定一個金額，以及一個硬幣面額的陣列，問你需要多少硬幣可以湊出這個金額，且硬幣數量要是最少的</p>
+
+<p>這題用貪婪法是沒辦法解的，因為多了一個限制，硬幣數量要是最少的<br />
+用遞迴可以窮舉出所有可能性，不過會出現重複的組合需要過濾<br />
+既然在學習 DP，我們就用 DP 來解決這個問題</p>
+
+<p>找零錢一般來說都是從大到小(找 24 塊會給 2 * <code class="language-plaintext highlighter-rouge">10</code> + 4 * <code class="language-plaintext highlighter-rouge">1</code>，應該是不會給 24 * <code class="language-plaintext highlighter-rouge">1</code>)，但硬幣數量不一定會是最少的<br />
+比方說<br />
+你有 [1, 6, 7, 9, 11], 然後找的零錢為 13</p>
+<ul>
+  <li>greedy: 1 * <code class="language-plaintext highlighter-rouge">11</code> + 2 * <code class="language-plaintext highlighter-rouge">1</code> :arrow_right: 3 個硬幣</li>
+  <li>dp: 1 * <code class="language-plaintext highlighter-rouge">6</code> + 1 * <code class="language-plaintext highlighter-rouge">7</code> :arrow_right: 2 個硬幣</li>
+</ul>
+
+<p>要怎麼知道 <code class="language-plaintext highlighter-rouge">n</code> 金額的最少硬幣數量呢？<br />
+很明顯我們沒辦法第一時間想出來，因為這個問題太複雜了<br />
+一種方式是我們可以先從小金額開始，一步一步的推導出大金額的最少硬幣數量<br />
+這樣時間複雜度也僅僅只有 $O(n)$</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">coin</span><span class="p">(</span><span class="n">coins</span> <span class="p">[]</span><span class="kt">int</span><span class="p">,</span> <span class="n">amount</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+    <span class="n">dp</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="n">amount</span> <span class="o">+</span> <span class="m">1</span><span class="p">)</span>
+    <span class="n">dp</span><span class="p">[</span><span class="m">0</span><span class="p">]</span> <span class="o">=</span> <span class="m">0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">amount</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="n">result</span> <span class="o">:=</span> <span class="kt">int</span><span class="p">(</span><span class="m">1e9</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">coin</span> <span class="o">:=</span> <span class="k">range</span> <span class="n">coins</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="n">coin</span> <span class="o">&gt;=</span> <span class="m">0</span> <span class="p">{</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">min</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">dp</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">coin</span><span class="p">]</span> <span class="o">+</span> <span class="m">1</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="n">dp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">dp</span><span class="p">[</span><span class="n">amount</span><span class="p">]</span> <span class="o">==</span> <span class="m">1e9</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="o">-</span><span class="m">1</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">dp</span><span class="p">[</span><span class="n">amount</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>重點在 <code class="language-plaintext highlighter-rouge">result = min(result, dp[i - coin] + 1)</code><br />
+0 元的時候，有 0 種方法可以湊出，所以 <code class="language-plaintext highlighter-rouge">dp[0] = 0</code><br />
+但是為什麼公式的部份需要 <code class="language-plaintext highlighter-rouge">+1</code> 呢？</p>
+
+<p>上述 iterate 全部的硬幣面額，然後我們要找出最小硬幣數量所以用 min<br />
+<code class="language-plaintext highlighter-rouge">dp[i - coin]</code> 表示的是 <strong>當前金額扣掉硬幣面額後的金額，所需的最小硬幣數量</strong><br />
+換句話說，如果我們要湊出當前金額，我們需要湊出 <code class="language-plaintext highlighter-rouge">i - coin</code> 的金額，而 <code class="language-plaintext highlighter-rouge">i - coin</code> 的金額正好是目前考慮的硬幣面額<br />
+所以我們需要 <code class="language-plaintext highlighter-rouge">+1</code>，表示我們使用了一個硬幣</p>
+
+<p>因為 dp[i] 裡面儲存的都是最小硬幣數量，所以可以保證 dp[i + 1] 經由我們的計算肯定也是最小硬幣數量</p>
+
+<h1 id="multi-state-decision-problem">Multi-state Decision Problem</h1>
+<p>我們剛剛看到的題目都是屬於單一狀態決策問題<br />
+也就是他的變因只有一個，需要考慮的事情相對單純(i.e. 最小值)</p>
+
+<p>不過 DP 難的地方，我覺的在於多狀態決策問題<br />
+他的變因超過一個以上，整個狀態的轉移變得非常複雜</p>
+
+<h2 id="leetcode-120-triangle"><a href="https://leetcode.com/problems/triangle/description/">LeetCode 120. Triangle</a></h2>
+<p>題目的要求是說，給定一個三角形，找出從頂點到底邊的最小路徑和</p>
+
+<p>這個題目的解法有點像是走迷宮<br />
+我們可以很輕易的得出他的公式，也就是最小和等於當前的值加上下一層的最小值<br />
+你會想，這還不簡單，用個遞迴從上到下窮舉出所有可能性就可以了</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">traverse</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">triangle</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">min</span><span class="p">(</span>
+        <span class="n">traverse</span><span class="p">(</span><span class="n">triangle</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> 
+        <span class="n">traverse</span><span class="p">(</span><span class="n">triangle</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="m">1</span><span class="p">),</span>
+    <span class="p">)</span>
+
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>有沒有發現，這個解法你好像在哪裡看過<br />
+它跟我們上面說的 fibonacci 一樣，都是屬於 <code class="language-plaintext highlighter-rouge">exponential</code> 的解法</p>
+
+<p>為什麼？<br />
+第一層 call，會往下算完全部的可能性；第二層 call，也會往下算完全部的可能性<br />
+它會重複計算很多次<br />
+改進的方法也是一樣的，我們可以用一個 dp 陣列記錄下來(記憶化搜索)</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre><span class="k">var</span> <span class="n">nnum</span> <span class="o">=</span> <span class="kt">int</span><span class="p">(</span><span class="o">-</span><span class="m">1</span> <span class="o">*</span> <span class="m">1e5</span><span class="p">)</span>
+
+<span class="k">func</span> <span class="n">traverse</span><span class="p">(</span><span class="n">triangle</span> <span class="p">[][]</span><span class="kt">int</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="kt">int</span><span class="p">,</span> <span class="n">dp</span> <span class="p">[][]</span><span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+    <span class="n">size</span> <span class="o">:=</span> <span class="nb">len</span><span class="p">(</span><span class="n">triangle</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="n">size</span> <span class="o">||</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="n">size</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="m">0</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">dp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">!=</span> <span class="n">nnum</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">dp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="n">dp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">triangle</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span> <span class="o">+</span> <span class="n">min</span><span class="p">(</span>
+        <span class="n">traverse</span><span class="p">(</span><span class="n">triangle</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dp</span><span class="p">),</span> 
+        <span class="n">traverse</span><span class="p">(</span><span class="n">triangle</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">dp</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dp</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>當前最小值取決於，你往左邊還是右邊走<br />
+那我們可以把當前的數值紀錄起來<br />
+我們可以透過 dp array 進行記憶化搜索，避免重複計算<br />
+當遇到重複計算的時候，我們就可以直接返回答案</p>
+
+<h2 id="leetcode-97-interleaving-string"><a href="https://leetcode.com/problems/interleaving-string/description/">LeetCode 97. Interleaving String</a></h2>
+<p>題目基本上就是給你三個字串，問你說能不能用前兩個字串交叉組成第三個字串<br />
+題目本身挺單純的，你只要用 pointer 去嘗試組合出最後一個字串即可</p>
+
+<p>第一版的 code 是用遞迴寫的</p>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">isInterleave</span><span class="p">(</span><span class="n">s1</span> <span class="kt">string</span><span class="p">,</span> <span class="n">s2</span> <span class="kt">string</span><span class="p">,</span> <span class="n">s3</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">dp</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">dp</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="o">==</span> <span class="m">0</span> <span class="o">&amp;&amp;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">==</span> <span class="m">0</span> <span class="o">&amp;&amp;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">==</span> <span class="m">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">true</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="o">==</span> <span class="m">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">false</span>
+    <span class="p">}</span>
+
+    <span class="n">target</span> <span class="o">:=</span> <span class="n">s3</span><span class="p">[</span><span class="m">0</span><span class="p">]</span>
+
+    <span class="n">result</span> <span class="o">:=</span> <span class="no">false</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="o">&amp;&amp;</span> <span class="n">s1</span><span class="p">[</span><span class="m">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">target</span> <span class="p">{</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">||</span> <span class="n">dp</span><span class="p">(</span><span class="n">s1</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">],</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">])</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="o">&amp;&amp;</span> <span class="n">s2</span><span class="p">[</span><span class="m">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">target</span> <span class="p">{</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">||</span> <span class="n">dp</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">],</span> <span class="n">s3</span><span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="p">])</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>能不能組成 s3 這個字串，取決於 s1 跟 s2 的狀態<br />
+所以要怎麼改進呢</p>
+
+<p>使用二維的 DP 陣列，紀錄每個狀態的當前結果<br />
+看起來會像這樣</p>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">isInterleave</span><span class="p">(</span><span class="n">s1</span> <span class="kt">string</span><span class="p">,</span> <span class="n">s2</span> <span class="kt">string</span><span class="p">,</span> <span class="n">s3</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">false</span>
+    <span class="p">}</span>
+
+    <span class="n">arr</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="kt">int</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">+</span> <span class="m">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="o">:=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">+</span> <span class="m">1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">+</span> <span class="m">1</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">solve</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="m">0</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">solve</span><span class="p">(</span><span class="n">arr</span> <span class="p">[][]</span><span class="kt">int</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span> <span class="kt">string</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">true</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">s3</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">false</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="m">0</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="m">1</span>
+    <span class="p">}</span>
+
+    <span class="n">result</span> <span class="o">:=</span> <span class="no">false</span>
+    <span class="n">target</span> <span class="o">:=</span> <span class="n">s3</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">s1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">target</span> <span class="p">{</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">1</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="o">!</span><span class="n">result</span> <span class="o">&amp;&amp;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">s2</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="n">target</span> <span class="p">{</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">s3</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="m">1</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="m">1</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">result</span> <span class="p">{</span>
+        <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="m">1</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="m">1</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>這邊初始化二維陣列，是使用 int 的類型<br />
+原因在於要區分有沒算過，而 boolean 的 true, false. 單用 false 會有兩種語意，所以要用 int 來紀錄</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">0</code>: nil</li>
+  <li><code class="language-plaintext highlighter-rouge">-1</code>: false</li>
+  <li><code class="language-plaintext highlighter-rouge">1</code>: true</li>
+</ol>
+
+<p>重點在 solve function 裡面</p>
+
+<p>你可以看到基本的思路是一樣的<br />
+如果當前字母相同就往下算，而這有兩種情況</p>
+<ol>
+  <li>s1 與 s3 字首相同</li>
+  <li>s2 與 s3 字首也相同</li>
+</ol>
+
+<p>所以你可以看到有兩個 if<br />
+另外第 34 行有一個 fast path, 因為我們只關心成功的 case, 所以這邊檢查 <code class="language-plaintext highlighter-rouge">!result</code><br />
+代表第一個 case 已經成功了，所以不用檢查第二個 case(它不會影響結果)</p>
+
+<p>然後 DP 的精隨是能夠提早 return 已經計算過得資料<br />
+所以在 22 行的時候我們這樣做了</p>
+
+<p>另外一個小小的東西<br />
+我一開始是定義 <code class="language-plaintext highlighter-rouge">solve</code> 的回傳值是 int<br />
+然後在 main function 那在判斷<br />
+不過，這樣會 TLE, 改成 boolean 可以解決(不過這部份就有點 hack 了我覺的)<br />
+基本上你只要想到能用二維陣列，這個方法已經足夠</p>
+
+<h1 id="conclusion">Conclusion</h1>
+<p>動態規劃的題目有趣但難度我覺的偏高<br />
+有些題目可以先從暴力解開始(i.e. recursion)<br />
+遞迴寫出來如果 TLE 代表方向應該是對的，當你有辦法構築出遞迴公式的時候<br />
+可以嘗試 identify 出公式內的變因，再轉換成動態規劃的問題會相對容易</p>
+
+<p>另外寫程式的時候我們常常透過 debugger 或是 print 大法觀察變數<br />
+在這個例子中可以是 dp array<br />
+但我親身經歷後是覺的它沒有那麼容易看懂，相鄰的 array item 不一定有直接的關係(尤其是多維的 array)<br />
+會導致 debug 過程困難</p>
+
+<h1 id="see-also">See Also</h1>
+<ul>
+  <li><a href="https://leetcode.com/problems/house-robber/description/">LeetCode 198. House Robber</a></li>
+  <li><a href="https://leetcode.com/problems/house-robber-ii/description/">LeetCode 213. House Robber II</a></li>
+</ul>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>程式設計與演算法競賽入門經典(ISBN: 978-986-347-311-4)</li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="algorithm" /><category term="dynamic programming" /><category term="dp" /><summary type="html"><![CDATA[動態規劃的題目是我覺的演算法中數一數二困難的問題，能夠清楚的理解並活用需要一點耐心與技巧。本文會透過幾個實際的例子分享我的解題思路與一些技巧]]></summary></entry><entry><title type="html">重新認識網路 - 從基礎開始</title><link href="https://ambersun1234.github.io/network/network-basics/" rel="alternate" type="text/html" title="重新認識網路 - 從基礎開始" /><published>2024-05-07T00:00:00+08:00</published><updated>2024-05-18T01:47:27+08:00</updated><id>https://ambersun1234.github.io/network/network-basics</id><content type="html" xml:base="https://ambersun1234.github.io/network/network-basics/"><![CDATA[<h1 id="dns---domain-name-system">DNS - Domain Name System</h1>
+<p>Domain Name System 是一個分散式的系統，用於紀錄網域名稱和 IP 位址之間的關聯<br />
+基本上現今我們在瀏覽網站的時候，多半是使用所謂的 domain name 上網的<br />
+比方說 <code class="language-plaintext highlighter-rouge">google.com</code>, <code class="language-plaintext highlighter-rouge">facebook.com</code></p>
+
+<p>對於人類來說，這是比較容易理解的<br />
+IP address 則是方便於電腦進行解析的，但卻是不容易理解<br />
+因此 DNS 的作用就是將 IP address 轉換成網域名稱</p>
+
+<p>本質上 DNS 分散式架構有助於提昇整體吞吐量<br />
+包含單一節點失效，效能問題(可參考 <a href="../../database/database-optimization-hardware">資料庫 - 最佳化 Read/Write 設計(硬體層面) | Shawn Hsu</a>)</p>
+
+<h2 id="dns-server-categories">DNS Server Categories</h2>
+<p><img src="https://qph.cf2.quoracdn.net/main-qimg-5ed6b5866ff2e2d1d26095a49aa4c25e" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.quora.com/What-is-a-DNS-root-server-and-what-do-they-do">What is a DNS root server and what do they do?</a></p>
+</blockquote>
+
+<p>基本上分為三種類型</p>
+
+<ul>
+  <li>Root DNS Server
+    <ul>
+      <li>這些伺服器是整體網路的最高階，共有 13 個組織負責管理</li>
+      <li>Root server 不會直接回 ip address, 它會告訴你誰擁有這些資訊，然後你去找 <code class="language-plaintext highlighter-rouge">TLD DNS Server</code></li>
+    </ul>
+  </li>
+  <li>Top-level Domain DNS Server
+    <ul>
+      <li>高階網域如 <code class="language-plaintext highlighter-rouge">com</code>, <code class="language-plaintext highlighter-rouge">org</code>, <code class="language-plaintext highlighter-rouge">edu</code> 等都會紀錄在 Top-level Domain DNS Server 中</li>
+      <li>同樣它也不會直接回 ip address, 它會告訴你誰有這些資訊，然後你再去找 <code class="language-plaintext highlighter-rouge">Authoritative DNS Server</code></li>
+    </ul>
+  </li>
+  <li>Authoritative DNS Server
+    <ul>
+      <li>到這層就會真的給你 ip address 了</li>
+    </ul>
+  </li>
+</ul>
+
+<p>所以每次你的查詢都是從高階到低階<br />
+這樣很慢嘛，所以也會有 caching 的機制在裡面</p>
+
+<h2 id="dns-load-balancing">DNS Load Balancing</h2>
+<p>現今的服務器通常都是分散式系統，這就意謂著一個 domain name 可能會對到很多台實體伺服器<br />
+那麼當你存取的時候，是哪一台伺服器需要回應你呢</p>
+
+<p>DNS 通常會回應一連串的 IP address<br />
+client 通常會取第一個 ip 使用<br />
+每次 DNS 回應的時候，server 會輪流改變 ip address 的順序<br />
+所以同一台伺服器就不會太操勞</p>
+
+<p>這樣就可以做到基本的 load balancing</p>
+
+<h2 id="nslookup">nslookup</h2>
+<p>這個指令可以查詢網域名稱對應的 IP address<br />
+舉例來說</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span>nslookup google.com
+Server:         127.0.0.53
+Address:        127.0.0.53#53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 172.217.163.46
+Name:   google.com
+Address: 2404:6800:4012:4::200e
+
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>不熟悉 command line 操作也可以使用類似 <a href="https://www.nslookup.io/">NsLookup.io</a> 等網站來查詢</p>
+
+<h1 id="socket">Socket</h1>
+<blockquote>
+  <p>In UNIX, Everything is a File</p>
+</blockquote>
+
+<p>事情還得要從作業系統說起<br />
+UNIX 的設計哲學是，Everything is a File<br />
+每個東西都是檔案，什麼意思？<br />
+檔案不就是檔案嗎？ 那麼網路，印表機這些也算檔案嗎？<br />
+依照作業系統的邏輯，如果要詳細區分這些東西為各種不同的類別，那麼實作起來將會無比困難<br />
+因此，就算是印表機這種東西，底層實作也會將它視為是 <strong>檔案</strong></p>
+
+<p>建立網路連線，它分成大約兩步驟</p>
+<ol>
+  <li>建立 socket(i.e. file descriptor)，建立好一個對接的端口</li>
+  <li>建立連線(並且透過 socket 進行資料的傳輸)</li>
+</ol>
+
+<p>而 socket 就是那個 <strong>檔案</strong><br />
+每個應用程式都擁有自己的 socket 接口<br />
+你可以使用 <a href="https://linux.die.net/man/8/lsof">lsof</a> 這個指令查看當前 internet file descriptor 的狀況<br />
+執行 <code class="language-plaintext highlighter-rouge">$ sudo lsof -i</code> 你會看到類似這張圖的輸出
+<img src="/assets/img/posts/lsof.png" alt="" />
+可以很清楚的看到，chrome 瀏覽器開了許多的 socket</p>
+
+<blockquote>
+  <p>你應該還會看到其他應用程式，像我的還有 telegram, docker … etc.</p>
+</blockquote>
+
+<hr />
+
+<p>socket 有沒有數量限制呢？ 或者說比較 general 一點<br />
+file descriptor 有沒有上限？<br />
+我想答案很明顯是有的</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span><span class="nb">ulimit</span> <span class="nt">-n</span>
+1024
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p>可參考 <a href="https://linuxcommand.org/lc3_man_pages/ulimith.html">man ulimit</a></p>
+</blockquote>
+
+<h1 id="ip---internet-protocol">IP - Internet Protocol</h1>
+<p>提供 <code class="language-plaintext highlighter-rouge">主機</code> 之間的通訊，但不提供任何保障</p>
+
+<ul>
+  <li>不保證送達目的地</li>
+  <li>不保證會依序送達</li>
+</ul>
+
+<h1 id="process-communication---a-high-level-view">Process Communication - A High Level View</h1>
+<p>兩個不同的 process 要透過 network 的方式進行溝通<br />
+離不開兩個觀念，送資料(<a href="#transport-layer-multiplexing">Transport-layer Multiplexing</a>)與收資料(<a href="#demultiplexing">Demultiplexing</a>)</p>
+
+<h2 id="transport-layer-multiplexing">Transport-layer Multiplexing</h2>
+<p>將資料與 header 封裝在一起透過 <a href="#socket">Socket</a> 往下丟給網路層<br />
+而 header 包含了一些下層需要知道的事情<br />
+比方說你要送到哪裡，要給誰<br />
+舉例來說 sender/receiver 的 ip 跟 port</p>
+
+<p>換言之，如果 ip port 都一樣，那代表這兩個連線是一樣的</p>
+
+<blockquote>
+  <p>port 1024 以後都可以隨意用，1 ~ 1023 不能使用</p>
+</blockquote>
+
+<blockquote>
+  <p>為什麼要有 sender 的資料？ 因為要知道資料要送回哪裡</p>
+</blockquote>
+
+<h2 id="demultiplexing">Demultiplexing</h2>
+<p>將網路層上來的資料分送到正確的 <a href="#socket">Socket</a> 端口<br />
+然後在根據 header 裡面的內容，送到正確的地方</p>
+
+<h1 id="tcp---transmission-control-protocol">TCP - Transmission Control Protocol</h1>
+<p>TCP 是建立在 <a href="#ip---internet-protocol">IP</a> 之上的協議<br />
+IP 是專注在 <strong>主機</strong> 之間的通訊，而 TCP 則是專注在 <strong>行程(process)</strong> 之間的通訊</p>
+
+<blockquote>
+  <p>可參考 <a href="https://datatracker.ietf.org/doc/html/rfc793">RFC 793</a></p>
+</blockquote>
+
+<p>TCP 相比 <a href="#ip---internet-protocol">IP</a> 額外提供了</p>
+<ul>
+  <li>可靠性傳輸(保證送達以及保證順序送達)</li>
+  <li>壅塞控制(congestion control)</li>
+</ul>
+
+<blockquote>
+  <p>有關傳輸層的討論可以參考 <a href="../../network/networking-osi">重新認識網路 - OSI 七層模型 | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="why-handshake-is-important">Why Handshake is Important</h2>
+<p>TCP 是可靠傳輸，所以它需要花一點時間建立可靠連線<br />
+為什麼要花時間建立連線？</p>
+
+<p>試想線上會議的情況下，當你加入會議，你可能會先確保你的麥克風、喇叭是不是正常的<br />
+確定對方聽的到你的聲音，然後你也聽的到對方的，才會開始開會對吧<br />
+這就是一個確保連線成功的機制</p>
+
+<p>結束會議也一樣<br />
+跟對方說你要下線了，對方也會跟你說要下線了<br />
+雙方都要認知道對方要下線，並且同意<br />
+才可以關閉連線</p>
+
+<blockquote>
+  <p>TCP 在 <a href="https://datatracker.ietf.org/doc/html/rfc793">RFC 793</a> 並沒有定義需要做 結束會議的握手<br />
+但是 <a href="https://datatracker.ietf.org/doc/rfc6824/">RFC 6824</a> 裡面有定義而且 tcpdump 的結果有時候有出現<br />
+就在這裡提一下</p>
+</blockquote>
+
+<p>你可能會覺的什麼都要 double check 是一件很麻煩的事情<br />
+但沒有進行這個確保的情況下，你可能會漏掉對方的資訊<br />
+而這樣就不是可靠性傳輸了</p>
+
+<p>對應到網路世界，這個過程稱之為握手<br />
+TCP 在以下情況會做握手</p>
+<ol>
+  <li>建立連線 - <a href="#three-way-handshake">Three-way Handshake</a></li>
+  <li>結束連線 - <a href="#four-way-handshake">Four-way Handshake</a></li>
+</ol>
+
+<hr />
+
+<p>需要注意的是<br />
+TCP server 會需要 <strong>2 個 socket</strong> 來處理連線<br />
+為什麼呢</p>
+
+<p>我們說過，一個 connection 背後代表著一個 unique 的 <a href="#socket">Socket</a><br />
+TCP 是可靠性傳輸協定，每一個獨立的連線傳輸都有一個 socket<br />
+也就是說會有若干個 socket</p>
+
+<p>如果說每一個連線的 socket 都不一樣<br />
+那麼你需要一個統一的連接進入點來處理不同的 connection<br />
+這也就是為什麼 TCP server 會需要 2 個 socket 來處理連線</p>
+
+<p>一個是主要進入點的 socket<br />
+另一個則是每個 client 獨立的 socket<br />
+所以是兩個</p>
+
+<h2 id="three-way-handshake">Three-way Handshake</h2>
+<p><img src="https://www.techopedia.com/wp-content/uploads/2023/03/ad900dc1-ad94-4c7b-a3f8-154ad27c35f1.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.techopedia.com/definition/10339/three-way-handshake">Three-Way Handshake</a></p>
+</blockquote>
+
+<p>所以基本上 TCP 三方交握就是一個初始化 say hello 的流程<br />
+確認你已經準備好要收訊息了 我也準備好要發訊息了這樣</p>
+
+<p><img src="/assets/img/posts/tcpdump1.png" alt="" /></p>
+
+<blockquote>
+  <p>前情提要 tcpdump flag</p>
+
+  <table>
+    <tbody>
+      <tr>
+        <td>flag</td>
+        <td>shortened</td>
+        <td>description</td>
+      </tr>
+      <tr>
+        <td>S</td>
+        <td>syn</td>
+        <td>synchronize 同步</td>
+      </tr>
+      <tr>
+        <td>.</td>
+        <td>ack</td>
+        <td>acknowledge 確認</td>
+      </tr>
+      <tr>
+        <td>F</td>
+        <td>fin</td>
+        <td>結束連線</td>
+      </tr>
+      <tr>
+        <td>P</td>
+        <td>push</td>
+        <td>傳送資料</td>
+      </tr>
+    </tbody>
+  </table>
+</blockquote>
+
+<p>用 <a href="https://www.tcpdump.org/">Tcpdump</a> 這個工具來稍微理解一下吧，不然光用講的我也聽不懂</p>
+
+<p>執行以下指令開始監聽 <code class="language-plaintext highlighter-rouge">$ sudo tcpdump -i lo port 4000</code><br />
+我這次測試的目標，是在本機上的 4000 port<br />
+因為是在本機上，所以是 <code class="language-plaintext highlighter-rouge">lo</code>(loopback) interface(可以用 <code class="language-plaintext highlighter-rouge">$ ifconfig</code> 查網卡名稱)<br />
+tcpdump 會監聽目標 port 上所有的流量，所以你就可以用他來觀察連線的狀態</p>
+
+<p>第一個藍色框框表示 TCP 三方交握<br />
+很明顯符合 <code class="language-plaintext highlighter-rouge">SYN</code>(S), <code class="language-plaintext highlighter-rouge">SYN + ACK</code>(S.) 以及 <code class="language-plaintext highlighter-rouge">ACK</code>(.) 這三種狀態<br />
+細心的你會發現，三方交握裡面有兩個奇怪的 seq 數字(1708137740 以及 3857014844)<br />
+sequential number 是一個隨機的數字，方便 server/client 溝通同步用的</p>
+
+<p>你可以看到第一個藍色框框，在第二階段 <code class="language-plaintext highlighter-rouge">SYN + ACK</code>，它回復的 ack 數字是 1708137740 + 1<br />
+這很明顯不是巧合，他是根據 client 的 sequential number 再加一回復的(<strong>seq + 1</strong>)<br />
+不過 server 回復的 sequential number 卻是不同的？ 因為 server client 他們會個別產生數字，不會共用</p>
+
+<hr />
+
+<p>最後當連線都建立完成之後，你可以看到黃色框框的部份<br />
+就是在進行資料傳輸了<br />
+這時你會發現為什麼 sequential number 變成一個 pair 了？<br />
+而且它似乎擁有某種關聯，<code class="language-plaintext highlighter-rouge">1:377</code> 然後 <code class="language-plaintext highlighter-rouge">377:14857</code><br />
+聰明的你一定猜到，它是在確保資料的 <strong>到達順序</strong></p>
+
+<hr />
+
+<p>你可能會發現，為什麼會有兩個三方交握(藍色框框)<br />
+仔細看會發現他是兩個不同的 client 分別跟 4000 port 進行連線<br />
+我雖然無法確定為什麼會有多個 client 連線，但這證明了一件事情，server 是可以多工處理不同 client 的連線的！<br />
+而且它還不會亂掉(因為 client port 不同，所以是不同的 <a href="#socket">Socket</a>)</p>
+
+<hr />
+
+<p>但藍色框框，最後 server 回 <code class="language-plaintext highlighter-rouge">ACK</code> 的時候, 為什麼是 1 呢？<br />
+這是 tcpdump 預設輸出相對 sequence number<br />
+可以在下指令的時候加一個 flag <code class="language-plaintext highlighter-rouge">-S</code> 就可以了<br />
+下圖，<code class="language-plaintext highlighter-rouge">ACK</code> 回的數字就是 <strong>seq + 1</strong> 了</p>
+
+<p><img src="/assets/img/posts/tcpdump2.png" alt="" /></p>
+
+<h2 id="four-way-handshake">Four-way Handshake</h2>
+<p><img src="/assets/img/posts/tcpdump3.png" alt="" /></p>
+
+<blockquote>
+  <p>再次註明，在原始的 <a href="https://datatracker.ietf.org/doc/html/rfc793">RFC 793</a> 的定義中<br />
+並沒有指出需要四方握手以結束連線<br />
+我在測試的時候也是有時候有看到，有時候又沒看到</p>
+</blockquote>
+
+<p>跟三方交握相反，四方握手是用在關閉連線的時候會用到<br />
+概念在 <a href="#why-handshake-is-important">Why Handshake is Important</a> 提到<br />
+基本上是一樣的</p>
+
+<p>這裡的關閉連線是從 server 開始的<br />
+第一個藍色框框，使用 <code class="language-plaintext highlighter-rouge">FIN + ACK</code> 來表明我想要中斷連線<br />
+我想要終止 sequential number 為 <code class="language-plaintext highlighter-rouge">20412</code> 這段連線<br />
+並且跟你說，上一段資訊 <code class="language-plaintext highlighter-rouge">1573</code> 我已經收到了</p>
+
+<p>所以第二段<br />
+<code class="language-plaintext highlighter-rouge">ACK</code> client 表示說好的我已經收到了你想要關閉 <code class="language-plaintext highlighter-rouge">20412</code> 的連線</p>
+
+<p>第三段<br />
+既然你想要關閉連線，那我這邊也想要關閉 <code class="language-plaintext highlighter-rouge">1573</code> 的連線(<code class="language-plaintext highlighter-rouge">FIN</code>)<br />
+並且 <code class="language-plaintext highlighter-rouge">20412</code> 連線已經結束了，回一個 <code class="language-plaintext highlighter-rouge">20412 + 1</code> 的 <code class="language-plaintext highlighter-rouge">ACK</code> 給你</p>
+
+<p>最後 server 表示，你的 <code class="language-plaintext highlighter-rouge">1573</code> 關閉請求已經批准！回一個 <code class="language-plaintext highlighter-rouge">1573 + 1</code> 的 <code class="language-plaintext highlighter-rouge">ACK</code> 給你</p>
+
+<hr />
+
+<p>基本上就是每個人做的每件事情都一定要回<br />
+所以才會拆成四個步驟來做<br />
+說到底就是 <code class="language-plaintext highlighter-rouge">server 想關</code>, <code class="language-plaintext highlighter-rouge">client 想關</code>, <code class="language-plaintext highlighter-rouge">server 結束</code>, <code class="language-plaintext highlighter-rouge">client 結束</code> 這樣</p>
+
+<h2 id="congestion-control">Congestion Control</h2>
+<p>網路是會塞車的，網路頻寬是一個主要的因素<br />
+相信你有過一個狀況，家裡很多人在用 wifi 的時候，你會感覺到它變慢<br />
+這個就是網路已經塞車的現象了</p>
+
+<p>說到塞車，假設連假你要出門旅遊<br />
+從連假的前一天開始就會有塞車的現象<br />
+這時候你可以選擇當個聰明用路人或者是跟著一起塞<br />
+一起塞的時候，你會發現到匝道會有管制，幾秒鐘放行幾輛車子這種<br />
+這就是 <strong>壅塞控制</strong> 的概念</p>
+
+<p>避免過多的車子進入國道，使得塞車的現象變得更嚴重<br />
+我們可以使用基本的管制措施限制數量，用以緩解塞車的現象</p>
+
+<p>當網路上的封包多到開始掉的時候，一個常見的方法就是減緩發送封包的頻率(<code class="language-plaintext highlighter-rouge">congestion window</code> :arrow_right: 給定時間內能傳多少資料)<br />
+對，<a href="#tcp---transmission-control-protocol">TCP</a> 是會掉封包的，因為底層是 <a href="#ip---internet-protocol">IP</a> 不可靠傳輸<br />
+TCP 有自己的偵錯方法，所以我們可以信任它</p>
+
+<h2 id="telnet">telnet</h2>
+<p>測試 TCP 連線可以使用 telnet<br />
+基本的用法就是</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span>telnet localhost 8080
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>然後就可以開始傳輸資料了</p>
+
+<h1 id="udp---user-datagram-protocol">UDP - User Datagram Protocol</h1>
+<p>UDP 的定義是在 <a href="https://datatracker.ietf.org/doc/html/rfc768">RFC 768</a><br />
+相較於 <a href="#tcp---transmission-control-protocol">TCP</a>，UDP 是不會進行握手的<br />
+所以他是無連線的 protocol</p>
+
+<p>UDP 相比 <a href="#ip---internet-protocol">IP</a> 額外新增了兩個服務</p>
+
+<ul>
+  <li>datagram header 中加入錯誤偵測欄位，確保資料無誤</li>
+  <li>process 之間的通訊</li>
+</ul>
+
+<p>UDP 並沒有像 <a href="#tcp---transmission-control-protocol">TCP</a> 一樣提供可靠性傳輸哦</p>
+
+<h2 id="udp-observation">UDP Observation</h2>
+<p>UDP 在傳送資料前並不會有任何握手確認的動作<br />
+看一下實際上是不是真的這樣子</p>
+
+<blockquote>
+  <p>我們可以用 <a href="https://www.tcpdump.org/">Tcpdump</a> 以及 <a href="https://www.wireshark.org/download.html">Wireshark</a> 觀察<br />
+測試指令我們可以用 <a href="https://netcat.sourceforge.io/">netcat</a> 來測試</p>
+</blockquote>
+
+<p><img src="/assets/img/posts/udpdump.png" alt="" /></p>
+
+<p>測試 UDP 的指令為 <code class="language-plaintext highlighter-rouge">$ echo "Hello world" | nc -u 127.0.0.1 8083 -w 10</code></p>
+
+<p>我們用 netcat(nc) 的指令，發送資料(Hello world) 到本機上的 8083 port<br />
+<code class="language-plaintext highlighter-rouge">w</code> flag 是指等待秒數，在這裡我們等 10 秒</p>
+
+<p>你可以看到 tcpdump 的確有抓到我們送過去的資料(沒錯 tcpdump 也可以用來抓 udp traffic)<br />
+詭異的是它為什麼會顯示長度為 12 呢？</p>
+
+<p><img src="/assets/img/posts/udpdump1.png" alt="" /></p>
+
+<p>透過 wireshark 觀察可以得知，最後一個 byte 是 <code class="language-plaintext highlighter-rouge">0A</code><br />
+參照 <a href="https://zh.wikipedia.org/zh-tw/ASCII">ASCII</a> 表來對照就是 <code class="language-plaintext highlighter-rouge">LF</code><br />
+所以實際上是 <code class="language-plaintext highlighter-rouge">Hello world\n</code>, 也就是 12 個 byte 了</p>
+
+<hr />
+
+<p>你可以很明顯的看到，UDP 並沒有所謂握手的動作<br />
+參照 tcpdump 的結果，他是直接傳資料過來的<br />
+就像有人突然跟你搭話，你有可能沒聽清楚蛤回去<br />
+封包就掉了</p>
+
+<h2 id="udp-transfer-type">UDP Transfer Type</h2>
+<p>UDP 在傳輸資料的時候有分成三種不同的模式 <a href="#unicast">Unicast</a>, <a href="#multicast">Multicast</a> 以及 <a href="#broadcast">Broadcast</a></p>
+
+<h3 id="unicast">Unicast</h3>
+<p>在 <a href="#udp-observation">UDP Observation</a> 我們看到的例子就是屬於 unicast<br />
+他是點對點的傳輸，跟 <a href="#tcp---transmission-control-protocol">TCP</a> 很像<br />
+只是沒有握手而已</p>
+
+<h3 id="multicast">Multicast</h3>
+<p>相較於單點傳播，multicast 為多點傳播<br />
+但它跟 <a href="#broadcast">Broadcast</a> 不一樣<br />
+多點傳播只會把資料傳給訂閱者，而不會把資料傳給其他人<br />
+有點類似 <code class="language-plaintext highlighter-rouge">Observer Pattern</code>(可參考 <a href="../../design%20pattern/design-pattern-observer">設計模式 101 - Observer Pattern | Shawn Hsu</a>)</p>
+
+<p>multicast 需要執行在特定的 ip 地址上<br />
+這個是因為它可以確保路由的時候更順利，因為只要送到這個地址的資料我就知道他是 multicast<br />
+這個區段從 <code class="language-plaintext highlighter-rouge">224.0.0.0</code> 到 <code class="language-plaintext highlighter-rouge">239.255.255.255</code></p>
+
+<p>訂閱 multicast server 的人，每當新訊息來的時候，就會收到<br />
+類似 mailing list<br />
+而發送訊息的本人，是不會收到自己發送的訊息的</p>
+
+<h3 id="broadcast">Broadcast</h3>
+<p>廣播就是所有人都可以收到資料了<br />
+它不需要明確的加入 “群組”, 就可以收到資料</p>
+
+<p>同樣的，廣播也需要一個地址 <code class="language-plaintext highlighter-rouge">255.255.255.255</code><br />
+把資料丟過去，所有同個區域網路都會收到你的訊息<br />
+而這其實會造成一些問題</p>
+
+<p>不是每個人都需要這個訊息<br />
+它會造成網路壅塞(c.f. <a href="#congestion-control">Congestion Control</a>)，這顯然不好<br />
+所以其實 broadcast 已經被廢棄了</p>
+
+<h1 id="ssl---secure-sockets-layertls">SSL - Secure Sockets Layer(TLS)</h1>
+<p>一個常見的誤區，至少對我來說<br />
+是錯誤的認為 TCP/UDP 這些協定會自己幫我們把資料加密<br />
+這是錯的 是錯的 錯的！</p>
+
+<p><img src="/assets/img/posts/udpdump1.png" alt="" /></p>
+
+<p>至少你可以從我們做的 wireshark 小實驗中得出<br />
+我們甚至不用 decrypt 就知道我們送的資料是 <code class="language-plaintext highlighter-rouge">Hello world</code></p>
+
+<p>我們能在網路上肆意的遊玩，是因為我們的資料都是加密過的<br />
+得益於 SSL(i.e. TLS) 的幫助</p>
+
+<p>TLS(現在比較常說 TLS) 是一種補強的 protocol<br />
+定義於 <a href="https://datatracker.ietf.org/doc/html/rfc5246">RFC 5246</a><br />
+其宗旨是為了提供在網路上雙方的隱私以及資料的完整性</p>
+
+<blockquote>
+  <p>At the lowest level, layered on top of some reliable<br />
+transport protocol (e.g., TCP [TCP]), is the TLS Record Protocol.</p>
+</blockquote>
+
+<p>TLS 需要跑在可靠性的傳輸協定之上，如 <a href="#tcp---transmission-control-protocol">TCP</a></p>
+
+<ul>
+  <li>隱私性是透過 <code class="language-plaintext highlighter-rouge">對稱性加密演算法</code> 或 <code class="language-plaintext highlighter-rouge">非對稱式加密演算法</code> 所提供</li>
+  <li>資料的完整性是透過 <code class="language-plaintext highlighter-rouge">Message Authenticate Codes(MACs)</code> 所提供</li>
+</ul>
+
+<p>基本上 TLS 是由兩部份組成 <a href="#tls-record-protocol">TLS Record Protocol</a> 以及 <a href="#tls-handshake-protocol">TLS Handshake Protocol</a></p>
+
+<h2 id="tls-record-protocol">TLS Record Protocol</h2>
+<p>record protocol 主要是用於封裝高階 protocol 的資料<br />
+舉例來說 HTTP(可參考 <a href="../../network/networking-http1">重新認識網路 - HTTP1 與他的小夥伴們 | Shawn Hsu</a>)</p>
+
+<p>怎麼封裝呢？<br />
+將 message-based 的資料包裝成一個可管理的封包<br />
+適當的壓縮資料，加上 <code class="language-plaintext highlighter-rouge">Message Authenticate Codes(MACs)</code> 來確保資料完整性</p>
+
+<blockquote>
+  <p>MACs 不能驗證來源合法性(i.e. 不確定是不是本人簽的)<br />
+如果需要驗證 1. 資料完整性 2. 來源合法性，可以考慮使用數位簽章(digital signature)</p>
+</blockquote>
+
+<h2 id="tls-handshake-protocol">TLS Handshake Protocol</h2>
+<p>重頭戲來啦，client 跟 server 要建立一個安全的連線了！</p>
+
+<ul>
+  <li>他們會先核對基本資料(e.g. <code class="language-plaintext highlighter-rouge">protocol version</code>, <code class="language-plaintext highlighter-rouge">加密演算法</code> 等等的)
+    <ul>
+      <li>然後嘗試做 session resumption(簡單的理解是 connection caching, 這樣就不用重新握手，很方便)</li>
+    </ul>
+  </li>
+  <li>驗證彼此的合法性
+    <ul>
+      <li>交換 certificate 驗證彼此的身份(透過 CA 組織, 比如說免費的 <a href="https://letsencrypt.org/">Let’s Encrypt</a>)</li>
+    </ul>
+  </li>
+  <li>產生 master secret, premaster secret，交換 random number(避免 <a href="https://en.wikipedia.org/wiki/Replay_attack">relay attack</a>)</li>
+  <li>secure session 建立成功！ 可以開始享受安全的資料傳輸了！</li>
+</ul>
+
+<p><img src="https://infocenter.nokia.com/public/7705SAR234R1A/topic/com.nokia.system-mgmt-guide/graphics/sw1394.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://infocenter.nokia.com/public/7705SAR234R1A/index.jsp?topic=%2Fcom.nokia.system-mgmt-guide%2Ftls-handshake.html">TLS Handshake</a></p>
+</blockquote>
+
+<h1 id="tcpudp-comparison">TCP/UDP Comparison</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"> </th>
+      <th style="text-align: left">TCP</th>
+      <th style="text-align: left">UDP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">Reliable</td>
+      <td style="text-align: left">:heavy_check_mark:</td>
+      <td style="text-align: left">:x:</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Ordered</td>
+      <td style="text-align: left">:heavy_check_mark:</td>
+      <td style="text-align: left">:x:</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Handshake</td>
+      <td style="text-align: left">:heavy_check_mark:</td>
+      <td style="text-align: left">:x:</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Connection</td>
+      <td style="text-align: left">:heavy_check_mark:</td>
+      <td style="text-align: left">:x:</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Congestion</td>
+      <td style="text-align: left">:heavy_check_mark:</td>
+      <td style="text-align: left">:x:</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Packet size</td>
+      <td style="text-align: left">Large</td>
+      <td style="text-align: left">Small</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Used Socket</td>
+      <td style="text-align: left">2</td>
+      <td style="text-align: left">1</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="tcpudp-golang-example">TCP/UDP Golang Example</h1>
+<p>詳細的程式碼可以參考 <a href="https://github.com/ambersun1234/blog-labs/tree/master/echo-tcp-udp">ambersun1234/blog-labs/echo-tcp-udp</a></p>
+
+<h2 id="tcp">TCP</h2>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">tcpHandle</span><span class="p">(</span><span class="n">conn</span> <span class="n">net</span><span class="o">.</span><span class="n">Conn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">defer</span> <span class="n">conn</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+    <span class="n">scann</span> <span class="o">:=</span> <span class="n">bufio</span><span class="o">.</span><span class="n">NewScanner</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">scann</span><span class="o">.</span><span class="n">Scan</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">input</span> <span class="o">:=</span> <span class="n">scann</span><span class="o">.</span><span class="n">Text</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Receive: "</span><span class="p">,</span> <span class="n">input</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">input</span><span class="p">)));</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">tcpServer</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">li</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">Listen</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">":%d"</span><span class="p">,</span> <span class="n">tcpPort</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">defer</span> <span class="n">li</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Listening on: localhost:%v</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">tcpPort</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">{</span>
+        <span class="n">conn</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">li</span><span class="o">.</span><span class="n">Accept</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">SetDeadline</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">Time</span><span class="p">{});</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="k">go</span> <span class="n">tcpHandle</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">tcpClient</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">host</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Getenv</span><span class="p">(</span><span class="s">"HOST"</span><span class="p">)</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">Dial</span><span class="p">(</span><span class="s">"tcp"</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%v:%d"</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">tcpPort</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="n">ticker</span> <span class="o">:=</span> <span class="n">time</span><span class="o">.</span><span class="n">NewTicker</span><span class="p">(</span><span class="m">2</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">{</span>
+        <span class="o">&lt;-</span><span class="n">ticker</span><span class="o">.</span><span class="n">C</span>
+
+        <span class="c">// send data</span>
+        <span class="n">msg</span> <span class="o">:=</span> <span class="s">"Hello World!"</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Send: "</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">msg</span><span class="p">)));</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="c">// receive data</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">bufio</span><span class="o">.</span><span class="n">NewReader</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span><span class="o">.</span><span class="n">ReadString</span><span class="p">(</span><span class="sc">'\n'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Server ACK with: '%v'</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="kt">string</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>基本上需要注意的點是</p>
+<ol>
+  <li>TCP 是以換行為分隔符號, 所以你送資料的時候記得加 <code class="language-plaintext highlighter-rouge">\n</code></li>
+</ol>
+
+<p>其他就相對單純<br />
+用一個 for-loop 持續監聽連線<br />
+當新的連線進來的時候，就開啟 goroutine 來處理它(line 32)<br />
+這也是為什麼上面我們說 <a href="#tcp---transmission-control-protocol">TCP</a> 需要兩個 sockets</p>
+
+<h2 id="udp-unicast">UDP Unicast</h2>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">udpUnicastHandle</span><span class="p">(</span><span class="n">conn</span> <span class="o">*</span><span class="n">net</span><span class="o">.</span><span class="n">UDPConn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">buf</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span> <span class="m">1024</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">{</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">adr</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">ReadFromUDP</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">data</span> <span class="o">:=</span> <span class="kt">string</span><span class="p">(</span><span class="n">buf</span><span class="p">[</span><span class="o">:</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Receive: "</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">WriteToUDP</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%v</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">data</span><span class="p">)),</span> <span class="n">adr</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">udpUnicastServer</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">address</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">UDPAddr</span><span class="p">{</span>
+        <span class="n">Port</span><span class="o">:</span> <span class="n">udpUnicastPort</span><span class="p">,</span>
+        <span class="n">IP</span><span class="o">:</span>   <span class="n">net</span><span class="o">.</span><span class="n">ParseIP</span><span class="p">(</span><span class="s">"0.0.0.0"</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="n">li</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">ListenUDP</span><span class="p">(</span><span class="s">"udp"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">address</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Listening on: localhost:%v</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">udpUnicastPort</span><span class="p">)</span>
+
+    <span class="n">udpUnicastHandle</span><span class="p">(</span><span class="n">li</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">udpUnicastClient</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">host</span> <span class="o">:=</span> <span class="n">os</span><span class="o">.</span><span class="n">Getenv</span><span class="p">(</span><span class="s">"HOST"</span><span class="p">)</span>
+    <span class="n">conn</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">Dial</span><span class="p">(</span><span class="s">"udp"</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%v:%d"</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">udpUnicastPort</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="n">ticker</span> <span class="o">:=</span> <span class="n">time</span><span class="o">.</span><span class="n">NewTicker</span><span class="p">(</span><span class="m">2</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">{</span>
+        <span class="o">&lt;-</span><span class="n">ticker</span><span class="o">.</span><span class="n">C</span>
+
+        <span class="c">// send data</span>
+        <span class="n">msg</span> <span class="o">:=</span> <span class="s">"Hello World!"</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Send: "</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">Write</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">msg</span><span class="p">));</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="c">// receive data</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">bufio</span><span class="o">.</span><span class="n">NewReader</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span><span class="o">.</span><span class="n">ReadString</span><span class="p">(</span><span class="sc">'\n'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Server ACK with: '%v'</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="kt">string</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>跟 <a href="#tcp">TCP</a> 的實作可以說是一模一樣<br />
+差在它不會預先建立連線<br />
+然後一些 function 改成使用 UDP 版本的這樣而已</p>
+
+<h2 id="udp-multicast">UDP Multicast</h2>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+</pre></td><td class="rouge-code"><pre><span class="k">func</span> <span class="n">udpMulticastHandle</span><span class="p">(</span><span class="n">conn</span> <span class="o">*</span><span class="n">net</span><span class="o">.</span><span class="n">UDPConn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">address</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">ResolveUDPAddr</span><span class="p">(</span><span class="s">"udp"</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%v:%v"</span><span class="p">,</span> <span class="n">udpMulticastHost</span><span class="p">,</span> <span class="n">udpMulticastPort</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">buf</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span> <span class="m">1024</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">{</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">ReadFromUDP</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">data</span> <span class="o">:=</span> <span class="kt">string</span><span class="p">(</span><span class="n">buf</span><span class="p">[</span><span class="o">:</span><span class="n">n</span><span class="p">])</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Receive: "</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">WriteTo</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%v</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">data</span><span class="p">)),</span> <span class="n">address</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">udpMulticastServer</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">address</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">ResolveUDPAddr</span><span class="p">(</span><span class="s">"udp"</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%v:%v"</span><span class="p">,</span> <span class="n">udpMulticastHost</span><span class="p">,</span> <span class="n">udpMulticastPort</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">li</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">ListenMulticastUDP</span><span class="p">(</span><span class="s">"udp"</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Listening on: localhost:%v</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">udpMulticastPort</span><span class="p">)</span>
+
+    <span class="n">udpMulticastHandle</span><span class="p">(</span><span class="n">li</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">func</span> <span class="n">udpMulticastClient</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">address</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">ResolveUDPAddr</span><span class="p">(</span><span class="s">"udp"</span><span class="p">,</span> <span class="n">fmt</span><span class="o">.</span><span class="n">Sprintf</span><span class="p">(</span><span class="s">"%v:%v"</span><span class="p">,</span> <span class="n">udpMulticastHost</span><span class="p">,</span> <span class="n">udpMulticastPort</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="n">conn</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">net</span><span class="o">.</span><span class="n">ListenMulticastUDP</span><span class="p">(</span><span class="s">"udp"</span><span class="p">,</span> <span class="no">nil</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="n">ticker</span> <span class="o">:=</span> <span class="n">time</span><span class="o">.</span><span class="n">NewTicker</span><span class="p">(</span><span class="m">2</span> <span class="o">*</span> <span class="n">time</span><span class="o">.</span><span class="n">Second</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">{</span>
+        <span class="o">&lt;-</span><span class="n">ticker</span><span class="o">.</span><span class="n">C</span>
+
+        <span class="c">// send data</span>
+        <span class="n">msg</span> <span class="o">:=</span> <span class="s">"Hello World!"</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Println</span><span class="p">(</span><span class="s">"Send: "</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">conn</span><span class="o">.</span><span class="n">WriteTo</span><span class="p">([]</span><span class="kt">byte</span><span class="p">(</span><span class="n">msg</span><span class="p">),</span> <span class="n">address</span><span class="p">);</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="c">// receive data</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">err</span> <span class="o">:=</span> <span class="n">bufio</span><span class="o">.</span><span class="n">NewReader</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span><span class="o">.</span><span class="n">ReadString</span><span class="p">(</span><span class="sc">'\n'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">!=</span> <span class="no">nil</span> <span class="p">{</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">Fatalln</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">Printf</span><span class="p">(</span><span class="s">"Server ACK with: '%v'</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="kt">string</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>UDP Multicast 就有意思的多了<br />
+首先，你必須使用 <code class="language-plaintext highlighter-rouge">ListenMulticastUDP</code> 這個 function<br />
+不論 client 或 server<br />
+注意到不能使用 ListenUDP</p>
+
+<p>另外一個有趣的點是先前在 <a href="#multicast">Multicast</a> 提到<br />
+群播發送訊息的人不會收到自己的訊息<br />
+根據 <a href="https://pkg.go.dev/net#ListenMulticastUDP">https://pkg.go.dev/net#ListenMulticastUDP</a> 裡面提到</p>
+
+<blockquote>
+  <p>Note that ListenMulticastUDP will set the IP_MULTICAST_LOOP socket option to 0 under IPPROTO_IP, to disable loopback of multicast packets.</p>
+</blockquote>
+
+<p>而你在測試 Multicast 的時候就必須要使用不同的機器<br />
+才可以正確的讀取到群播的資料<br />
+並不需要手動撰寫過濾自身訊息的程式(你必須要使用 <code class="language-plaintext highlighter-rouge">ListenMulticastUDP</code> 這個 function)</p>
+
+<p>並且，server 寫資料的時候也要注意<br />
+因為是群播，所以你的 destination 也必須要是 <code class="language-plaintext highlighter-rouge">群播地址</code>(第 16 行)<br />
+不要寫成 client address 不然你會讀不到資料</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>電腦網際網路(ISBN: 978-986-463-950-2)</li>
+  <li><a href="https://zh.wikipedia.org/wiki/TCP/IP%E5%8D%8F%E8%AE%AE%E6%97%8F">網際網路協議套組</a></li>
+  <li><a href="https://jyhshin.pixnet.net/blog/post/31256044">TCP header format</a></li>
+  <li><a href="https://www.guru99.com/tcp-3-way-handshake.html">What is TCP Three-Way HandShake?</a></li>
+  <li><a href="https://zh.wikipedia.org/wiki/%E4%BC%A0%E8%BE%93%E6%8E%A7%E5%88%B6%E5%8D%8F%E8%AE%AE">傳輸控制協定</a></li>
+  <li><a href="https://www.iana.org/domains/root/servers">Root Servers</a></li>
+  <li><a href="https://stackoverflow.com/questions/41389880/why-does-tcp-socket-programming-need-two-socketsone-welcome-socket-and-one-conn">Why does TCP socket programming need two sockets(one welcome socket and one connection socket) but UDP only needs one?</a></li>
+  <li><a href="https://stackoverflow.com/questions/11129212/tcp-can-two-different-sockets-share-a-port">TCP: can two different sockets share a port?</a></li>
+  <li><a href="https://learn.microsoft.com/zh-tw/troubleshoot/windows-server/networking/three-way-handshake-via-tcpip">透過 TCP/IP 進行三向交握的說明</a></li>
+  <li><a href="https://github.com/steveLauwh/TCP-IP/blob/master/TCP/Three-Way%20Handshake%20And%20Four-Way%20Wavehand.md">Three-Way Handshake</a></li>
+  <li><a href="https://stackoverflow.com/questions/60443487/why-is-the-ack-flag-in-a-tcpdump-represented-as-a-period-instead-of-an-a">Why is the ACK flag in a tcpdump represented as a period “.” instead of an “A”?</a></li>
+  <li><a href="https://dzone.com/articles/tcpdump-learning-how-read-udp">tcpdump: Learning how to read UDP packets</a></li>
+  <li><a href="https://www.datavideo.com/hk/article/51/streaming-terminology">串流技術簡介- 什麼是 UDP, TCP, Unicast, Multicast, RTP, RTSP, RTMP?</a></li>
+  <li><a href="https://stackoverflow.com/questions/72843819/what-ip-to-use-in-order-to-perform-a-udp-broadcast">What IP to use in order to perform a UDP broadcast?</a></li>
+  <li><a href="https://zh.wikipedia.org/zh-tw/TCP%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6">TCP擁塞控制</a></li>
+  <li><a href="https://stackoverflow.com/questions/3329641/how-do-multiple-clients-connect-simultaneously-to-one-port-say-80-on-a-server">How do multiple clients connect simultaneously to one port, say 80, on a server? [duplicate]</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="network" /><category term="tcp" /><category term="udp" /><category term="ssl" /><category term="tls" /><category term="dns" /><category term="nc" /><category term="tcpdump" /><category term="wireshark" /><category term="broadcast" /><category term="load balance" /><category term="ip" /><category term="telnet" /><category term="multicast" /><category term="unicast" /><summary type="html"><![CDATA[本篇文章將會涵蓋所有網際網路的基礎，包含 DNS, TCP, UDP, TLS。其中會使用 Tcpdump, Wireshark 等工具實際觀察]]></summary></entry><entry><title type="html">從 0 認識 Blockchain - 錢包基礎原理</title><link href="https://ambersun1234.github.io/blockchain/blockchain-wallet/" rel="alternate" type="text/html" title="從 0 認識 Blockchain - 錢包基礎原理" /><published>2024-05-01T00:00:00+08:00</published><updated>2024-05-01T21:35:53+08:00</updated><id>https://ambersun1234.github.io/blockchain/blockchain-wallet</id><content type="html" xml:base="https://ambersun1234.github.io/blockchain/blockchain-wallet/"><![CDATA[<h1 id="preface">Preface</h1>
+<p>加密貨幣涉及了很多密碼學相關的知識<br />
+其中錢包這裡佔了滿多部份的<br />
+這篇文章會盡量的用簡單的方式來說明<br />
+跟我一起看看吧</p>
+
+<h1 id="introduction-to-wallet">Introduction to Wallet</h1>
+<p>錢包可以說是加密貨幣中至關重要的一部分<br />
+你的所有虛擬資產將會被儲存在錢包中</p>
+
+<p>錢包的建立是使用數學的方法產生一組密碼學相關的資訊<br />
+比方說你的 <code class="language-plaintext highlighter-rouge">Public Key</code> 以及 <code class="language-plaintext highlighter-rouge">Private Key</code><br />
+之後你就可以用這組資訊跟區塊鏈互動</p>
+
+<p>其實產生的方法還有另外一種是用一組 <code class="language-plaintext highlighter-rouge">master key</code><br />
+然後透過 master key 產生無數的 <code class="language-plaintext highlighter-rouge">公私鑰</code><br />
+本文將會著重討論此種方式(Deterministic Wallet)</p>
+
+<h2 id="wallet-mnemonic">Wallet Mnemonic</h2>
+<blockquote>
+  <p>mnemonic 讀作 nemonic, 第一個 m 不發音</p>
+</blockquote>
+
+<p><img src="https://i.pinimg.com/originals/11/9f/cd/119fcd6f215892ebc952e7befb7ad850.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.pinterest.com/pin/brave-wallet-backup-mnemonic-page--570549846541363404/">https://www.pinterest.com/pin/brave-wallet-backup-mnemonic-page–570549846541363404/</a></p>
+</blockquote>
+
+<p>在創建新的錢包的時候，<a href="https://bitcoin.org/en/">BitCoin</a> 或者是 <a href="https://ethereum.org/en/">Ethereum</a> 都會告訴你需要將 <code class="language-plaintext highlighter-rouge">助記詞</code> 保管好<br />
+而這個助記詞在錢包中扮演了相當重要的角色</p>
+
+<p>前面提到，deterministic wallet 會產生一組 <code class="language-plaintext highlighter-rouge">master key</code>, 然後可以透過它產生無數 <code class="language-plaintext highlighter-rouge">公私鑰</code><br />
+那麼 master key 就跟 mnemonic(助記詞) 很有關係了</p>
+
+<h3 id="mnemonic-wordlist">Mnemonic Wordlist</h3>
+<p>助記詞你可以看到是由若干個英文單字所組成的<br />
+它本質上還是一串數字，只是為了方便人類辨識、閱讀以及記憶<br />
+所以採用文字的方式紀錄而已</p>
+
+<p>而這個紀錄方式非也像是 <a href="https://en.wikipedia.org/wiki/ASCII">ASCII</a> 這種編碼而已<br />
+取而代之的是採用一種叫做 <code class="language-plaintext highlighter-rouge">wordlist</code> 的東西<br />
+想的簡單一點就是一個詞彙字典而已<br />
+比方說 <code class="language-plaintext highlighter-rouge">apple</code> 是 1, <code class="language-plaintext highlighter-rouge">banana</code> 是 2 等等</p>
+
+<blockquote>
+  <p>wordlist 不一定要是英文，你也可以製作其他語言的 wordlist<br />
+畢竟那個就只是一個詞彙字典而已</p>
+</blockquote>
+
+<p>根據 <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP-39</a> 所描述<br />
+助記詞應該要包含以下特性</p>
+<ol>
+  <li>要避免相似的詞彙</li>
+  <li>透過前四個字母就可以確定是哪一個詞彙</li>
+</ol>
+
+<p>參考 <a href="https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt">BIP-39 wordlist</a><br />
+考慮以下助記詞，他的編碼過後的數字是多少？</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre>bronze barrel chicken
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p>bitcoin 的 wordlist 是 0-based, 所以要 -1</p>
+</blockquote>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td><td class="rouge-code"><pre>bronze  -&gt; 229
+barrel  -&gt; 150
+chicken -&gt; 331
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>那麼它編碼後的就是 <code class="language-plaintext highlighter-rouge">0x1ca2589e</code>(十進位轉八進位，自己算算看，懶的話可以用 <a href="https://iancoleman.io/bip39/">Mnemonic Code Converter</a>)</p>
+
+<p>那麼這串數字！ 還不是 master key<br />
+你還必須要再透過 hash function 算個百八十遍才會得到最終的 master key</p>
+
+<p>hash function 要選擇 <a href="https://zh.wikipedia.org/zh-tw/PBKDF2">PBKFD2</a> 的演算法<br />
+他的重點在於要 <strong>重複 hashing</strong> 以增加安全性(i.e. 金鑰延伸)<br />
+輸入就是</p>
+<ol>
+  <li>助記詞</li>
+  <li>密碼(你的錢包的密碼)</li>
+  <li>salt</li>
+</ol>
+
+<blockquote>
+  <p>重複多少呢，BitCoin 是 2048 次</p>
+</blockquote>
+
+<hr />
+
+<p>到這裡你就成功的做出 master key 了<br />
+看了上面的討論，就可以理解為什麼你要保管好 mnemonic 的原因<br />
+拿到 mnemonic 可以復原你的所有公私鑰，然後攻擊者就可以偷你的錢了(劃重點)</p>
+
+<h2 id="wallet-seedmaster-key">Wallet Seed(master key)</h2>
+<p><img src="https://github.com/bitcoin/bips/raw/master/bip-0032/derivation.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki">BIP-32</a></p>
+</blockquote>
+
+<blockquote>
+  <p>entropy 是 mnemonic decode 之後的八進位數字<br />
+HMAC-SHA512 是 PBKFD2 的演算法</p>
+</blockquote>
+
+<p>有了 master key 之後，上圖你可以看到<br />
+我們就可以產生無數的公私鑰<br />
+而這就是 deterministic wallet(hierarchical deterministic wallet) 的運作方式</p>
+
+<p>只要有一把 master key 就可以管理底下全部的公私鑰<br />
+不論是備份或者是要做 restore 都挺方便的</p>
+
+<h1 id="restore-wallet">Restore Wallet</h1>
+<p>看到這裡你應該很清楚，使用 <a href="#wallet-mnemonic">Mnemonic</a> 就可以一鍵還原你的所有錢包<br />
+但我就在想他是怎麼做的</p>
+
+<p>別誤會，我知道只要 mnemonic 就可以復原<br />
+但問題是它怎麼知道你有多少錢包？</p>
+
+<p>還記得先前我們說過你可以創建無數錢包嗎<br />
+所以理論上你就可以復原出無數錢包了<br />
+連包含你沒有產生的錢包理論上都算的出來 這顯然哪裡怪怪的</p>
+
+<p>wallet restore 的時候他是會算出所有錢包的公私鑰沒錯<br />
+只不過它會多一個步驟是檢查他有沒有在鏈上<br />
+所以它才只會回復你自己建立過得錢包而已</p>
+
+<h1 id="why-generate-wallet-by-cryptography">Why Generate Wallet By Cryptography</h1>
+<p>為什麼你要用一個這麼複雜的方式產生錢包而不是單純的使用隨機數字來產生錢包呢</p>
+
+<p>其中一個原因很明顯跟安全有關<br />
+隨機數字產生錢包，他的密碼安全性是不夠強的<br />
+就跟我們用 ssh key 登入伺服器一樣</p>
+
+<p>另一個我覺的寫得很好的原因是為了去中心化<br />
+如果像傳統銀行一樣使用流水號的方式來產生錢包的話<br />
+先不說安全性，勢必是需要一個 <code class="language-plaintext highlighter-rouge">中心化</code> 的設施來發行流水號<br />
+而這與 blockchain 的概念背道而馳</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://medium.com/taipei-ethereum-meetup/%E8%99%9B%E6%93%AC%E8%B2%A8%E5%B9%A3%E9%8C%A2%E5%8C%85-%E5%BE%9E-bip32-bip39-bip44-%E5%88%B0-ethereum-hd-%EF%BD%97allet-a40b1c87c1f7">【加密貨幣錢包】從 BIP32、BIP39、BIP44 到 Ethereum HD Wallet</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="blockchain" /><category term="blockchain" /><category term="ethereum" /><category term="wallet" /><category term="seed" /><category term="hash" /><category term="mnemonic" /><category term="wordlist" /><category term="bitcoin" /><category term="master key" /><category term="hierarchical deterministic wallet" /><category term="deterministic wallet" /><summary type="html"><![CDATA[本文將從助記詞出發，探討 wordlist, hash 並逐步帶你理解加密貨幣錢包運作的基礎原理]]></summary></entry><entry><title type="html">網頁程式設計三兩事 - Logging 最佳實踐</title><link href="https://ambersun1234.github.io/website/website-log/" rel="alternate" type="text/html" title="網頁程式設計三兩事 - Logging 最佳實踐" /><published>2024-04-10T00:00:00+08:00</published><updated>2024-04-10T00:10:06+08:00</updated><id>https://ambersun1234.github.io/website/website-log</id><content type="html" xml:base="https://ambersun1234.github.io/website/website-log/"><![CDATA[<h1 id="introduction-to-logging">Introduction to Logging</h1>
+<p><code class="language-plaintext highlighter-rouge">log</code> 對於現今電腦系統來說是一個至關重要的資訊檔案<br />
+救援回復以及修 bug 其實都離不開 <code class="language-plaintext highlighter-rouge">log</code></p>
+
+<p>簡單來說 <code class="language-plaintext highlighter-rouge">log</code> 就是一個檔案，紀錄著系統運行各個時間點的運行狀態<br />
+你可以把它想像成是日記的概念(有些會用 日誌 這個詞)</p>
+
+<p>log 不僅僅存在於網頁程式當中<br />
+乃至系統層級都可以見到 log 的身影<br />
+比如說 linux 系統中的 <code class="language-plaintext highlighter-rouge">dmesg</code> 指令<br />
+<code class="language-plaintext highlighter-rouge">dmesg</code> 會紀錄系統運行的各種狀況</p>
+
+<p><img src="https://phoenixnap.com/kb/wp-content/uploads/2022/01/dmesg-command-output.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://phoenixnap.com/kb/dmesg-linux">How to Use the dmesg Linux Command</a></p>
+</blockquote>
+
+<p><code class="language-plaintext highlighter-rouge">dmesg</code> 裡面紀錄的資訊，像我之前看過的，包含驅動程式掛載紀錄，網卡狀態等等的<br />
+其實就是一系列系統運行的資訊</p>
+
+<p>作為網頁開發者的我們，後端系統中 log 的資訊就可能會替換成 request 的資訊，以及處理過程中產出的輔助資訊</p>
+
+<h2 id="when-and-what-to-log">When and What to Log?</h2>
+<p>現在的問題是，如何知道要紀錄什麼資訊呢?</p>
+
+<p>後端系統你可能可以紀錄</p>
+<ol>
+  <li>每個 request 的資訊(如 client ip, request URL 以及 request body)</li>
+  <li>每個 request 的時間點</li>
+  <li>各個 request 處理過程中的資訊</li>
+</ol>
+
+<p>更重要的是，我需要在每個地方都安插 log 嗎？</p>
+
+<hr />
+
+<p>舉個實際的例子，我跟團隊們在討論 log 的位置產生了一點分歧<br />
+我們應該要在 router, service, database layer 每個地方都做 log 呢？<br />
+還是只在特定的位置(比如說 service layer) 做 log 即可？</p>
+
+<p>log 太多，無意義的資訊可能過多，甚至可能會塞滿你的硬碟空間<br />
+log 太少，當需要 debug 的時候可能會遺失一些重要的資訊<br />
+這個問題兩邊都站得住腳，只是要考慮 trade off 的問題罷了</p>
+
+<p>使用 <a href="#log-level">Log Level</a> 適當過濾掉不太重要的 log 只是一個暫時的解法<br />
+最終 log 都會爆掉，那麼 Archive(<a href="#log-rotation-and-archival">Log Rotation and Archival</a>) 行不行呢？</p>
+
+<h2 id="log-level">Log Level</h2>
+<p>如果 log 重複的資訊太多，要找的時候可能不好找<br />
+我們是不是能夠依照 log 的重要程度進行分類</p>
+
+<p>我們可以把 request client ip, request URL 等等歸類在 <code class="language-plaintext highlighter-rouge">Info</code> 當中<br />
+顯然他的目的只是告訴開發者在某個時間點有一個 request 進來了這樣</p>
+
+<p>request body 之類的可以放在 <code class="language-plaintext highlighter-rouge">Debug</code> level 裡面<br />
+當需要除錯的時候我們才需要看到它的內容</p>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">Trace</code> 我覺的比較偏向 <code class="language-plaintext highlighter-rouge">console.log</code> 這種你單純想看的情況</p>
+</blockquote>
+
+<p>當一個 request 進來的時候，如果他的參數是不合法的，比如說 <code class="language-plaintext highlighter-rouge">email</code> 的格式無效的時候<br />
+這時候你可以選擇</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">Warn</code> level, 如果你沒有套用 validator 之類的東西，錯誤的資料仍然可以進到系統並完成操作</li>
+  <li><code class="language-plaintext highlighter-rouge">Error</code> level, 錯誤的 email 會導致整個 <strong>操作</strong> 無法繼續進行下去</li>
+</ol>
+
+<blockquote>
+  <p>這裡選擇 Warn, Error 其實都可以，為什麼 Warn 可以的原因是因為<br />
+像是某些 log 框架，他的 log level 會跟第三方服務串接<br />
+如果大幅度的使用 Error 會導致你收到很多不太緊急的錯誤<br />
+這樣就失去了你做 integration 的意義，詳細可以參考 <a href="#slack-and-sentry-integration">Slack and Sentry Integration</a></p>
+</blockquote>
+
+<p><code class="language-plaintext highlighter-rouge">Fatal</code> 則是當系統崩潰無法繼續服務的時候，就是使用 <code class="language-plaintext highlighter-rouge">Fatal</code> level</p>
+
+<p><img src="https://i.stack.imgur.com/z5Fim.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://stackoverflow.com/a/64806781">When to use the different log levels</a></p>
+</blockquote>
+
+<h1 id="structured-logging">Structured logging</h1>
+<p>肉眼看 log 可以說是工程師日常<br />
+雖然說是日常，但看久了也是挺傷眼睛的</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre>I1112 14:06:35.783529  328441 structured_logging.go:51] "using InfoS" longData={Name:long Data:Multiple
+lines
+with quite a bit
+of text. internal:0}
+I1112 14:06:35.783549  328441 structured_logging.go:52] "using InfoS with\nthe message across multiple lines" int=1 stringData="long: Multiple\nlines\nwith quite a bit\nof text." str="another value"
+</pre></td></tr></tbody></table></code></pre></div></div>
+<blockquote>
+  <p>ref: <a href="https://www.kubernetes.dev/blog/2022/05/25/contextual-logging/#structured-logging">Contextual Logging in Kubernetes 1.24</a></p>
+</blockquote>
+
+<p>前面提到我們 log 可以順便帶一些資訊，其中 <code class="language-plaintext highlighter-rouge">request body</code> 也會包含到<br />
+但如果說 body info 裡面包含一些換行資訊，那麼在 cli 上面看起來就不是很直觀了(如上圖所示)</p>
+
+<hr />
+
+<p>我們把這些資訊透過結構化的方式組合起來<br />
+比方說 JSON 格式，每個資訊都會以特定的方式組合起來<br />
+這樣要找資訊的時候也會比較方便</p>
+
+<p>此外你也透過一些軟體工具處理 raw log，比如說 <a href="https://github.com/warrenbuckley/Compact-Log-Format-Viewer">Compact Log Format Viewer</a></p>
+
+<p><img src="https://medevel.com/content/images/2023/12/screenshot.jpeg" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://medevel.com/13-log-viewer/">14 Top Free and Open-source Log File Viewers</a></p>
+</blockquote>
+
+<p>因此在下 log 的時候，我們不妨就預設使用 JSON 格式之類的 structured logging 機制<br />
+這樣也方便後續如果要接一些第三方服務的時候可以無痛轉換</p>
+
+<h1 id="contextual-logging">Contextual Logging</h1>
+<p>使用 <a href="#structured-logging">Structured Logging</a> 可以大幅度的增加 debug 時的效率<br />
+但是 log 之間的狀態是沒有顯示的，什麼意思</p>
+
+<p>舉例來說，你有一個流量算大的後端系統<br />
+而他的 log 的內容大概長這樣</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre></td><td class="rouge-code"><pre>{method: "get", message: "request /api/user/{userId}/posts", parameters: {userId: 1}}
+{method: "get", message: "request /api/user/{userId}/posts", parameters: {userId: 2}}
+{message: "found user posts, total 15"}
+{method: "post", message: "request /api/user/{userId}/post", body: {xxx}}
+{message: "Error query database, invalid cursor provided"}
+{message: "Error connecting database"}
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>請問，究竟是哪兩筆 request 出問題了呢？ 是 user <code class="language-plaintext highlighter-rouge">1</code> 還是 user <code class="language-plaintext highlighter-rouge">2</code> 的 request 回傳錯誤？<br />
+你可能會說，我只要在 log error 的時候帶一些 user 資訊就可以了<br />
+這個作法不太好，你怎麼確定兩行相同的 user id 就代表一定是同一個 request 的結果呢？<br />
+即使我們用了 JSON 定義了一定的規格，但這個例子來說仍然不夠清楚</p>
+
+<p>所以 contextual logging 的重點在於，log 裡面要帶入 context(上下文)<br />
+request 的 context 我們已經有帶了(client ip, request url … etc.)<br />
+剩下就是 log 之間的 context</p>
+
+<p>一個常見的作法是使用 UUID 的方式 assign 到每一個 request 身上<br />
+進來的 request，logger 會 assign 一個 UUID, 那麼只要是該次 request 所產生的 log 都會有這個識別符號<br />
+因此開發者在追 log 的時候就會簡單清楚明瞭了</p>
+
+<h1 id="log-rotation-and-archival">Log Rotation and Archival</h1>
+<p>很明顯的，單靠 <a href="#log-level">Log Level</a> 只是一個暫時的解法<br />
+最終 log 檔案將會大到爆掉</p>
+
+<p>比較直覺的作法會是將每天的 log 檔進行壓縮封存<br />
+而確實這是一個有效的方法<br />
+但封存到一個極限你的硬碟空間還是會不夠<br />
+所以是需要進行刪除的，就像行車記錄器一樣，它會一直複寫</p>
+
+<p>這個過程稱之為 <code class="language-plaintext highlighter-rouge">log rotation</code><br />
+不過是自動化執行的</p>
+
+<p>透過類似 <a href="https://linux.die.net/man/8/logrotate">Logrotate</a> 這類工具可以自動做到以上的事情</p>
+
+<h1 id="slack-and-sentry-integration">Slack and Sentry Integration</h1>
+<p>最後的最後<br />
+我們可以設定自動化 alert<br />
+當有嚴重的錯誤發生的時候，我們可以馬上知道並著手處理</p>
+
+<p>以我前公司的例子來說<br />
+我們是使用 <a href="https://logging.apache.org/log4j/2.x/">Log4j</a> 配合 <a href="https://www.npmjs.com/package/@log4js-node/slack">@log4js-node/slack</a> 套件進行整合<br />
+當 <code class="language-plaintext highlighter-rouge">Error</code> 等級的 log 發生的時候，slack bot 會在 slack 上通知我<br />
+大概是這樣的感覺</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels">When to use the different log levels</a></li>
+  <li><a href="https://www.loggly.com/blog/logging-tips-for-power-users-contextual-logging/">Logging Tips for Power Users: Contextual Logging</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Log_rotation">Log rotation</a></li>
+  <li><a href="https://sibevin.github.io/posts/2017-03-20-121433-logrotate">Logrotate - 處理log rotation的好用工具</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="website" /><category term="logging" /><category term="contextual logging" /><category term="slack" /><category term="sentry" /><category term="integration" /><category term="archive" /><category term="log rotation" /><category term="logrotate" /><category term="log4j" /><summary type="html"><![CDATA[Log 可以說是軟體開發當中最重要的一個資訊檔案，它可以紀錄著網頁程式運行的各種狀況。本篇文章將會簡單的介紹如何下 log 以及你該如何處理 log]]></summary></entry><entry><title type="html">DevOps - 成就完美的自動化 IaC 與 CaC</title><link href="https://ambersun1234.github.io/devops/devops-code/" rel="alternate" type="text/html" title="DevOps - 成就完美的自動化 IaC 與 CaC" /><published>2024-04-05T00:00:00+08:00</published><updated>2024-04-05T17:02:24+08:00</updated><id>https://ambersun1234.github.io/devops/devops-code</id><content type="html" xml:base="https://ambersun1234.github.io/devops/devops-code/"><![CDATA[<h1 id="infrastructure">Infrastructure</h1>
+<p>當軟體開發完成之後，Infra 對於整體運作來說是很重要的<br />
+沒有基礎設施，如網路，電腦以及儲存空間，我們將沒辦法提供服務</p>
+
+<p>如今已經有非常成熟的 cloud provider 如 <a href="https://aws.amazon.com/tw/">AWS</a><br />
+某種程度上解決了基礎建設的難處<br />
+透過簡易的 UI 設定機器大小，網路等等 我們可以將大多數精力放在軟體開發上面了</p>
+
+<p>不過這些操作都是手動處理居多，也是很麻煩的<br />
+更不用說你可能手殘設定錯誤，導致系統中斷服務(這並不是沒有發生過的)<br />
+因此我們可以將這些操作自動化以及一些設定來幫助我們<br />
+也就是 <code class="language-plaintext highlighter-rouge">IaC - Infrastructure as Code</code></p>
+
+<h1 id="programming-approach">Programming Approach</h1>
+<h2 id="declarative-approach">Declarative Approach</h2>
+<p>透過撰寫所需要的系統組態設定的檔案，這樣的檔案就稱為宣告式</p>
+
+<h2 id="imperative-approach">Imperative Approach</h2>
+<p>詳細描述具體實作步驟細節，即為命令式</p>
+
+<h1 id="introduction-to-iac---infrastructure-as-code">Introduction to IaC - Infrastructure as Code</h1>
+<p>IaC 是個概念，而這個概念可能你我都已經接觸過不少次了<br />
+舉個簡單的 <a href="https://docs.docker.com/compose/">docker-compose</a> 的例子</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">3.9"</span>
+
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">web</span><span class="pi">:</span>
+    <span class="na">build</span><span class="pi">:</span> <span class="s">.</span>
+    <span class="na">deploy</span><span class="pi">:</span>
+      <span class="na">replicas</span><span class="pi">:</span> <span class="m">5</span>
+      <span class="na">restart_policy</span><span class="pi">:</span>
+        <span class="na">condition</span><span class="pi">:</span> <span class="s">on-failure</span>
+
+  <span class="na">nginx</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">nginx:latest</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">8080:80"</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">./nginx.conf:/etc/nginx/nginx.conf</span>
+    <span class="na">depends_on</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">web</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>docker compose 這個 yaml 裡面定義了你的服務的基本組態設定<br />
+我們定義了兩個 service(web 以及 nginx)<br />
+包含了他的 replica, port, volume 以及連接方式等等的設定</p>
+
+<p>這其實就是 Infrastructure as Code 的概念<br />
+想想看哦，是不是擁有了這個組態設定檔，給我一台電腦，我都能完美複製 <strong>一模一樣</strong> 的環境出來？<br />
+那 as Code 是什麼意思呢？<br />
+我們是不是可以將 docker-compose.yaml 的組態設定用上版本控制，那某種程度上它也是一種程式碼了吧</p>
+
+<h2 id="iac-definition">IaC Definition</h2>
+<p>根據 <a href="https://aws.amazon.com/tw/what-is/iac/">什麼是基礎設施即程式碼？</a> 所述</p>
+
+<blockquote>
+  <p>就像軟體程式碼描述應用程式及其運作方式，基礎設施即程式碼 (IaC) 描述系統架構及其運作方式</p>
+</blockquote>
+
+<p>通常具有以下性質的特性，就可以被稱為是 IaC</p>
+<ol>
+  <li>可以自動化(code-driven configuration)</li>
+  <li>可以被版本控制</li>
+  <li><a href="#declarative-approach">宣告式</a> 描述系統組態設定</li>
+  <li>專注在硬體層面</li>
+</ol>
+
+<h2 id="why-iac">Why IaC</h2>
+<p>透過自動化的方式建立環境可以帶來一些好處</p>
+
+<p>既然他是自動化的，也就意味著它出錯的機率會大幅度的降低<br />
+每次部屬到新的環境的時候，如果漏掉了一個設定，就可能會釀成大錯<br />
+人為疏失一直是軟體開發的常態問題，透過自動化能夠解決是在好不過得了</p>
+
+<p>並且，因為我們是透過設定檔的方式建立環境<br />
+這樣可以很輕鬆的在不同的地區建立相同的環境</p>
+
+<h1 id="introduction-to-cac---configuration-as-code">Introduction to CaC - Configuration as Code</h1>
+<p>同樣的概念套到 Configuration as Code 就很好理解了<br />
+像我自己平常寫專案會是使用 <code class="language-plaintext highlighter-rouge">.env</code> 的方式來設定環境<br />
+而通常我會給一個 <code class="language-plaintext highlighter-rouge">.env.example</code> 的檔案來作為範例<br />
+只要複製這個檔案就可以成功套用預設的設定檔了<br />
+這其實某種程度上來說就是 Configuration as Code</p>
+
+<p>當然，我的作法跟 CaC 的定義有些許落差，不過我相信你有 get 到這個概念</p>
+
+<h2 id="cac-definition">CaC Definition</h2>
+<p>相比 <a href="#iac-definition">IaC Definition</a> 主要描述硬體層面的細節<br />
+CaC 則是專注在描述軟體層面的細節</p>
+
+<p>而定義方面也大同小異</p>
+
+<ol>
+  <li>可以自動化(code-driven configuration)</li>
+  <li>可以被版本控制</li>
+  <li><a href="#declarative-approach">宣告式</a> 描述軟體層面的組態設定</li>
+  <li>專注在軟體層面的細節</li>
+</ol>
+
+<h2 id="nodejs-pm2">Node.js <a href="https://pm2.keymetrics.io/">PM2</a></h2>
+<p>我公司的服務，是用 <a href="https://pm2.keymetrics.io/">PM2</a> 這個服務帶起來的<br />
+而 PM2 的設定檔 ecosystem.config.js 裡面可以包含預設的設定</p>
+
+<p>我們將一些常用的設定放在這個檔案中<br />
+像是 timeout, worker node … etc.<br />
+並且在這個檔案中可以設定不同的環境所需要的設定</p>
+
+<p>所以它本質上是符合 CaC 的概念的</p>
+
+<h2 id="how-about-secrets">How about Secrets?</h2>
+<p>CaC 是將 configuration 以程式碼的形式儲存在版控之中<br />
+但是我們知道密碼這類隱私的東西是萬萬不可上傳的<br />
+那麼要如何 “as code” 呢？</p>
+
+<p>一個方式是是用 environment variable, 像是 <a href="https://etcd.io/">etcd</a><br />
+在應用程式中讀取這個 environment variable 就可以了</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://aws.amazon.com/tw/what-is/iac/">什麼是基礎設施即程式碼？</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="devops" /><category term="infrastructure as code" /><category term="configuration as code" /><category term="iac" /><category term="cac" /><category term="pm2" /><summary type="html"><![CDATA[現今軟體開發的過程都是由設定檔來管理的, 我們已經無意中接觸過 IaC 與 CaC 的概念很多次了。本篇文章將會從頭理解一次他們的概念]]></summary></entry><entry><title type="html">神奇的演算法 - Greedy Algorithm</title><link href="https://ambersun1234.github.io/algorithm/algorithm-greedy/" rel="alternate" type="text/html" title="神奇的演算法 - Greedy Algorithm" /><published>2024-02-18T00:00:00+08:00</published><updated>2024-02-28T00:54:43+08:00</updated><id>https://ambersun1234.github.io/algorithm/algorithm-greedy</id><content type="html" xml:base="https://ambersun1234.github.io/algorithm/algorithm-greedy/"><![CDATA[<h1 id="preface">Preface</h1>
+<p>還記得之前上演算法的時候，最看不懂的東西就是貪婪法了<br />
+不過其實他的核心概念很簡單，寫起來也簡單<br />
+趁著還記得細節的時候，把它紀錄起來</p>
+
+<h1 id="introduction-to-greedy-algorithm">Introduction to Greedy Algorithm</h1>
+<p>貪婪演算法，顧名思義，這種演算法的概念是以 “貪婪” 為優先選擇<br />
+什麼意思呢</p>
+
+<p>貪婪的表現是 <code class="language-plaintext highlighter-rouge">不會考慮後果的</code><br />
+不考慮後果只注重當下的最佳選擇，就是貪婪演算法的核心概念<br />
+也因此，貪婪法 <strong>並不會都給出最佳解</strong></p>
+
+<blockquote>
+  <p>只考慮當下最優解<br />
+換句話說就是，它不會折返重新計算有沒有更好的方法</p>
+</blockquote>
+
+<p>但是找零錢的問題，是個典型貪婪法能夠提供最佳解的題目<br />
+通常來說，找錢一定從大面額到小面額<br />
+比如說，<code class="language-plaintext highlighter-rouge">125</code> 可以拆成 <code class="language-plaintext highlighter-rouge">100 * 1 + 10 * 2 + 5 * 1</code><br />
+這個例子，你貪婪的對象就是 <strong>面額的大小</strong><br />
+因此在這個狀況下，貪婪法可以給出最佳解</p>
+
+<blockquote>
+  <p>可參考 <a href="https://leetcode.com/problems/coin-change/description/">LeetCode 322. Coin Exchange</a></p>
+</blockquote>
+
+<p>不過如果題目稍微變形一下，就不一定了<br />
+比方說題目要求，回傳的硬幣數量要是最小的，那貪婪法就不一定有用了<br />
+假設你擁有 <code class="language-plaintext highlighter-rouge">1</code>, <code class="language-plaintext highlighter-rouge">5</code>, <code class="language-plaintext highlighter-rouge">10</code>, <code class="language-plaintext highlighter-rouge">20</code> 以及 <code class="language-plaintext highlighter-rouge">25</code> 的硬幣，那麼 41 塊可以有兩種找錢的方式</p>
+<ol>
+  <li><code class="language-plaintext highlighter-rouge">(25 * 1) + (10 * 1) + (5 * 1) + (1 * 1)</code> :arrow_right: 4 枚硬幣</li>
+  <li><code class="language-plaintext highlighter-rouge">(20 * 2) + (1 * 1)</code> :arrow_right: 3 枚硬幣</li>
+</ol>
+
+<p>可以看到，貪婪法失效了</p>
+
+<h1 id="is-greedy-algorithm-useless">Is Greedy Algorithm Useless?</h1>
+<p>既然貪婪法不一定能給出全局最佳解<br />
+那它實際上的用處在哪呢？ 是不是就沒有用了</p>
+
+<p>其實不然，雖然不一定能給出全域最佳解<br />
+但由於貪婪法他的實作容易而且執行速度較快<br />
+它能夠一定程度給你解法，即使它不是最好的答案</p>
+
+<p>最後就是針對一些 real time 的 application 它可能需要邊執行邊做決定的那種<br />
+貪婪法可以給到 <code class="language-plaintext highlighter-rouge">當下最優解</code></p>
+
+<h1 id="when-to-use-greedy-algorithm">When to Use Greedy Algorithm</h1>
+<p>其實這個相比其他題目，貪婪法好像沒有一個準確的準則說這題一定可以用<br />
+但一個比較好的 guideline 是你不需要找到全域最佳解，一個足夠好的答案如果也可以接受的話，也可以使用<br />
+另一個通則則是區域最佳解對之後的選擇影響不大</p>
+
+<h1 id="leetcode-55-jump-game"><a href="https://leetcode.com/problems/jump-game/description/">LeetCode 55. Jump Game</a></h1>
+<p>這題其實還滿好玩的，如果能夠不看答案寫出來我相信你就理解貪婪法了</p>
+
+<p>題目是這樣子的<br />
+給你一個 array, 每個 array[i] 都代表著能夠跳躍的最大距離<br />
+請你求出，你能不能從 起點 跳到 終點?</p>
+
+<p>他的第一個範例是這樣的</p>
+<blockquote>
+  <p>Input: nums = <code class="language-plaintext highlighter-rouge">[2,3,1,1,4]</code><br />
+Output: true<br />
+Explanation: Jump 1 step from index 0 to 1, then 3 steps to the last index.</p>
+</blockquote>
+
+<p>我當初看到這個範例覺的它怪怪的<br />
+我們已經知道他是貪婪法了，可是為什麼他的執行過程看起來一點都不貪婪？<br />
+在第 0 個位置的時候，你明明可以跳兩步，但為什麼你只跳一步呢？</p>
+
+<p>如果你嘗試用貪婪法下去模擬，你會發現你可以這樣走<br />
+index 0(2) :arrow_right: index 2(1) :arrow_right: index 3(1) :arrow_right: index 4(4)<br />
+這樣走也會到終點</p>
+
+<hr />
+
+<p>所以這題要怎麼解<br />
+目標是走到終點，要思考的點是我們怎麼樣會走不到終點？<br />
+如果跳躍距離為 0，是不是就沒辦法往前走了？<br />
+所以我們要貪婪的對象，是目標的數值不能為 0<br />
+所以他的貪婪核心算法理論上應該長這樣</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="rouge-code"><pre><span class="n">counter</span> <span class="o">:=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<span class="k">for</span> <span class="n">counter</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="n">counter</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span> <span class="o">-</span> <span class="m">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">true</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">counter</span><span class="p">]</span> <span class="o">!=</span> <span class="m">0</span> <span class="p">{</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="n">counter</span>
+        <span class="k">break</span>
+    <span class="p">}</span>
+    <span class="n">counter</span> <span class="o">-=</span> <span class="m">1</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>滿簡單的對吧<br />
+基本上就是看落點有沒有可能是 0(亦即我們走不到終點)<br />
+如果它不是 0 我們就拿到下一個落點位置 <code class="language-plaintext highlighter-rouge">counter</code> 了<br />
+之後就把當前位置加上 counter offset 一直走就知道結果了</p>
+
+<p>當你寫完的時候，你可能會發現有問題<br />
+<code class="language-plaintext highlighter-rouge">[3,0,8,2,0,0,1]</code> 這個測資居然是錯的<br />
+實際走一次看看問題在哪</p>
+
+<p>我們的貪婪法實際執行過程如下<br />
+index 0(3) :arrow_right: index 3(2) :arrow_right: index 5(0)<br />
+是 false 他到不了</p>
+
+<p>但你如果手動走走看你會發現你是這樣走的<br />
+index 0(3) :arrow_right: index 2(8) :arrow_right: :crown:<br />
+他是可以到終點的</p>
+
+<hr />
+
+<p>很明顯我們的算法有問題<br />
+只考慮非 0 的落點很顯然不夠貪婪<br />
+你要找的當前落點必須是你能夠達到的最遠距離<br />
+所以提早 break 是不行的</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="n">counter</span> <span class="o">:=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<span class="n">maxJump</span> <span class="o">:=</span> <span class="m">0</span>
+<span class="n">maxJumpV</span> <span class="o">:=</span> <span class="m">0</span>
+<span class="k">for</span> <span class="n">counter</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="n">counter</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">)</span> <span class="o">-</span> <span class="m">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">true</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">counter</span><span class="p">]</span> <span class="o">!=</span> <span class="m">0</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">counter</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">maxJumpV</span> <span class="p">{</span>
+            <span class="n">maxJumpV</span> <span class="o">=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">counter</span><span class="p">]</span>
+            <span class="n">maxJump</span> <span class="o">=</span> <span class="n">counter</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">counter</span> <span class="o">-=</span> <span class="m">1</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>但這樣仍然不夠貪婪！<br />
+沒錯，上面的解法仍然會錯<br />
+<code class="language-plaintext highlighter-rouge">[4,2,0,0,1,1,4,4,4,0,4,0]</code> 這個測資即使你選了當前能夠跳躍最遠距離的仍然會錯<br />
+為什麼?</p>
+
+<p>因為我們少考慮了原本跳躍的距離<br />
+在 index 0 的時候我們最大跳躍距離是 4, 在 index 1 到 index 4 之中<br />
+他們的跳躍距離分別是 [2, 0, 0, 1]，很明顯之中的最大距離是 2</p>
+
+<p>但如果我們選擇 index 1, 總共能跳躍的距離是 <code class="language-plaintext highlighter-rouge">1 + 2</code><br />
+你要先從 index 0 到 index 1, index 1 才能最多往後跳 2<br />
+但如果你選擇 index 4, 總共能跳躍的距離是 <code class="language-plaintext highlighter-rouge">4 + 1</code><br />
+從 index 0 到 index 4, index 4 在往後跳 1</p>
+
+<p>很明顯的，我們要考慮的當前最佳解是 <strong>當前跳躍距離 + 落點能提供的跳躍距離</strong><br />
+回到它給的範例，其實他的算法是貪婪的，不過它貪婪的對象 <code class="language-plaintext highlighter-rouge">不僅限於當前跳躍距離</code> 而已<br />
+所以完整的算法應該是這個樣子的</p>
+
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="rouge-code"><pre><span class="n">counter</span> <span class="o">:=</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<span class="n">maxJV</span> <span class="o">:=</span> <span class="m">0</span>
+<span class="n">maxJ</span> <span class="o">:=</span> <span class="m">0</span>
+<span class="k">for</span> <span class="n">counter</span> <span class="o">&gt;</span> <span class="m">0</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">size</span> <span class="o">-</span> <span class="m">1</span> <span class="o">||</span> <span class="n">i</span> <span class="o">+</span> <span class="n">counter</span> <span class="o">&gt;=</span> <span class="n">size</span> <span class="o">-</span> <span class="m">1</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="no">true</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">counter</span><span class="p">]</span> <span class="o">!=</span> <span class="m">0</span> <span class="o">&amp;&amp;</span> 
+        <span class="n">counter</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">counter</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">maxJV</span> <span class="p">{</span>
+        <span class="n">maxJV</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">+</span> <span class="n">nums</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">counter</span><span class="p">]</span>
+        <span class="n">maxJ</span> <span class="o">=</span> <span class="n">counter</span>
+    <span class="p">}</span>
+    <span class="n">counter</span> <span class="o">-=</span> <span class="m">1</span>
+<span class="p">}</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>當前跳躍距離(counter) + 落點能提供的跳躍距離(nums[i + counter]) 才是最貪婪的當前最佳解<br />
+因此只要找到最大的數值，我們就能夠知道你該跳多少了(maxJ)</p>
+
+<h1 id="see-also">See Also</h1>
+<ul>
+  <li><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/description/">LeetCode 122. Best Time to Buy and Sell Stock II</a></li>
+</ul>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://zh.wikipedia.org/zh-tw/%E8%B4%AA%E5%BF%83%E7%AE%97%E6%B3%95">貪婪演算法</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="algorithm" /><category term="greedy" /><summary type="html"><![CDATA[貪婪演算法，顧名思義，這種演算法的概念是以 "貪婪" 為優先選擇，不考慮後果只注重當下的最佳選擇，就是貪婪演算法的核心概念]]></summary></entry><entry><title type="html">Container 技術 - 從 Docker 到 Kubernetes，你能獲得什麼？</title><link href="https://ambersun1234.github.io/container/container-docker-to-k8s/" rel="alternate" type="text/html" title="Container 技術 - 從 Docker 到 Kubernetes，你能獲得什麼？" /><published>2024-02-12T00:00:00+08:00</published><updated>2024-05-07T16:54:48+08:00</updated><id>https://ambersun1234.github.io/container/container-docker-to-k8s</id><content type="html" xml:base="https://ambersun1234.github.io/container/container-docker-to-k8s/"><![CDATA[<h1 id="preface">Preface</h1>
+<p>人家都在說，Kubernetes(俗稱 k8s) 是一個容器集群管理的工具<br />
+當你要管理一大群的 container 的時候，使用 k8s 是一個不錯的選擇</p>
+
+<p>但我們仔細回想一下 k8s 能帶來的好處<br />
+無非就是以下幾點</p>
+<ol>
+  <li>能夠自動擴展(auto scale out/up)</li>
+  <li>能夠自動偵測故障並復原(self healing)</li>
+  <li>擁有 load balance 的功能</li>
+</ol>
+
+<p>我滿好奇的，現有的工具難道做不到嗎<br />
+在正式學習 k8s 之前，我們應該要先審視手上的工具<br />
+新工具不會是萬能的，你也許聽過 k8s 在小團隊使用會造成一定的困難，尤其是團隊成員都對該工具不熟悉的時候</p>
+
+<h1 id="production-environment-features-recap">Production Environment Features Recap</h1>
+<p>我們上面提到的那些功能，基本上都是屬於正式環境才可能需要面對的東西<br />
+亦即開發中，你應該不需要處理這些管理的部份<br />
+但是讓我們稍微複習，或者是重新認識一下這些術語</p>
+
+<h2 id="auto-scaling">Auto Scaling</h2>
+<p>在 <a href="../../database/database-optimization-hardware">資料庫 - 最佳化 Read/Write 設計(硬體層面) | Shawn Hsu</a> 中我們有提到 scale up 以及 scale out 的概念<br />
+但是你會希望這些操作可以是自動化的執行<br />
+也就是說當系統偵測到目前的流量以現有的系統已經無法支撐的情況之下，它能夠自己新增機器<br />
+以及，當流量下降的時候，它能夠關掉一些資源避免系統的浪費</p>
+
+<h2 id="load-balancing">Load Balancing</h2>
+<p><img src="https://media.geeksforgeeks.org/wp-content/cdn-uploads/20201030211002/Load-Balancer-System-Design.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.geeksforgeeks.org/load-balancing-approach-in-distributed-system/">Load Balancing Approach in Distributed System</a></p>
+</blockquote>
+
+<p>負載平衡是一種常見的增加伺服器吞吐能力的手段<br />
+他的假設是你的應用程式部屬在 <strong>多台機器</strong> 上<br />
+你不會希望只有其中一台伺服器很忙而已</p>
+
+<p>因此負載平衡會將大量的 request 盡量均勻的分佈在所有 worker(機器) 上面<br />
+當新的機器加入的時候(<a href="#auto-scaling">Auto Scaling</a>)，它也能夠分攤現有的工作量，使得吞吐量得以提昇</p>
+
+<h2 id="fault-tolerance-and-self-healing">Fault Tolerance and Self Healing</h2>
+<p>基本上正式環境，不敢說全部，但大多數可能都會遇到服務掛掉的情況<br />
+那你要怎麼即時的去反應這些問題，怎麼去解決就成了一個大的問題<br />
+有的問題可能重開就好，但有的可能沒有那麼好處理</p>
+
+<p>一樣的概念，如果能將某些部份自動化處理，是不是也能夠減少服務掛點對使用者的影響<br />
+自動偵測並復原顯得相對重要了</p>
+
+<p>包括最基本的重開機，資料的復原等等的都是包含在裡面的<br />
+服務重啟的過程，是不是會斷線？ 要盡量避免服務中斷也是很重要的一點</p>
+
+<h1 id="nginx">Nginx</h1>
+<p>我最早碰 <a href="https://www.nginx.com/">Nginx</a> 的時候，是僅僅用它最為我的 web server 而已<br />
+而它其實能做的更多，包含我們談到的 <a href="#load-balancing">Load Balancing</a> 以及本篇的隱藏知識, proxy</p>
+
+<h2 id="proxy">Proxy</h2>
+<p>Proxy 就一句話，服務於 client 以及 server 中間的東西</p>
+
+<p>你可以用網頁後端的 middleware 來思考，它長得很像<br />
+同樣都是服務於 client server 之間<br />
+但是 proxy 是負責全部的流量，而 middleware(網頁) 只有負責該次 request/response</p>
+
+<h2 id="forward-proxy-vs-reverse-proxy">Forward Proxy vs. Reverse Proxy</h2>
+<p>Nginx 可以幫你加一些 header 之類的，根據 <a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header">Module ngx_http_proxy_module - proxy_set_header</a><br />
+預設會幫你加 <code class="language-plaintext highlighter-rouge">Host</code> 以及 <code class="language-plaintext highlighter-rouge">Connection</code></p>
+
+<p>而這個是屬於 <strong>Forward Proxy</strong>，亦是 <code class="language-plaintext highlighter-rouge">多個 client 到 單一 server</code>
+<img src="https://www.jyt0532.com/public/forward-proxy.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.jyt0532.com/2019/11/18/proxy-reverse-proxy/">系統設計 - 正向代理跟反向代理</a></p>
+</blockquote>
+
+<hr />
+
+<p><img src="https://www.jyt0532.com/public/reverse-proxy.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.jyt0532.com/2019/11/18/proxy-reverse-proxy/">系統設計 - 正向代理跟反向代理</a></p>
+</blockquote>
+
+<p>反向代理則是 <code class="language-plaintext highlighter-rouge">單一 client 到 多個 server</code><br />
+其中這很有用的地方是我們說過得 <a href="#load-balancing">Load Balancing</a><br />
+你可以決定要將 request 導向哪一個 server</p>
+
+<p>根據 <a href="https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/">HTTP Load Balancing</a><br />
+Nginx 預設的演算法是 <code class="language-plaintext highlighter-rouge">Round Robin</code></p>
+<blockquote>
+  <p>By default, NGINX distributes requests among the servers in the group according to their weights using the Round Robin method. The weight parameter to the server directive sets the weight of a server; the default is 1</p>
+</blockquote>
+
+<p>寫起來大概長這樣</p>
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td><td class="rouge-code"><pre><span class="err">upstream</span><span class="w"> </span><span class="err">backend</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="err">server</span><span class="w"> </span><span class="err">backend</span><span class="mi">1</span><span class="err">.example.com</span><span class="w"> </span><span class="err">weight=</span><span class="mi">5</span><span class="err">;</span><span class="w">
+    </span><span class="err">server</span><span class="w"> </span><span class="err">backend</span><span class="mi">2</span><span class="err">.example.com;</span><span class="w">
+    </span><span class="err">server</span><span class="w"> </span><span class="mf">192.0</span><span class="err">.</span><span class="mf">0.1</span><span class="w"> </span><span class="err">backup;</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></pre></td></tr></tbody></table></code></pre></div></div>
+<p>不用擔心後面我們會實際的操作一下</p>
+
+<h2 id="sticky-session">Sticky Session</h2>
+<p>執行 load balancing 如果碰到 session 這種東西可能會有一點麻煩<br />
+假設你的 session 是儲存在 server 本身的，那問題可大了</p>
+
+<p>多台的機器做 load balancing 意味著你下一次 request 到後端，可能是不一樣的 server 在服務<br />
+此時，server B 並沒有你在 server A 上面註冊的 session<br />
+因此你可能會遇到一些存取的問題</p>
+
+<p>這個時候你會希望，client A 永遠是由 server A 服務，並不會由其他伺服器接手<br />
+所以 sticky session 的用意就是這個</p>
+
+<p>同時 Nginx 也在 Plus 的服務中提供相關服務，可參考以下文件 <a href="https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/#enabling-session-persistence">Enabling Session Persistence</a></p>
+
+<h1 id="docker-compose">Docker Compose</h1>
+<p>docker-compose 算是老朋友了，從一開始我在學習使用 docker 架設網站的時候就碰過了<br />
+那麼，它能夠滿足我們提到的三個需求嗎(load balance, auto-scaling 以及 fault tolerance and self healing)</p>
+
+<p>其實我們前面就給過提示了<br />
+使用 docker-compose 某種程度上可以達成以上要求<br />
+讓我們看個例子</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="rouge-code"><pre><span class="na">version</span><span class="pi">:</span> <span class="s2">"</span><span class="s">3.9"</span>
+
+<span class="na">services</span><span class="pi">:</span>
+  <span class="na">web</span><span class="pi">:</span>
+    <span class="na">build</span><span class="pi">:</span> <span class="s">.</span>
+    <span class="na">deploy</span><span class="pi">:</span>
+      <span class="na">replicas</span><span class="pi">:</span> <span class="m">5</span>
+      <span class="na">restart_policy</span><span class="pi">:</span>
+        <span class="na">condition</span><span class="pi">:</span> <span class="s">on-failure</span>
+
+  <span class="na">nginx</span><span class="pi">:</span>
+    <span class="na">image</span><span class="pi">:</span> <span class="s">nginx:latest</span>
+    <span class="na">ports</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s2">"</span><span class="s">8080:80"</span>
+    <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">./nginx.conf:/etc/nginx/nginx.conf</span>
+    <span class="na">depends_on</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="s">web</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>這個 deployment 有兩個 service, 分別是 web 以及 nginx<br />
+其中 web 只是一個簡單的 express echo server<br />
+它擁有 5 個 replica 以及設定好的 restart policy</p>
+
+<p>這代表著他有一定的復原的能力，雖然僅僅是在失敗的時候重啟而已<br />
+5 個 replica 則表示其具有一定能力可以負擔更大的 request 數量<br />
+但是要怎麼讓它均勻的讓每個 server 執行呢？</p>
+
+<p>前面提到 nginx 可以實現負載平衡<br />
+但是！ 以這個例子 實現負載平衡的卻不是 nginx<br />
+我們有 5 個 replica, 每一次呼叫的時候，你怎麼會知道呼叫的是哪一台 server 呢？</p>
+
+<p>docker 有自己內建的 dns server, 這也解釋了為什麼我們可以單純的使用 <strong>“名字”</strong> 來設定 ip<br />
+因為底層會幫我們把那個名字透過 dns server 轉換成真實的 ip address<br />
+而你每一次呼叫 “web” service 的時候，dns server 都要決定要給你哪一個 ip 對吧<br />
+所以負載平衡這段其實是由 docker 內建的 dns server 幫你做掉了</p>
+
+<blockquote>
+  <p>有關 DNS load balancing<br />
+可參考 <a href="../../network/networking-basics">重新認識網路 - 從基礎開始 | Shawn Hsu</a></p>
+</blockquote>
+
+<p>你說可是上面我們還是使用了 nginx 阿<br />
+那是因為每一個 replica service 都使用了相同的 port number(這個會造成 error), 我們需要一個統一的進入點存取<br />
+所以這裡才使用了 nginx</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre>events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen 80;
+        
+        location / {
+            proxy_pass http://web:3000;
+        }
+    }
+}
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>因為每一個 replica service 都聽 3000 port，所以 dns server 會自動將 web 轉換掉變成真正的 ip address<br />
+所以我們才可以這樣寫</p>
+
+<h1 id="docker-swarm">Docker Swarm</h1>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://stackoverflow.com/questions/39663096/docker-compose-creating-multiple-instances-for-the-same-image">‘docker-compose’ creating multiple instances for the same image</a></li>
+  <li><a href="https://www.jyt0532.com/2019/11/18/proxy-reverse-proxy/">系統設計 - 正向代理跟反向代理</a></li>
+  <li><a href="https://blog.csdn.net/zhangskd/article/details/50242241">Nginx的负载均衡 - 最少连接 (least_conn)</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="container" /><category term="container" /><category term="docker" /><category term="k8s" /><category term="scale" /><category term="nginx" /><category term="proxy" /><category term="load balance" /><category term="fault tolerance" /><category term="reverse proxy" /><category term="docker swarm" /><summary type="html"><![CDATA[雖然 Kubernetes 能夠帶來很多好處，但是你真的需要用到那麼複雜的工具嗎？ 用其他的工具是不是也能做到 Load Balance 與 Auto Scale 呢？]]></summary></entry><entry><title type="html">資料庫 - 新手做 Data Migration 資料遷移</title><link href="https://ambersun1234.github.io/database/database-migration/" rel="alternate" type="text/html" title="資料庫 - 新手做 Data Migration 資料遷移" /><published>2024-02-08T00:00:00+08:00</published><updated>2024-02-28T00:54:43+08:00</updated><id>https://ambersun1234.github.io/database/database-migration</id><content type="html" xml:base="https://ambersun1234.github.io/database/database-migration/"><![CDATA[<h1 id="preface">Preface</h1>
+<p>資料搬遷，在現代軟體服務當中屬於較為常見的一種需求<br />
+不論是單純的機器之間的搬資料抑或者是因應商業邏輯而需要做的資料搬遷<br />
+都是屬於 Data Migration</p>
+
+<p>本文將會專注在資料本身的 Migration<br />
+也就是因應商業邏輯的調整</p>
+
+<h1 id="introduction-to-data-migration">Introduction to Data Migration</h1>
+<p><img src="https://www.prisma.io/blog/posts/2020-12-migrate-production-workflow.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b">Hassle-Free Database Migrations with Prisma Migrate</a></p>
+</blockquote>
+
+<p>有的時候，你可能會需要針對資料庫的某個欄位做些微的更動<br />
+比如說，增加 unique constraint 或者是設置 default value<br />
+這些，其實就是資料搬遷的一種</p>
+
+<p>以 <a href="https://www.prisma.io/">Prisma</a> 來說<br />
+每一次的搬遷，它都會新增一筆新的 entry<br />
+針對該欄位的更新 sql 就會寫在裡面</p>
+
+<hr />
+
+<p>不過這仍然是較為簡單的狀況<br />
+真實世界可複雜的多<br />
+商業邏輯的改變，資料搬遷的功會比想像中的多</p>
+
+<p>比如說<br />
+我們想要仿造 Youtube 的開啟小鈴鐺的功能，使用者可以自由切換要不要開啟通知<br />
+因為我們已經有使用者正在使用我們的服務了<br />
+所以針對 <strong>舊有的使用者</strong>，我們必須讓它也可以使用這個功能<br />
+所以我們需要針對這些舊有用戶，幫他們新增預設的通知設定</p>
+
+<blockquote>
+  <p>新的使用者，因為初始化的時候已經做了，所以不需要包含在這次的搬遷內容裡面</p>
+</blockquote>
+
+<h1 id="preparation">Preparation</h1>
+<p>既然你已經知道你要針對哪一個部份做資料搬遷了<br />
+你需要做哪一些準備工作呢？</p>
+
+<h2 id="backup">Backup</h2>
+<p>因為這種商業邏輯的資料搬遷往往伴隨著一定程度的危險<br />
+所以做好備份的工作是必要的</p>
+
+<p>最壞的狀況就是，當資料搬遷出了大問題<br />
+你已經沒辦法挽回的時候，至少還有一個拯救的辦法</p>
+
+<p>不過要注意的是，當系統升級完成但搬遷卻失敗<br />
+使用 backup 復原並不是一個好的辦法<br />
+因為你需要考慮到回復會不會造成系統相容性的問題等等的<br />
+有沒有 <strong>向後相容</strong>？ 它會不會造成現有服務運作異常<br />
+這個問題值得思考</p>
+
+<h2 id="verify-business-requirement">Verify Business Requirement</h2>
+<p>除了技術方面，你還得要確認商業邏輯的部份<br />
+他是不是符合公司的要求</p>
+
+<p>如果條件允許，也必須提及此次系統更新可能的影響<br />
+包含它是否商業上可行？ 會不會與未來的規劃有衝突等等的</p>
+
+<h1 id="how-to-do-data-migration">How to do Data Migration?</h1>
+<p>仔細想想其實也就兩種</p>
+
+<ol>
+  <li>手動升級</li>
+  <li>自動化升級</li>
+</ol>
+
+<p>其中手動升級是較為不推薦的作法<br />
+如果沒有適當的文件，它可能會難以維護<br />
+甚至你可能會忘記為什麼這個欄位會是這個數值</p>
+
+<p>自動化升級至少你還有 code 可以查看<br />
+而自動化的部份，你可以單純寫 SQL 或者是使用類似 <a href="https://prisma.io">Prisma</a> 這種工具幫你解決<br />
+如果遇到複雜的商業邏輯的部份，則可能要寫個小程式執行</p>
+
+<h1 id="possible-issues">Possible Issues</h1>
+<h2 id="data-loss">Data Loss</h2>
+<p>執行資料搬遷，我們絕對不希望它更改到其他不相干的部份<br />
+但它仍然是可能會發生的，所以測試是必要的</p>
+
+<p>針對你搬遷的部份，建立幾筆資料觀察它執行的結果<br />
+在上到 production 之前，可以在 dev 以及 staging 環境測試<br />
+我個人會推薦，在這些之前，也可以在本機進行測試</p>
+
+<h2 id="long-migration-time">Long Migration Time</h2>
+<p>當搬遷的資料數量過於龐大<br />
+花超過額外預期的時間是有可能會發生的</p>
+
+<p>資料庫系統的更新，因為會佔用一定的連線數量，以及一定的 I/O<br />
+系統的反應速度可能會變慢</p>
+
+<p>為了系統的可用性，我們通常會希望系統的 down time 越低越好<br />
+盡可能的提高使用者體驗</p>
+
+<p>你可以借助現有第三方的資料搬遷服務，降低此種意外的方法<br />
+或者是可以選擇在半夜這種不會有太多使用者在線上的時候，執行系統升級</p>
+
+<h2 id="idempotent">Idempotent</h2>
+<p>最後也是最重要的一點，你的自動化搬遷的執行檔案<br />
+它必須要滿足 <code class="language-plaintext highlighter-rouge">Idempotent</code> 的條件</p>
+
+<p>何謂 Idempotent？ 就是你不管執行幾次，它得到的結果都要是一致的<br />
+比如說上面我們提到想要實作使用者的通知設定功能<br />
+你絕對不會希望一個使用者有多個相同設定</p>
+
+<p>因此，在設計 migration script 的時候，他要執行的是 <code class="language-plaintext highlighter-rouge">upsert</code><br />
+若是寫入的資料不存在，寫入，若存在，則略過或更新部份值<br />
+以 <a href="https://www.postgresql.org/">PostgreSQL</a> 來說<br />
+你可以使用</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="p">(</span><span class="n">xxx</span><span class="p">)</span> <span class="k">VALUES</span><span class="p">(</span><span class="n">yyy</span><span class="p">)</span> <span class="k">ON</span> <span class="n">CONFLICT</span><span class="p">(</span><span class="n">zzz</span><span class="p">)</span> <span class="k">DO</span> <span class="k">UPDATE</span> <span class="k">SET</span> <span class="n">id</span> <span class="o">=</span> <span class="n">EXCLUDED</span><span class="p">.</span><span class="n">id</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>當你寫入的資料，有比對到一模一樣的資料的時候，它就會選擇使用原本的 id<br />
+而這個比對的基礎，是寫在 <code class="language-plaintext highlighter-rouge">ON CONFLICT</code> 裡面</p>
+
+<p>注意到，一模一樣的資料的定義是，它必須擁有 unique constraint 進行保護<br />
+有時候你要 upsert 的資料根本沒有 unique constraint<br />
+這時候其實你別無選擇，你只能先 query 有沒有該筆資料的存在，然後在寫入<br />
+當然這時候，使用 <code class="language-plaintext highlighter-rouge">transaction</code> 是相對比較好的選擇</p>
+
+<blockquote>
+  <p>有關 transaction 的討論，可以參考 <a href="../../database/database-transaction">資料庫 - Transaction 與 Isolation | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b">Hassle-Free Database Migrations with Prisma Migrate</a></li>
+  <li><a href="https://www.ibm.com/topics/data-migration">What is data migration?</a></li>
+</ul>]]></content><author><name>Shawn Hsu</name><email>ambersun1019.shawn@gmail.com</email></author><category term="database" /><category term="data migration" /><category term="sql" /><category term="prisma" /><summary type="html"><![CDATA[隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題]]></summary></entry></feed>
