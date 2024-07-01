@@ -3,7 +3,7 @@ title: Container 技術 - 理解 Docker Container
 date: 2021-09-20
 description: 你已經使用 Docker 一段時間了，但是你真的了解他嗎？本文將會探討 Docker 的運作原理
 categories: [container]
-tags: [docker, linux]
+tags: [docker, linux, container, distroless image, network]
 math: true
 ---
 
@@ -153,6 +153,27 @@ $ docker inspect ubuntu:22.04
 得證
 
 實驗程式碼可以參考 [ambersun1234/blog-labs/minimized-docker-image-lab](https://github.com/ambersun1234/blog-labs/tree/master/minimized-docker-image-lab)
+
+# Distroless Image
+在寫 dockerfile 的時候多半的開頭你會這樣寫
+
+```dockerfile
+FROM ubuntu:22.04
+```
+
+ubuntu:22.04 是你的 base image\
+注意到你不一定非得要寫 base image，你也可以手動安裝你需要的 package\
+不過通常這個作法不特別推薦的原因是，網路上有許多現成的 base image 可以使用\
+他們通常都是經過測試的，也省去了複雜的手動操作的必要性
+
+Google 在 2014 年的時候提出了一個概念叫做 `distroless image`\
+簡單來說，就是一個不包含任何作業系統的 image\
+使用 ubuntu:22.04 這種有 OS 的 image 會包含許多不必要的東西，例如說 package manager 以及 shell\
+這些東西在 production 環境下是不需要的，因為他們會增加 image 的大小，也會增加安全性的風險\
+distroless image 的目的在於提供一個環境，只包含你的應用程式以及他的相依性的 image
+
+根據 [GoogleContainerTools/distroless](https://github.com/GoogleContainerTools/distroless) 內所述\
+distroless image 的大小甚至比 `alpine` 還要小了近 50%
 
 # Docker Networking
 得益於優異的網路設定，其他服務可以很輕鬆的與 container 連接, 不須理會他是跑在哪一個 OS 上面，更甚至不用知道他是不是 container\
