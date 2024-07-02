@@ -1,10 +1,12 @@
 ---
-title: 資料庫 - 最佳化 Read/Write 設計(硬體層面)
+title: 資料庫 - 初探分散式資料庫
 date: 2023-08-11
-description: 除了 Index, Cache 之外，我們能不能夠從硬體層面來提升效能呢？這篇文章將會介紹一些硬體層面的最佳化設計
+description: 除了 Index, Cache 之外，我們能不能夠從硬體層面來提升效能呢？這篇文章將會介紹一些分散式系統下的最佳化設計
 categories: [database]
-tags: [database, distributed, cluster, CAP]
+tags: [database, distributed, cluster, CAP, single leader, multi leader, replication, scale up, scale out, leaderless, sequential io, random io]
 math: true
+redirect_from:
+    - /database/database-optimization-hardware/
 ---
 
 # Distributed System

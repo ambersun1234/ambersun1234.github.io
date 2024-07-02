@@ -19,7 +19,7 @@ IP address 則是方便於電腦進行解析的，但卻是不容易理解\
 因此 DNS 的作用就是將 IP address 轉換成網域名稱
 
 本質上 DNS 分散式架構有助於提昇整體吞吐量\
-包含單一節點失效，效能問題(可參考 [資料庫 - 最佳化 Read/Write 設計(硬體層面) \| Shawn Hsu](../../database/database-optimization-hardware))
+包含單一節點失效，效能問題(可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware))
 
 ## DNS Server Categories
 ![](https://qph.cf2.quoracdn.net/main-qimg-5ed6b5866ff2e2d1d26095a49aa4c25e)

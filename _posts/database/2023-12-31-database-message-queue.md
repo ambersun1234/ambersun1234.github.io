@@ -314,7 +314,7 @@ topic 是一個 order sequence of event, 我們剛剛提到，事件是會分先
 儲存在硬碟裡，是可以避免掉資料的問題\
 但硬碟不是很慢嗎，Kafka 是如何維持高吞吐量的?\
 well, 他們在 [4.2 Persistence](https://kafka.apache.org/documentation/#persistence) 裡面有詳細說明\
-其中最大的優勢是在 **sequential I/O**(可參考 [資料庫 - 最佳化 Read/Write 設計(硬體層面) \| Shawn Hsu](../../database/database-optimization-hardware/#random-io-vs-sequential-io))
+其中最大的優勢是在 **sequential I/O**(可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware/#random-io-vs-sequential-io))
 
 sequential I/O 根據他們的說法，相對於 Random I/O 有高達 6000 倍的效能提昇\
 與其自己維護 in-memory cache 增加維護難度，程式複雜度\
@@ -391,7 +391,7 @@ controller 主要負責做兩件事情
 2. 監控並處理已經離線的 node
     + 透過 `heartbeat`，定期發送一個訊號給 controller，如果規定時間內沒有收到訊號，controller 就會將該 node 視為失效
 
-> 有關 single leader replication，可參考 [資料庫 - 最佳化 Read/Write 設計(硬體層面) \| Shawn Hsu](../../database/database-optimization-hardware/#single-leadermaster-slave)
+> 有關 single leader replication，可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware/#single-leadermaster-slave)
 
 Kafka 對於節點失效的定義有那麼一點點的不同\
 以下兩種都可以被視為是失效的狀態
