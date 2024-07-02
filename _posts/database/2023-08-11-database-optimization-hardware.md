@@ -167,7 +167,7 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 > 有關 Byzantine fault 的討論，可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue#byzantine-fault)
 
 ### Multi Leader
-![](https://media.licdn.com/dms/image/C5112AQE4giiXdpATXQ/article-cover_image-shrink_600_2000/0/1578341090265?e=1704931200&v=beta&t=ApZ2UYzCbBeG58Y7HT-bSQdEWcAbuarI7uMRqvy5trc)
+![](https://media.licdn.com/dms/image/C5112AQE4giiXdpATXQ/article-cover_image-shrink_720_1280/0/1578341089996?e=1725494400&v=beta&t=hSQJS2M8sO-Y0Iiagjx-KjWs_wUy-Hyfo7lPFhvAuwU)
 > ref: [Distributed Systems - Multi Leader Replication](https://www.linkedin.com/pulse/distributed-systems-multi-leader-replication-divagar-carlmarx/)
 
 既然 [Single Leader](#single-leadermaster-slave) 僅解決了讀取的效能問題\
