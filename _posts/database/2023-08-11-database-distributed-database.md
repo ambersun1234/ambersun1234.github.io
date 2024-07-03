@@ -3,7 +3,7 @@ title: 資料庫 - 初探分散式資料庫
 date: 2023-08-11
 description: 除了 Index, Cache 之外，我們能不能夠從硬體層面來提升效能呢？這篇文章將會介紹一些分散式系統下的最佳化設計
 categories: [database]
-tags: [database, distributed, cluster, CAP, single leader, multi leader, replication, scale up, scale out, leaderless, sequential io, random io]
+tags: [database, distributed, cluster, CAP, single leader, multi leader, replication, scale up, scale out, leaderless, sequential io, random io, quorum consensus, raft consensus]
 math: true
 redirect_from:
     - /database/database-optimization-hardware/
@@ -199,6 +199,39 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 + [Multi Leader](#multi-leader) 僅需要 leader 們解決
 + [Leaderless](#leaderless) 需要全體成員參與決策
 
+## Consensus
+所以你有多個節點，讀寫資料是一個問題\
+每台機器上保存的資料可能都有一點落差(因為同步的問題)，你要怎麼確定 "哪一個資料" 才是正確的？\
+前面看了 [single leader](#single-leadermaster-slave), [multi leader](#multi-leader), [leaderless](#leaderless)\
+他們要怎麼互相的協調才能提供 **正確的資料**？
+
+### Quorum Consensus
+想的簡單點，共識機制其實就是 `取得多數人的同意`\
+什麼意思？ 當某個新的資料要寫入資料庫的時候，要怎麼確定資料已經寫入？\
+10 個節點只有其中 1 個人說寫入了，剩下 9 個人都說還沒\
+這樣應該不會視為是成功寫入
+
+當多數人都同意寫入成功之後，這個資料才算是成功寫入\
+這就是基本的 Quorum Consensus 的概念
+
+好處在於說，當一個節點掛掉的時候，其他人還認得說有這件事情發生過\
+換言之，資料不會不見
+
+`n` 個節點，需要取得
++ `w` 個節點確認寫入成功才算數
++ `r` 個節點確認讀取成功才算數
+
+要保證每次的讀取都有最新的值，可以遵照這個公式 `w + r > n`\
+他可以確定至少有一個節點擁有最新的資料(前提是 w 跟 r 的副本有重疊到)
+
+### Raft Consensus
+我們在 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue) 裡大概知道 Raft Consensus 他是怎麼做的\
+那他跟 [Quorum Consensus](#quorum-consensus) 有什麼不同呢？
+
+主要差異在於 Raft 有選舉的機制\
+當 leader 掛掉的時候，Raft 會自動選出新的 leader\
+而 Quorum 是使用多數決，他沒有所謂的 leader 以及選舉制度
+
 # Different Approaches of Increasing Demands on Computer System
 ![](https://i.kym-cdn.com/entries/icons/facebook/000/019/404/upgradddd.jpg)
 > ref: [Upgrade Button](https://knowyourmeme.com/memes/upgrade-button)
@@ -273,3 +306,4 @@ Disk Seek 在 HDD 幾乎不可能平行運算，因為機械裝置只有一個
 + [Interview question: How to scale SQL database to allow more writes?](https://medium.com/@rokaso/interview-question-how-to-scale-sql-database-to-allow-more-writes-6c8ba6d11ccd)
 + [Difference between Distributed and Cluster? What is a cloud computing platform? Distributed application scenarios?](https://medium.com/@mena.meseha/difference-between-distributed-and-cluster-aca9d50c2c44)
 + [CAP theorem - Availability and Partition Tolerance](https://stackoverflow.com/questions/12346326/cap-theorem-availability-and-partition-tolerance)
++ [Quorum & Raft & Paxos](https://blog.csdn.net/hezuijiudexiaobai/article/details/130946103)
