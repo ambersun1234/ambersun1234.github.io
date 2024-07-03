@@ -7,10 +7,30 @@ tags: [algorithm]
 math: true
 ---
 
-# Preface
-這篇文章主要會以 subarray sum 為主探討一些常見的題目
+# Subarray
+## Definition
+subarray 為一個 array 的連續子集合\
+subarray 不可為空，subarray sum 則為這個子陣列的和
 
-> subarray 為一個 array 的連續子集合，subarray 不可為空，subarray sum 則為這個子陣列的和
+## Properties
+subarray 有一個特性，給定長度為 `n` 的 array\
+subarray 的總數為 `1 + 2 + 3 + ... + n`\
+舉例來說
+
+```
+假設 array = 1234
+
+subarray 會是
+1234, 234, 34, 4 (index 3, value 4)
+123, 23, 3       (index 2, value 3)
+12, 2            (index 1, value 2)
+1                (index 0, value 1)
+```
+
+可以看到數量是 `1 + 2 + 3 + 4 = 10`\
+這個特性剛好對到 array 的 index\
+也就是說，當我在 `index 3(value 4)` 的時候，我可以知道前面總共有 `1 + 2 + 3 + 4 = 10` 個 subarray\
+針對 `index 3(value 4)` 自己來說，他有 `index + 1`(也就是 4) 個 subarray
 
 # [LeetCode 560. Subarray Sum Equals K](https://leetcode.com/problems/subarray-sum-equals-k/)
 ## Brute Force Approach
