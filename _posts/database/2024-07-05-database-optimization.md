@@ -1,9 +1,12 @@
 ---
-title: 資料庫 - 最佳化 Read/Write 設計(軟體層面)
-date: 2023-08-12
+title: 資料庫 - 最佳化 Read/Write 設計
+date: 2024-07-05
+description: 資料庫是一個系統中最重要的一環，因此我們需要對其進行最佳化，以提高效能。本文將探討一些最佳化的手段，以及你該如何選擇適合的方法
 categories: [database]
-tags: [database, distributed, sharding, index, docker]
+tags: [database, distributed, sharding, index, docker, table partitioning, store program, rebalance]
 math: true
+redirect_from:
+    - /database/database-optimization-software/
 ---
 
 # Preface
@@ -21,9 +24,9 @@ math: true
 + 如果資料量很大，將 table 分割可以增加查詢效能(因為一個 子 table 裡面的資料量較少, index 數量減少，就可以變快)
 + 針對被頻繁存取的資料，可以將其放置於存取效能較佳設備之上(e.g. [SSD](https://en.wikipedia.org/wiki/Solid-state_drive)), 反之則可以放在速度較慢的裝置上(e.g. 磁帶)
 
-> 單一節點下，Sharding 的作用可以體現於 ***讀取*** 效能提昇\
-> 針對 **寫入** 的部份，可以搭配 `Replication` 下去使用\
-> 可參考 [資料庫 - 最佳化 Read/Write 設計(硬體層面) \| Shawn Hsu](../../database/database-optimization-hardware#replication)
+> 單一節點下，Sharding 的作用可以體現於 **寫入** 效能提昇\
+> 針對 **讀取** 的部份，可以搭配 `Replication` 下去使用\
+> 可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware#replication)
 
 ![](https://miro.medium.com/v2/resize:fit:828/format:webp/0*tOAcT4T5Rdg6Fx5z.png)
 > ref: [System Design — Sharding / Data Partitioning](https://medium.com/must-know-computer-science/system-design-sharding-data-partitioning-b7201596aafa)
@@ -52,8 +55,6 @@ clustered index 是 unique 的，也因此它永遠可以指到 `一筆資料`
 試圖平均的去分散資料\
 但總有那麼幾個時候，還是會出現不平均的狀況\
 所以會出現忙碌程度不一，很忙的那個節點，稱為 `hot spot`
-
-> 可參考 [資料庫 - 最佳化 Read/Write 設計(硬體層面)](../../database/database-optimization-hardware/#random-io-vs-sequential-io)
 
 ### Content Based
 [Key Based](#key-based) 除了會有 skewed 的情況會導致查詢效率不佳\
@@ -165,6 +166,9 @@ server 會針對所謂的 [Prepare Statement](#prepare-statement) 以及 [Store 
 也就是說 `create`, `drop`, `alter`, `rename`, `truncate`, `analyze`, `optimize` 以及 `repair` 這種 [Data Definition Language - DDL](https://en.wikipedia.org/wiki/Data_definition_language) 的操作都會造成 metadata 的改變\
 前面幾個還滿好理解的，但為什麼 analyze 跟 optimize 會改變 metadata 呢？
 
+
+> to be continued
+
 <!-- + ### ANALYZE
 
     顧名思義是用來分析，主要目的是分析這兩個
@@ -195,20 +199,52 @@ server 會針對所謂的 [Prepare Statement](#prepare-statement) 以及 [Store 
 
 > metadata :arrow_right: 描述資料的資料 -->
 
-常見的 store program 包含像是 store procedure, function, triggers 以及 events\
+常見的 store program 包含像是 store procedure, function, triggers 以及 events
+
+<hr>
+
+store procedure 由於其過時的程式語言，難以管理、部屬以及測試等問題
 
 # SQL Commands
 ## Regex vs. Like Operator
+> to be continued
 
 ## Join vs. Multiple Queries
 先講結論，Join 的效率肯定是高於 multiple query 的\
-其實這個問題本質上跟 N + 1 是一樣的
+但是用 Join 一定是最佳解嗎
 
-詳細可以參考 [資料庫 - SQL N + 1 問題 \| Shawn Hsu](../../database/database-sqln1.md)
+我們之前看過所謂的 N + 1 問題\
+在那個例子下，的確使用 Join 會是較好的選擇
+> 詳細可以參考 [資料庫 - SQL N + 1 問題 \| Shawn Hsu](../../database/database-sqln1.md)
+
+有什麼樣的情況下你會選擇使用 multiple query?\
+在單台機器的情況下，我想不會有人反對 Join 的速度\
+但是在多台機器的情況下，搭配上 sharding 的機制，Join 要如何實現？
+
+<hr>
+
+對吧！ 不同的 table 在不同的機器上面要如何 Join?\
+就算可以 join table，他的效率一樣會優於 multiple query 嗎\
+有時候你得注意到，**在不同的 context 底下，適用的方案不同**
+
+簡單的 query 如 `SELECT * FROM user WHERE id = 1` 可以被 cache 起來\
+相對的，複雜的 query 也可以被 cache 起來\
+差別在於，誰會比較常被存取？ 顯然是簡單的 query
+
+multiple query 除了可以被 cache 起來之外\
+如果搭配上 scale out 可以平行處理不同的 query\
+這樣他的效能 **不見得會比較差**
+
+<hr>
+
+至於該選擇哪一種，真的是 case by case\
+你可以透過簡單的估算，搭配現有的財力，選擇出適當的實作方式
 
 # Store Image in Database?
+> to be continued
 
 # Database inside Container?
+> to be continued
 
 # References
 + 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
