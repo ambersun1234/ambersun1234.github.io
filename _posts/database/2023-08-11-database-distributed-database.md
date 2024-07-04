@@ -164,9 +164,9 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 遇到節點損壞的時候，勢必要將其中一個 follower 升格為 leader\
 升格的過程你可能會遇到一些問題，舉例來說，有可能 old leader 沒有意識到它已經被降級了\
 它仍然在執行 leader 的功能，這就會造成同一時間有兩個 leader 存在的問題\
-而這稱為 `Byzantine fault`
+而這稱為 `Split Brain`(腦分裂)
 
-> 有關 Byzantine fault 的討論，可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue#byzantine-fault)
+> 有關 Split Brain 的討論，可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue#split-brain)
 
 ### Multi Leader
 ![](https://media.licdn.com/dms/image/C5112AQE4giiXdpATXQ/article-cover_image-shrink_720_1280/0/1578341089996?e=1725494400&v=beta&t=hSQJS2M8sO-Y0Iiagjx-KjWs_wUy-Hyfo7lPFhvAuwU)
@@ -206,7 +206,7 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 他們要怎麼互相的協調才能提供 **正確的資料**？
 
 ### Quorum Consensus
-想的簡單點，共識機制其實就是 `取得多數人的同意`\
+想的簡單點，Quorum 共識機制其實就是 `取得多數人的同意`\
 什麼意思？ 當某個新的資料要寫入資料庫的時候，要怎麼確定資料已經寫入？\
 10 個節點只有其中 1 個人說寫入了，剩下 9 個人都說還沒\
 這樣應該不會視為是成功寫入
