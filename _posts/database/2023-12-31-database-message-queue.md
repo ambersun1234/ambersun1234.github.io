@@ -367,7 +367,7 @@ Kafka 本身是分散式的系統\
 每個 topic partition 都可以使 **不同的 client 在不同的 broker 上面進行同步的讀寫**
 
 > 針對每個 topic 的每個 partition, 其內部順序是有序的\
-> partition 之間的順序不保證\
+> partition 之間的順序不保證
 
 當你的資料量大的時候，可以適度的增加 consumer 的數量\
 Kafka 會根據 consumer 的數量自動調整 partition 的數量\
@@ -562,7 +562,7 @@ consumer 這裡有兩個東西滿有趣的\
 > 可以使用 `auto.commit.interval.ms` 來調整提交的時間
 
 這裡你可以看到我們定義了 `auto.offset.reset`\
-指的是當沒有任何 offset 紀錄的時候，你要從哪裡開始讀取\
+指的是當沒有任何 offset 紀錄的時候，你要從哪裡開始讀取
 + `earliest` 代表從最早的 offset 開始讀取
 + `latest` 代表從最新的 offset 開始讀取
 
