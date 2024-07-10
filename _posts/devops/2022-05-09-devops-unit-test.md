@@ -233,6 +233,30 @@ Test Double 內部又分五個種類
 
 > 可參考 [如何寫出好的程式碼架構 \| Shawn Hsu](../../random/solid)
 
+## Dependency Injection Framework
+當元件越來越多的時候，手動注入可能是個問題\
+因此現在有一些框架有試著解決這些問題，比如說 [uber/dig](https://github.com/uber-go/dig)
+
+dig 的做法是將全部的元件都註冊到 container 裡面\
+container 類似一個管理中樞，所有元件都會在這裡註冊\
+你不需要知道元件彼此之間的相依關係，你只要知道，你需要他就好\
+dig 會負責幫你把所有需要的元件都注入(依靠 reflection)
+
+> 此過程稱為 provide
+
+舉例來說，我有 router, controller, service, database\
+具體上誰依賴誰我不知道，但你可能需要他們? 要用自己拿
+
+本質上這些工具做的事情是解決了手動註冊管理的問題\
+並不會因為你用了他，你的 code 就解耦了(事實上我看過用了 Framework 還寫出黏在一起的程式碼)
+
+此外，框架如 dig 你會沒辦法第一時間知道誰依賴誰\
+這對於剛接觸 codebase 的人來說可能會無所適從\
+必須要一層一層看他怎麼定義的才能明白
+
+相對來說，也因為 DI(Dependency Injection) 相當好實作\
+手動建構依賴關係的也是大有人在，具體依照團隊需求各自決定
+
 # Issues that I have when Writing Tests
 到這裡你已經足夠了解如何撰寫測試了\
 不過在一開始我寫測試的時候，錯誤的實作了一些東西\
