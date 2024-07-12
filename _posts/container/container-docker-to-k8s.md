@@ -181,7 +181,13 @@ http {
 因為每一個 replica service 都聽 3000 port，所以 dns server 會自動將 web 轉換掉變成真正的 ip address\
 所以我們才可以這樣寫
 
+儘管 docker compose 可以在某種程度下進行 scale\
+但是這只限於單一節點，如果你要跨節點的話，docker compose 執行起來就會有一些問題
+
 # Docker Swarm
+相比 [Docker Compose](#docker-compose), docker swarm 是一個真正的的 orchestration 工具\
+上面所有提到的功能，docker swarm 都可以做到\
+所以究竟為什麼我們要使用 k8s 呢？
 
 # References
 + ['docker-compose' creating multiple instances for the same image](https://stackoverflow.com/questions/39663096/docker-compose-creating-multiple-instances-for-the-same-image)
