@@ -217,6 +217,71 @@ model 層我做了一層抽象，稱為 `storage.StorageI`\
 以我們的例子來說是 `storage.StorageI`\
 所以這樣他就會動了
 
+# Debug Dig
+如果你撰寫的程式碼發生了錯誤，在 dig 裡面 debug 我覺得是相對困難的地方\
+舉例來說，我們剛剛看過的例子\
+以下有 5 個 provide 的 function
+
+```go
+if err := container.Provide(func() *gin.Engine {
+    gin.SetMode(gin.DebugMode)
+    server := gin.New()
+    return server
+}); err != nil {
+    panic(err)
+}
+
+if err := container.Provide(inmemory.NewInMemory, dig.As(new(storage.StorageI))); err != nil {
+    panic(err)
+}
+
+if err := container.Provide(post.NewPostService); err != nil {
+    panic(err)
+}
+if err := container.Provide(user.NewUserService); err != nil {
+    panic(err)
+}
+
+if err := container.Provide(NewController); err != nil {
+    panic(err)
+}
+```
+
+```
+panic: could not build arguments for function "main".main.func2
+> (/blog-labs/golang-dig/server.go:39):
+> failed to build *main.Controller: could not build arguments for function "main".NewController
+> (/blog-labs/golang-dig/controller.go:26): failed to build post.PServiceI:
+> missing dependencies for function "golang-dig/service/post".NewPostService 
+> (/blog-labs/golang-dig/service/post/post.go:24):
+> missing type: storage.StorageI (did you mean *inmemory.InMemory?)
+```
+
+從這裡的錯物訊息來看，你可以很清楚的知道是型別出問題\
+但是，我自己遇到的例子是我的程式直接 crash 掉，並沒有任何的實用錯誤訊息\
+這時候你就會像個無頭蒼蠅一樣，不知道從何看起
+
+我遇到的，是從 reflection 那裡開始報錯\
+我唯一看得出來的錯誤訊息是，他無法正確的建構我要的 service
+![](/assets/img/posts/dig.png)
+
+但錯誤訊息仍然提供了一個我疏忽的的提示
+```text
+panic: could not build arguments for function "main".main.func2
+```
+
+看到那個 `func2` 了嗎\
+這或許是個提示，但這個 2 是啥\
+往回看 provide 的 function，總共有 5 個\
+第 2 個剛好就是出錯的那個函數\
+一下子範圍就縮小了許多
+
+```go
+if err := container.Provide(inmemory.NewInMemory, dig.As(new(storage.StorageI))); err != nil {
+    panic(err)
+}
+```
+
 # Example
 上述的例子可以在 [ambersun1234/blog-labs/golang-dig](https://github.com/ambersun1234/blog-labs/tree/master/golang-dig) 找到
 

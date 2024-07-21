@@ -237,6 +237,8 @@ Test Double 內部又分五個種類
 當元件越來越多的時候，手動注入可能是個問題\
 因此現在有一些框架有試著解決這些問題，比如說 [uber/dig](https://github.com/uber-go/dig)
 
+> 可參考 [實際上手體驗 Golang DI Framework 之 Uber Dig \| Shawn Hsu](../../random/golang-dig)
+
 dig 的做法是將全部的元件都註冊到 container 裡面\
 container 類似一個管理中樞，所有元件都會在這裡註冊\
 你不需要知道元件彼此之間的相依關係，你只要知道，你需要他就好\
