@@ -3,7 +3,7 @@ title: DevOps - 整合測試 Integration Test
 date: 2023-10-25
 description: 整合測試相較於單元測試，測試的範圍更大，跨越了 function 之間的整合。本文將會介紹整合測試的範圍以及如何利用 Dependency Injection、Docker Container 的使用，打造一個完整的整合測試環境
 categories: [devops]
-tags: [integration test, mock, e2e test, docker]
+tags: [integration test, mock, e2e test, docker, isolation, dependency injection]
 math: true
 ---
 
@@ -94,13 +94,31 @@ Fake Object 可以提供較為簡單版本的實作\
 
 ```shell
 $ docker run -d --name test \
-		-p 6630:3306 \
-		-v rest-mysql:/var/lib/mysql \
-		-e MYSQL_DATABASE=db \
-      	-e MYSQL_USER=root \
-      	-e MYSQL_ROOT_PASSWORD=root \
+    -p 6630:3306 \
+    -v rest-mysql:/var/lib/mysql \
+    -e MYSQL_DATABASE=db \
+    -e MYSQL_USER=root \
+    -e MYSQL_ROOT_PASSWORD=root \
 		mariadb
 ```
+
+## dockertest
+啟動 docker container 不一定只能手動建立執行\
+目前也有如 [dockertest](https://github.com/ory/dockertest) 這種第三方套件的存在\
+透過他你可以在程式碼內部用程式的方式啟動 docker container\
+取代了手動建立維護的需求
+
+值得注意的是，跑整合測試理論上來說，每個測試案例需要有獨立的 container\
+但是這麼做會導致整體的 overhead 變得相對的大\
+因為每一個測試都需要重新建立一個 container
+
+我目前遇到的做法大多是只使用同一個 container\
+但是這樣就要確保每個測試案例都是獨立的，不會互相影響\
+可以透過 transaction rollback 或是 drop table 的方式來達成
+
+每次使用獨立的 container 我還有遇到一個問題是 port 佔用的問題\
+舉例來說，PostgreSQL 的 port 是 5432\
+每一次建立的時候都會佔用同一個 port，所以在設計上需要注意到這個問題
 
 # Example
 架構上跟 unit test 一樣\
