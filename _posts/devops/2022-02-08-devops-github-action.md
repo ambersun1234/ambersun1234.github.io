@@ -508,6 +508,28 @@ $ act -b --rebuild
 
 詳細實作程式碼你可以在 [ambersun1234/issue-assign-all-collaborators](https://github.com/ambersun1234/issue-assign-all-collaborators) 中找到
 
+# Continue on Error
+基本上 workflow 的內容你都會希望他執行正確\
+但有時候又不是這麼一回事
+
+舉例來說，有一個 job 的內容是讓他背景執行一些東西\
+由於 API limit 限制，他可能會失敗\
+需要等到 request 的內容減量他才會成功\
+所以這個是可以接受的
+
+GitHub Action 提供了一個 `continue-on-error` 的參數\
+基本上可以 bypass 掉上面的問題
+
+```yaml
+steps:
+    ...
+    - name: Create Search Index
+    continue-on-error: true
+```
+
+在有可能會失敗的 step 的地方可以加上這個參數\
+即使執行失敗，在 Action 裡面仍然視為成功並且會繼續執行下去
+
 # Skip workflow
 有時候你可能需要跳過 workflow，不管是出於不想跑測試或者是需要快速上版\
 可以使用以下特殊指令
@@ -536,6 +558,7 @@ ref: [https://github.com/ambersun1234/nft/commit/95047600c90eb5d86e4cb8227f163c5
 我試了一下發現是不行的，不太確定哪裡有做錯
 
 ## Command in First line Message
+> to be continued
 
 # How to speed up Docker Container Action
 從上面的討論你應該可以很清楚的發現到\
