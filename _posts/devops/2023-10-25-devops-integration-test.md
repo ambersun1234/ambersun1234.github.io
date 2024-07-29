@@ -102,23 +102,28 @@ $ docker run -d --name test \
 		mariadb
 ```
 
+## One Container per Test?
+跑整合測試理論上來說，每個測試案例需要有獨立的 container\
+但是這麼做會導致整體的 overhead 變得相對的大\
+因為每一個測試都需要重新建立一個 container
+
+具體的取捨主要看團隊的共識\
+基本上因為 db 的讀寫(只要是 RDBMS) 都可以做 transaction rollback\
+所以不一定需要每個測試都有獨立的 container
+
 ## dockertest
 啟動 docker container 不一定只能手動建立執行\
 目前也有如 [dockertest](https://github.com/ory/dockertest) 這種第三方套件的存在\
 透過他你可以在程式碼內部用程式的方式啟動 docker container\
 取代了手動建立維護的需求
 
-值得注意的是，跑整合測試理論上來說，每個測試案例需要有獨立的 container\
-但是這麼做會導致整體的 overhead 變得相對的大\
-因為每一個測試都需要重新建立一個 container
-
-我目前遇到的做法大多是只使用同一個 container\
-但是這樣就要確保每個測試案例都是獨立的，不會互相影響\
-可以透過 transaction rollback 或是 drop table 的方式來達成
-
 每次使用獨立的 container 我還有遇到一個問題是 port 佔用的問題\
 舉例來說，PostgreSQL 的 port 是 5432\
-每一次建立的時候都會佔用同一個 port，所以在設計上需要注意到這個問題
+每一次建立的時候都會佔用同一個 port
+
+dockertest 在這方面有提供一個解決方案\
+他會自動幫你找到一個空閒的 port\
+並利用內建的 function 取得該 port 並進行設定
 
 # Example
 架構上跟 unit test 一樣\
@@ -290,4 +295,3 @@ await this.userService.deleteUser(userID)
 |Execution Environment|Local|Local or Staging|Production|
 
 # References
-+ [bard](https://bard.google.com/chat)
