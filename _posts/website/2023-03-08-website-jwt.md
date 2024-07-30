@@ -3,7 +3,7 @@ title: 網頁程式設計三兩事 - 不一樣的驗證思維 JWT(JSON Web Token
 date: 2023-03-08
 description: JWT 作為近年來相當流行的驗證方式，本文將會介紹 JWT 的基本概念以及其原理，並且會介紹如何使用 JWT 來進行驗證
 categories: [website]
-tags: [jwt, session, jws, jwe, jwk, golang, oauth, realm]
+tags: [jwt, session, jws, jwe, jwk, golang, oauth, realm, cookie, httponly cookie, authorization]
 math: true
 ---
 
@@ -504,6 +504,33 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9.
 跟 [Basic Scheme](#basic-scheme) 一樣，server 一樣有 challenge, 一樣有 [realm](#realm)\
 不過我個人的經驗上是不常看到就是
 
+# JWT in Cookie?
+這聽起來很反人類，至少對我而言是如此
+
+cookie 本身就是一個存放在 client 端的資料\
+為何 backend 能夠存取？\
+事實上每一次的 request 都會帶上 cookie，這是因為 browser 會自動幫你帶上去\
+簡單暴力的 `Cookie` header
+
+因此，後端是可以存取 cookie 的\
+只不過要注意的是，cookie 本身是可以被 client 端修改的\
+所以安全性沒有那麼高
+
+<hr>
+
+但為什麼要把 JWT token 放在 cookie 裡面呢？\
+有好好的 Authorization header 不用是為什麼?\
+安全性嗎？ 對，就是安全性
+
+cookie 有一個特性，就是 `httpOnly`\
+這個特性可以讓 cookie 只能被 server 端存取，而無法被 client 端存取\
+也就是說，惡意的 javascript 不能夠存取你的 cookie 拿到你的 token 自然也就無法存取你的資源
+
+> 也可以搭配 `secure` 這個特性，讓 cookie 只能在 https 下使用
+
+所以這就是為什麼有些人會選擇把 JWT token 放在 cookie 裡面\
+但終究是不同的選擇，要看你的需求
+
 # realm
 realm 指的是一個區域，要進行身份驗證的區域\
 啥意思呢？\
@@ -665,3 +692,4 @@ func AuthMiddleware() func(ctx *gin.Context) {
 + [Difference between the "Resource Owner Password Flow" and the "Client Credentials Flow"](https://stackoverflow.com/questions/22077487/difference-between-the-resource-owner-password-flow-and-the-client-credential)
 + [JWT Keys - Asymmetric and Symmetric](https://stackoverflow.com/questions/32900998/jwt-keys-asymmetric-and-symmetric)
 + [簡介其他 OpenID Connect 協定的內容](https://ithelp.ithome.com.tw/articles/10227389)
++ [使用 HTTP Cookie](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Cookies)
