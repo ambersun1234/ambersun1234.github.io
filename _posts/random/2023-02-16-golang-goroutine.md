@@ -3,7 +3,7 @@ title: Goroutine 與 Golang Runtime Scheduler
 date: 2023-02-16
 description: Goroutine 是 Golang 中的一個重要概念，Golang Runtime Scheduler 透過 cooperative scheduling 的方式執行不同的 Goroutine 具體來說是怎麼做的？。本文將會介紹 goroutine 的基本概念以及 Golang Runtime Scheduler 的運作方式
 categories: [random]
-tags: [golang, coroutine, thread, scheduler, parallelism, concurrency]
+tags: [golang, coroutine, thread, scheduler, parallelism, concurrency, gm, gmp, work steal]
 math: true
 ---
 
@@ -176,7 +176,7 @@ scheduler 會隨機挑選一個 goroutine 將它 map 到 kernel-level thread 之
 > 4. Aggressive thread blocking/unblocking. In presence of syscalls worker threads are frequently blocked and unblocked. This adds a lot of overhead.
 
 1. 在 GM Model 的情況下，goroutine 要得到 cpu time 就必須得要依靠 scheduler 進行排程，那麼你一定會希望自己能夠早點被執行，所以多個 goroutine 會為了 scheduler 而 **互相競爭**, 爭取到 scheduler 替他們排程的機會，也就導致說 scheduler 的 mutex lock 會一直被爭奪
-2. 在只有 `g` 跟 `m` 的架構下，頻繁的切換講白話文就是頻繁的 store/restore, 這樣也會影響效能
+2. 在只有 `g` 跟 `m` 的架構下，頻繁的切換會影響效能，講白話文就是頻繁的 store/restore
 3. `m` 上面的 cache 只有需要存放跟當前 goroutine code 相關的資料就好，存放一些跟執行無關的 data 會導致 poor data(cache) locality(剛剛用到的東西有很大的機率會繼續用，塞太多不需要的東西會一直 cache miss 效能會差)
 4. 當遇到 blocking I/O 的時候，必須要等待嘛，既然要等待，我是不是就切到另一條 thread 繼續執行就行了(當然你 goroutine 要切換, kernel-level thread 也要)，但這樣頻繁的切換 store/restore 會影響效能
 
