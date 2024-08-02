@@ -303,16 +303,18 @@ defaults:
       toc_sticky: true
   - scope:
       path: ""
-      type: tag
-    values:
-      author_profile: true
-  - scope:
-      path: ""
     values:
       layout: single
       author_profile: true
   - scope:
       path: ""
+      type: tag
+    values:
+      author_profile: true
+      sitemap: false
+  - scope:
+      path: ""
       type: category
     values:
       author_profile: true
+      sitemap: false
