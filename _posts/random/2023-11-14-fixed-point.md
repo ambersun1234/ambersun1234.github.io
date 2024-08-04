@@ -282,6 +282,17 @@ IEEE 754 的 exponent 的部份為什麼不是直接塞\
 在程式裡面紀錄所謂的 **縮放大小**(scaling factor)，以本例來說就是 `100` 倍\
 而定點數的概念就是這麼的簡單
 
+## Q Format Notation
+基本上就是上面講的 scaling factor\
+不過 Q Format Notation 比較多是在描述二進位的情況
+
+他的表示是這樣子寫的 `Qm.n`\
+意思是說，有 `m` 個 bits 用來表示整數部份，`n` 個 bits 用來表示小數部份\
+所以 `Q19.12` 就是說，有 20 bits 用來表示整數部份，12 bits 用來表示小數部份\
+要把它還原，就是將整個 integer 除以 $2^{12}$(因為是二進位)
+
+> 19 + 12 = 31 bits，因為有 sign bit 要算進去
+
 ## Fixed Point Builtin Implementation
 我一開始想要試定點數的時候，發現竟無從下手\
 要玩浮點數，我可以直接用 C 開 float, double 下去看\
@@ -314,3 +325,5 @@ IEEE 754 的 exponent 的部份為什麼不是直接塞\
 + [Single-precision floating-point format Range](https://stackoverflow.com/questions/32193791/single-precision-floating-point-format-range)
 + [算術溢位](https://zh.wikipedia.org/zh-tw/%E7%AE%97%E8%A1%93%E6%BA%A2%E5%87%BA)
 + [算術下溢](https://zh.wikipedia.org/zh-tw/%E7%AE%97%E6%9C%AF%E4%B8%8B%E6%BA%A2)
++ [Q (number format)](https://en.wikipedia.org/wiki/Q_(number_format))
++ COSCUP 2024 - 從零開始建構 C 語言最佳化編譯器
