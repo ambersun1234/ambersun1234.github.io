@@ -209,9 +209,52 @@ Erasure Coding 是針對資料的正確性的保護\
 MinIO 透過這兩個機制在各種意義上保護了你的資料\
 而他們的設計也是為了因應不同的狀況 不要搞混
 
+# Debug MinIO on Kubernetes
+有的時後你可能會遇到一些問題，比方說無法連線之類的\
+在 K8s 裡，你沒辦法從 host 直接開 GUI 看 log\
+但用 cli 還是可行的
+
+當你 kubectl exec 進去之後才發現 `mc` 的工具沒有裝\
+好加在 MinIO 官方有提供一個簡單的 debug 專用 pod
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mc
+  labels:
+    app: mc
+spec:
+  containers:
+  - image: minio/mc:latest
+    command:
+      - "sleep"
+      - "604800"
+    imagePullPolicy: IfNotPresent
+    name: mc
+  restartPolicy: Always
+```
+
+將這個 pod 部署到你的 cluster 上面\
+然後你可以透過 mc 這個工具連線進去你的 MinIO\
+我遇到的問題是連線連不上，因為不確定是 application config 沒讀到所以出錯\
+還是本身設定就有問題了，因此我的首要目的會是測試連線
+
+```shell
+$ mc alias set myminio http://minio-service:9000 minioadmin minioadmin
+```
+
+mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可以\
+他的語法是，將連線資訊儲存在一個 alias 中，之後就可以直接使用\
+建立 alias 的時候他就會先測試連線是否正常，因此就可以做測試
+
+最後我發現是我的 ENV 沒有正確的設定\
+透過以上簡單的步驟，你就可以快速的 debug 你的 MinIO 啦
+
 # References
 + [Core Operational Concepts](https://min.io/docs/minio/linux/operations/concepts.html)
 + [很酷的糾刪碼(erasure code)技術](https://samkuo.me/post/2015/09/python-with-erasure-code/)
 + [Erasure Coding](https://min.io/docs/minio/container/operations/concepts/erasure-coding.html#minio-ec-erasure-set)
 + [erasure coding (EC)](https://www.techtarget.com/searchstorage/definition/erasure-coding)
 + [Requirements to Set Up Bucket Replication](https://min.io/docs/minio/kubernetes/upstream/administration/bucket-replication/bucket-replication-requirements.html)
++ [Debugging MinIO Installs](https://blog.min.io/debugging-minio-installs/)
