@@ -311,10 +311,8 @@ defaults:
       type: tag
     values:
       author_profile: true
-      sitemap: false
   - scope:
       path: ""
       type: category
     values:
       author_profile: true
-      sitemap: false
