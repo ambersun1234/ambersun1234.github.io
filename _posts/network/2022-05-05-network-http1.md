@@ -109,7 +109,7 @@ HTTP/1.0 還定義了常用的 methods
 
 HTTP character sets 是一種使用一個或多個 mapping table **將一連串八進位的資料解析成字串** 的方法\
 而 mapping table 就是(e.g. [ASCII](https://zh.wikipedia.org/wiki/ASCII))\
-![](https://docs.microsoft.com/zh-tw/azure/rtos/netx/media/user-guide/ascii-character-codes-hex.png)
+![](https://www.sciencebuddies.org/cdn/references/ascii-table.png)
 > 這裡以 ASCII 為例，0x0A 是 `LF`, 0x0D 是 `CR`
 
 所以你發現了嗎？ HTTP 是 **plain text** 傳輸\
