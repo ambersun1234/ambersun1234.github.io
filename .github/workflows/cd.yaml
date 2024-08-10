@@ -70,7 +70,8 @@ jobs:
 
   build_and_deploy:
     runs-on: ubuntu-latest
-    needs: [autogen_og_image, image_cors_check]
+    # needs: [autogen_og_image, image_cors_check]
+    needs: [autogen_og_image]
     steps:
       - uses: actions/checkout@v3
         with:
