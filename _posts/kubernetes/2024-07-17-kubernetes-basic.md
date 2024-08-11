@@ -315,12 +315,33 @@ node 包含了以下的組成元件
     + 為了支援各項平台，k8s 有自己的一套 [Kubernetes CRI (Container Runtime Interface)](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md) 界面，用以支援各種不同的 runtime(有關 container runtime 的介紹可以參考 [Container 技術 - runC, containerd 傻傻分不清 \| Shawn Hsu](../../container/container-runc))
 
 
-<!-- # Pod
+### Pod
 pod 是 k8s 中最小可部屬單元，注意到不是 container 哦\
 pod 是由一系列的 spec 定義出來的(裡面包含像是 image 資訊、metadata, ports ... etc.)\
 pod 裡面可以包含 一個或多個 container, 所有的 container 共享 儲存空間、網路等等的
 
-> 通常的作法會是一個 pod 裡面僅僅會包含一個 container -->
+> 通常的作法會是一個 pod 裡面僅僅會包含一個 container
+
+看到這裡其實我覺得有點疑惑，為什麼 Kubernetes 要多拉一層 pod 出來呢？\
+很明顯我可以直接用 container 來運行我的服務
+
+如果你想要執行多個 container 並共享資源之類的事情，單 container 並沒有辦法做到\
+你會需要透過類似 docker-compose 的方式來達成共享網路，資料儲存\
+在 K8s 裡面，這個 **環境** 就是 pod
+
+但 pod 不僅僅是環境而已，他也包含了一些資源管理，生命週期管理的功能\
+這樣他才是 k8s 中最小的可部屬單元
+
+<hr>
+
+不過，我們其實不太會直接操作 pod\
+原因是 pod 的生命週期是很短暫的，亦即 pod 會隨著 node 的重啟而消失\
+比較常見的是他不會自動重啟，rolling update 等功能\
+所以他對於管理方面其實是不太方便的
+
+通常來說會是使用更進階的 workload resources 來管理 pod\
+deployment, statefulset, daemonset 等等的\
+這個部份我們會在之後的文章中進行介紹
 
 # References
 + [nodes](https://kubernetes.io/docs/concepts/architecture/nodes/)
