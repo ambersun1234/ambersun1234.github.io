@@ -75,6 +75,8 @@ transaction 會紀錄
 不同的是，這裡用的 account 是完全匿名的\
 也就是說 即使 blockchain 都是公開透明的，其他人也無從得知帳號主人的真實身份
 
+> 可參考 [從 0 認識 Blockchain - 錢包基礎原理 \| Shawn Hsu](../../blockchain/blockchain-wallet)
+
 其中用到的，是非對稱式加密系統\
 利用公鑰 私鑰進行所有操作，既能完全匿名，也能夠驗證你的身份(透過 [數位簽章 Digital Signature](https://en.wikipedia.org/wiki/Digital_signature))
 
@@ -90,6 +92,8 @@ transaction 會紀錄
 當有一台電腦想要搞事的時候，會因為算出來的結果跟別人不一樣，而遭淘汰\
 可以把他想像成 **多數決**\
 因為 network 的思考方式(共識機制)都一定一模一樣，如果有某個人的結果不同，那必定表示他在搞事
+
+> 有關共識機制，可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#consensus)
 
 ## Chain Selection Mechanism
 前面提到 blockchain 目前是採多數決的方式決定的\
