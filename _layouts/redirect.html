@@ -2,22 +2,18 @@
 <html lang="en-US">
   <meta charset="utf-8">
   <title>Redirecting&hellip;</title>
-  <link id="aaa" rel="canonical" href="">
+  <link id="redirect-link" rel="canonical" href="{{ page.redirect.to }}">
   <script>location="{{ page.redirect.to }}" + window.location.hash</script>
-  <meta id="ccc" http-equiv="refresh" content="0; url=">
+  <meta id="redirect-meta" http-equiv="refresh" content="0; url={{ page.redirect.to }}">
   <h1>Redirecting&hellip;</h1>
-  <a id="bbb" href="">Click here if you are not redirected.</a>
+  <a id="redirect-a" href="">Click here if you are not redirected.</a>
 </html>
 
 <script>
   const url = "{{ page.redirect.to }}" + window.location.hash
 
-  const b = document.getElementById('bbb')
-  b.setAttribute('href', url)
-
-  const a = document.getElementById('aaa')
-  a.setAttribute('href', url)
-
-  const c = document.getElementById('ccc')
-  c.setAttribute('content', '0; url=' + url)
+  // dynamically set the redirect link with anchor if exists
+  document.getElementById('redirect-link').setAttribute('href', url)
+  document.getElementById('redirect-meta').setAttribute('content', '0; url=' + url)
+  document.getElementById('redirect-a').setAttribute('href', url)
 </script>
