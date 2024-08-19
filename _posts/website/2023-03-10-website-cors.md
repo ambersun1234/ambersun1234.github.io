@@ -3,7 +3,7 @@ title: 網頁程式設計三兩事 - 萬惡的 Same Origin 與 CORS
 date: 2023-03-10
 description: 不同的網站是否可以互相存取資源？ CORS 的機制就可以解決這個問題！。本篇文章將會介紹 Same Origin Policy 以及 CORS 的概念
 categories: [website]
-tags: [cors, website]
+tags: [cors, website, preflight request, same origin, chrome, golang, gin]
 math: true
 ---
 
@@ -135,7 +135,8 @@ export class HttpInterceptorService implements HttpInterceptor {
 這些 scheme 的 origin 會預設為 `null`\
 那這樣就會有點危險，所以一般不建議這樣設定
 
-# Simple Request
+# Request Types
+## Simple Request
 HTTP 的 request 當中，不受限於 [Same Origin Policy](#same-origin-policy) 的 request 被稱之為 simple request\
 也就是說，符合下列規則的 request 不需要套用 CORS header 即可正常請求
 
@@ -145,7 +146,7 @@ HTTP 的 request 當中，不受限於 [Same Origin Policy](#same-origin-policy)
 |Headers|Accept<br>Accept-Language<br>Content-Language<br>Content-Type<br>Range|
 |Content-Type|`application/x-www-form-urlencoded`<br>`multipart/form-data`<br>`text/plain`|
 
-# Preflight Request
+## Preflight Request
 預檢請求，亦即在正式 request 之前必須要先額外發一個 request 進行檢查\
 根據 server 的回應，來判斷是否可以往下執行
 
@@ -184,6 +185,18 @@ HTTP 的 request 當中，不受限於 [Same Origin Policy](#same-origin-policy)
 CORS 的問題基本上是為了解決瀏覽器實作的 [Same Origin Policy](#same-origin-policy)\
 也因此，在你 debug 的時候使用 [postman](https://www.postman.com/) 或是 [curl](https://curl.se/)\
 CORS 的問題基本上不會出現(因為它不在瀏覽器裡面跑)
+
+# Refferer Policy: strict-origin-when-cross-origin
+有的時候不是你設定有錯，是瀏覽器的問題
+
+假設你 **後端** 正確的設定了 CORS header 了，但是你還是遇到問題\
+八成是瀏覽器在搞事，舉例來說 Google Chrome
+
+![](https://global.discourse-cdn.com/business4/uploads/athom/optimized/3X/2/a/2a72131a869b1a4bf1a22e4a56f28b356a29b0f5_2_1366x1000.png)
+> ref: [How to restrict LAN addresses in a browser?](https://security.stackexchange.com/questions/243357/how-to-restrict-lan-addresses-in-a-browser)
+
+Chrome 的選項 `Block insecure private network requests` 記得要把它關閉\
+然後你的網站就可以正常運作了
 
 # Configure CORS Support in Golang Gin
 ```go
@@ -284,3 +297,4 @@ func main() {
 + [Same-origin policy](https://en.wikipedia.org/wiki/Same-origin_policy)
 + [CORS - Is it a client-side thing, a server-side thing, or a transport level thing? [duplicate]](https://stackoverflow.com/questions/36958999/cors-is-it-a-client-side-thing-a-server-side-thing-or-a-transport-level-thin)
 + [Reason: Credential is not supported if the CORS header 'Access-Control-Allow-Origin' is '*'](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSNotSupportingCredentials)
++ [CORS error on request to localhost dev server from remote site](https://stackoverflow.com/questions/66534759/cors-error-on-request-to-localhost-dev-server-from-remote-site)
