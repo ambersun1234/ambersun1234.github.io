@@ -52,7 +52,29 @@
             {{ page.last_modified_at | date: date_format }}
           </time>
         </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-{{ document.url }}"> Loading...</span>
+        </span>
       {% endif %}
     {% endif %}
   </p>
 {% endif %}
+
+<script>
+  fetch(`http://127.0.0.1:8888/views?url={{ document.url }}`)
+    .then(response => response.json())
+    .then(data => {
+      if (isNaN(data.views)) {
+        data.views = 0;
+      }
+      
+      document.getElementById("view-field-{{ document.url }}").innerHTML = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+    })
+    .catch(error => {
+      document.getElementById("view-field-{{ document.url }}").innerHTML = "0";
+    });
+</script>
