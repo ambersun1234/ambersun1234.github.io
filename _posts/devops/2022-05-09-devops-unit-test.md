@@ -215,6 +215,38 @@ Test Double 內部又分五個種類
 > 他是簡單版本的實作，同時因為他是實作，代表它能驗證輸出是否符合預期\
 > 更重要的是實作本身可以驗證行為(i.e. 確保執行順序像是 A :arrow_right: B :arrow_right: C)
 
+## Manually Create Mock Implementation
+那你要怎麼建立 mock 的實作呢？\
+通常來講是建議使用第三方的 library 如 [mockery](https://github.com/vektra/mockery) 自動產生\
+但你能不能自己寫呢？當然可以 但不建議
+
+![](/assets/img/posts/dip.jpg)
+
+考慮以上的關係圖，要建立 mock 的實作，你只要將所有的 interface 實作一遍就好\
+但是這個實作是需要非常小心的
+
+什麼意思？\
+mock 的實作 **應該最小化商業邏輯，甚至不應該有**\
+舉例來說你要實作一個 `function GetUser(userID string): User` 的 mock\
+他不應該真的去查詢什麼東西，確認他存在/不存在 再回傳\
+這樣的實作是不對的，因為這樣的實作會讓你的測試變得複雜，且不容易維護
+
+取而代之的是，他要回應一個固定的數值\
+或者是 **根據不同的輸入，給定相對應的輸出**\
+在調用的時候就會類似像這樣
+
+```js
+userMock.On("GetUser", "myuserid").Return(User{
+    ID: "myuserid",
+    Name: "myname",
+    Age: 18,
+})
+```
+
+當參數為 `myuserid` 的時候，回傳一個固定的 User 物件\
+不過如今都有現代化的 testing framework 提供了這樣的功能\
+就不需要自己寫了
+
 # Dependency Inversion Principle
 ![](https://upload.wikimedia.org/wikipedia/commons/9/96/Dependency_inversion.png)\
 在撰寫單元測試的時候，我對依賴反轉這件事有更進一步的認識
