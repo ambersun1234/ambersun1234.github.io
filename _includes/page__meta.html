@@ -66,15 +66,10 @@
 
 <script>
   fetch(`http://127.0.0.1:8888/views?url={{ document.url }}`)
-    .then(response => response.json())
-    .then(data => {
-      if (isNaN(data.views)) {
-        data.views = 0;
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+        document.getElementById("view-field-{{ document.url }}").innerHTML = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
       }
-      
-      document.getElementById("view-field-{{ document.url }}").innerHTML = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
     })
-    .catch(error => {
-      document.getElementById("view-field-{{ document.url }}").innerHTML = "0";
-    });
 </script>
