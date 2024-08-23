@@ -39,7 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: mujo-code/puppeteer-headful@16.6.0
+      # - uses: mujo-code/puppeteer-headful@16.6.0
+      - uses: ambersun1234/puppeteer-headful@66190b3cf79e5cd4dac6b57ebe42fdc04517da9d
       - name: Install Chinese Font
         run: |
           sudo apt update
