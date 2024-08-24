@@ -77,6 +77,23 @@ server 會回傳一系列的 header 來描述哪些 request 可以被接受，�
 只有當 server 回傳特定 CORS header 它才會帶\
 設定的部份可參考 [CORS Headers](#cors-headers)
 
+## Modify Origin Header
+既然 [Same Origin Policy](#same-origin-policy) 是用於保護網站被其他網站存取\
+而且他依靠的是 origin header\
+那有沒有可能我手動把它改掉，bypass 這個限制？
+
+基本上你沒有辦法透過手動修改 origin header 來 bypass 這個限制\
+瀏覽器帶的 origin header 是不可更改的
+
+但是你可以透過其他方式來達到這個目的\
+比如說 proxy\
+[Nginx](https://www.nginx.com/) 的 [proxy_set_header](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) 可以新增或修改 header\
+以這個例子來說就是要修改 origin header
+
+不過這種做法算沒必要\
+他的前提是你要能夠操作 server\
+以攻擊者的角度來說，其實使用 [CSRF](https://en.wikipedia.org/wiki/Cross-site_request_forgery) 來做攻擊更有效率
+
 ## CORS Headers
 
 這裡就大概列出幾個常用常見的 header\
