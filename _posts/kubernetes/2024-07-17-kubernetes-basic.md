@@ -43,7 +43,15 @@ Kubernetes 的優勢
 2. 根據不同負載量自動 scale out, scale in
 3. 擁有 self-healing 的機制，亦即 zero downtime
 
-## Kubernetes by Example
+## Powerful than Docker Compose
+其實我一開始在寫設定檔的時候，我真的覺得他長得很像 docker-compose\
+最有感的就是資料庫連線的方式，都是透過名字來連線
+
+話雖如此，K8s 也有比 docker-compose 更強大的地方\
+比如說 K8s 支援更好的 scaling, 可以動態調整，可以不限定於單一機器\
+docker-compose 通常是用在開發階段，不太適合正式環境，不如考慮 [docker swarm](https://docs.docker.com/engine/swarm/)
+
+# Producer-Consumer Example
 K8s 很多東西可以玩，也很複雜，但是基本的概念是相對簡單的\
 讓我們來看一個例子
 
@@ -58,7 +66,7 @@ producer 會將訊息送到 rabbitmq 裡面，而 consumer 則會從 rabbitmq �
 1. 打包上傳到 docker hub 或者是私有的 docker registry
 2. 手動傳入 K8s 裡面([k3d](#k3d))
 
-### Deployment
+## Deployment
 萬事俱備之後，我們就可以開始部屬服務了\
 K8s 是使用 yaml 檔描述你該怎麼部屬服務的(有點類似 IaC 但不全然一樣)\
 我們需要三個服務，他們被稱作 `Deployment`
@@ -112,6 +120,10 @@ spec:
 `initContainer` 是執行在 pod 啟動之前的 container\
 這裡的 initContainer 是用來等待 rabbitmq-service 啟動完成
 
+> initContainer 通常是搭配 until do done loop 搭配 nc 使用\
+> 使用 nc 記得搭配 `-z` 參數，這樣就不會真的連線進去\
+> 我們的目的僅僅是確認服務有沒有啟動而已
+
 `container` 就是定義主要服務的地方\
 這裡定義了我們的 producer container，然後 image 是我們 local build 出來的所以 `ImagePullPolicy` 是 Never\
 比較有趣的是 resources 這塊，可以看到有 requests 以及 limits\
@@ -126,7 +138,7 @@ spec:
 + `requests`: 這是你的 container 需要的最小資源
 + `limits`: 這是你的 container 最多可以使用的資源
 
-### Service
+## Service
 我們知道了一個 deployment 要怎麼樣定義出來\
 container image 要用哪一個，他要怎麼跑，他資源上有哪些限制\
 但顯然還不夠，舉例來說，他要怎麼跟 RabbitMQ 連線？
@@ -161,7 +173,7 @@ spec:
 K8s 採用的做法是透過 `Service` 來提供一個固定連線方式給 producer 來連線\
 要怎麼連線？ 一樣是 **名字**
 
-### ConfigMap and Secret
+## ConfigMap and Secret
 連線的方式我是透過 env variable 來設定的\
 然後 env variable 的值是透過 `ConfigMap` 以及 `Secret` 來設定的\
 一般來說 K8s 的設定檔都會獨立出來，兩個差別在於 `Secret` 是放機密資料的(但他不會加密)
@@ -185,21 +197,23 @@ metadata:
 type: Opaque
 data:
   MQ_URL: YW1xcDovL3Rlc3Q6dGVzdEByYWJiaXRtcS1zZXJ2aWNlOjU2NzIv
-  # amqp://test:test@rabbitmq-service:5672/
 ```
 
 剛剛的 `rabbitmq-service` 就是用在這裡\
 然後 producer 的 `configMapRef`, `secretRef` 就是會使用上述的資料\
 他們也是透過設定檔的 **"名字"**(myconfig, application-credentials) 來指定的
 
-## Example Recap
+`MQ_URL` 是 rabbitmq 的連線資訊\
+注意到 secret 的資料是 base64 encode 過的(也僅僅只有 encode 過而已，他是可以 decode 的)
+
+# Example Recap
 > 我覺的 [Kubernetes Crash Course for Absolute Beginners [NEW]](https://www.youtube.com/watch?v=s_o8dwzRlu4) 分享的概念淺顯易懂\
 > 因此這部份我也會參考原作的講解的方法，重新解釋一遍，另外也滿推薦可以看看原本的內容
 
 上面的例子我們大約的看過 K8s 的基本組成元件\
 但容許我再用正式的定義複習一次
 
-### Deployment and Service
+## Deployment and Service
 我們知道，Kubernetes 是負責管理龐大的容器們的工具\
 容器本身需要一個地方執行，不論是虛擬機或是實體機器，稱之為 `Node`\
 而 Kubernetes 不只是為了 docker 而生，為了要兼容其他的 container runtime\
@@ -224,7 +238,7 @@ Kubernetes 的每個 pod 也有自己的 ip address, 提供你存取\
 其中一個重點是，Service 可以定義固定的 "存取介面"\
 意思就是我可以透過 存取介面(i.e. **name**) 存取到我們的 Pod
 
-### ConfigMap and Secret
+## ConfigMap and Secret
 在 backend development 裡\
 資料庫的存取算是滿普遍的需求\
 以往我們在做這方面的東西的時候，通常會將 `連線資訊` 等等的寫在 config.yaml 或是 environment variable 裡面\
@@ -235,7 +249,7 @@ Kubernetes 中也是同樣的概念稱為 `ConfigMap`
 但是要注意的是，Kubernetes 的 Secret 是 ***不會做加密的***\
 需要透過第三方的套件來加密
 
-> ConfigMap 以及 Secret 的資料要是 base64 encode 過的資料哦~
+> Secret 的資料要是 base64 encode 過的資料哦~
 
 <hr>
 
@@ -244,13 +258,12 @@ Kubernetes 中也是同樣的概念稱為 `ConfigMap`
 不過 Kubernetes 通常不建議這麼做，因為它只是個容器管理工具\
 針對 persistent data 的部份建議是往外放
 
-## Powerful than Docker Compose
-其實我一開始在寫設定檔的時候，我真的覺得他長得很像 docker-compose\
-最有感的就是資料庫連線的方式，都是透過名字來連線
+## Label(name) is the Key to Connect
+在 K8s 的設定檔裡面，你會注意到我一直強調利用 **名字** 來連線或者是做 value reference\
+yaml 檔之間的設定基本上都是透過這種方式操作的
 
-話雖如此，K8s 也有比 docker-compose 更強大的地方\
-比如說 K8s 支援更好的 scaling, 可以動態調整，可以不限定於單一機器\
-docker-compose 通常是用在開發階段，不太適合正式環境，不如考慮 [docker swarm](https://docs.docker.com/engine/swarm/)
+當你要在 deployment 裡面拿到 configMap 的資料的時候，你會透過 `configMapRef` 以及 `secretRef` 取得特定 label 下的特定的資料\
+如果找不到相對應的，比如說 environment variable, 記得檢查 key, value 是不是有打錯字之類的
 
 # k3d
 我們可以使用 [k3d](https://k3d.io/v5.7.2/) 在本機跑 K8s
@@ -319,6 +332,9 @@ pod 是 k8s 中最小可部屬單元，注意到不是 container 哦\
 pod 是由一系列的 spec 定義出來的(裡面包含像是 image 資訊、metadata, ports ... etc.)\
 pod 裡面可以包含 一個或多個 container, 所有的 container 共享 儲存空間、網路等等的
 
+> 如果要 log pod 裡面的 container, 你可以透過 `kubectl logs <pod-name> -c <container-name>` 來取得\
+> 因為一個 pod 可能會有多個 container, 所以你需要指定 container 的名字
+
 > 通常的作法會是一個 pod 裡面僅僅會包含一個 container
 
 看到這裡其實我覺得有點疑惑，為什麼 Kubernetes 要多拉一層 pod 出來呢？\
@@ -342,6 +358,15 @@ pod 裡面可以包含 一個或多個 container, 所有的 container 共享 儲
 deployment, statefulset, daemonset 等等的\
 這個部份我們會在之後的文章中進行介紹
 
+# Conclusion
+在撰寫 yaml 檔案的時候，請務必注意以下幾點
+1. label, selector 之間的名字是不是一樣的
+2. configMap 的資料 **不用 base64 encode**, 但是 secret 的資料要
+3. 連線資訊的部分，可以依賴 [Service](#service) 定義一個固定的連線方式
+
+掌握這些極基本的概念，你就有辦法開始使用 K8s 了\
+但路途還很遙遠，一起學習吧
+
 # References
 + [nodes](https://kubernetes.io/docs/concepts/architecture/nodes/)
 + [pods](https://kubernetes.io/docs/concepts/workloads/pods/)
@@ -352,3 +377,5 @@ deployment, statefulset, daemonset 等等的\
 + [kubernetes 简介：service 和 kube-proxy 原理](https://cizixs.com/2017/03/30/kubernetes-introduction-service-and-kube-proxy/)
 + [Kubernetes Crash Course for Absolute Beginners [NEW]](https://www.youtube.com/watch?v=s_o8dwzRlu4)
 + [Docker Swarm vs Kubernetes: A Practical Comparison](https://betterstack.com/community/guides/scaling-docker/docker-swarm-kubernetes/#comparing-docker-swarm-and-kubernetes)
++ [Bash: Loop until command exit status equals 0](https://stackoverflow.com/questions/21982187/bash-loop-until-command-exit-status-equals-0)
++ [Defaulted container "container-1" out of: container-1, container-2](https://stackoverflow.com/questions/74552547/defaulted-container-container-1-out-of-container-1-container-2)
