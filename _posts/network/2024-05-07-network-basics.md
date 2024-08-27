@@ -3,7 +3,7 @@ title: 重新認識網路 - 從基礎開始
 date: 2024-05-07
 description: 本篇文章將會涵蓋所有網際網路的基礎，包含 DNS, TCP, UDP, TLS。其中會使用 Tcpdump, Wireshark 等工具實際觀察
 categories: [network]
-tags: [tcp, udp, ssl, tls, dns, nc, tcpdump, wireshark, broadcast, load balance, ip, telnet, multicast, unicast]
+tags: [tcp, udp, ssl, tls, dns, nc, tcpdump, wireshark, broadcast, load balance, ip, telnet, multicast, unicast, cname]
 redirect_from:
     - /network/networking-basics/
 math: true
@@ -38,6 +38,33 @@ IP address 則是方便於電腦進行解析的，但卻是不容易理解\
 
 所以每次你的查詢都是從高階到低階\
 這樣很慢嘛，所以也會有 caching 的機制在裡面
+
+## CNAME and A Record
+我大學的時候自架實驗室伺服器，為了更好的區分不同的功能\
+我將不同服務置於不同的 subdomain 底下，像是 `doc.example.com`, `git.example.com`\
+當時是將所有的 subdomain 都指向同一台伺服器，並且透過 nginx 來做反向代理
+
+這中間其實就是使用了 CNAME 與 A record 來做到的\
+不同的 subdomain 都指向同一台伺服器(或者說同一個 ip address)
+
+我們知道 domain name 對應到 ip address 是 DNS 的工作\
+這種紀錄，稱之為 `A record`
+
+CNAME 另一方面則是 `alias` 的功用\
+`doc.example.com` 指向 `example.com` 再指向最終的 ip address\
+你可以發現到，他並不會直接指向 ip address\
+所以這種紀錄，稱之為 `CNAME`\
+他是一個別名，指向另一個 domain name
+
+套用 [什麼是 DNS CNAME 記錄？](https://www.cloudflare.com/zh-tw/learning/dns/dns-records/dns-cname-record/) 所述
+> 想像一下，一個尋寶遊戲，每個線索都指向另一個線索，最後的線索指向寶藏。 \
+> 帶有 CNAME 記錄的域名就像一條線索，可以將您指向另一個線索（另一個具有 CNAME 記錄的域名）或寶藏（具有 A 記錄的域名）。
+
+<hr>
+
+但是 `doc.example.com` 不一定要是 CNAME\
+你可以將它設定成 A record，直接指向 ip address\
+這樣你就可以將他指到到任何你想要的地方
 
 ## DNS Load Balancing
 現今的服務器通常都是分散式系統，這就意謂著一個 domain name 可能會對到很多台實體伺服器\
@@ -687,3 +714,4 @@ UDP Multicast 就有意思的多了\
 + [What IP to use in order to perform a UDP broadcast?](https://stackoverflow.com/questions/72843819/what-ip-to-use-in-order-to-perform-a-udp-broadcast)
 + [TCP擁塞控制](https://zh.wikipedia.org/zh-tw/TCP%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6)
 + [How do multiple clients connect simultaneously to one port, say 80, on a server? [duplicate]](https://stackoverflow.com/questions/3329641/how-do-multiple-clients-connect-simultaneously-to-one-port-say-80-on-a-server)
++ [什麼是 DNS CNAME 記錄？](https://www.cloudflare.com/zh-tw/learning/dns/dns-records/dns-cname-record/)
