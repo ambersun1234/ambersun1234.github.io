@@ -113,14 +113,15 @@ spec:
               cpu: 1000m
 ```
 
-> 小試身手！ 第 4, 9, 13 行的 producer 各是什麼意思？
+> 小試身手！ 第 4, 9, 13 行的 producer 各是什麼意思？ 可參考 [Different Labels in Deployment](#different-labels-in-deployment)
 
 這是 producer 的設定檔，consumer 以及 rabbitmq 也是類似的\
 首先我們先從看得懂先開始\
 `initContainer` 是執行在 pod 啟動之前的 container\
+你可以拿來做一些初始化的工作，比如說等待服務啟動完成\
 這裡的 initContainer 是用來等待 rabbitmq-service 啟動完成
 
-> initContainer 通常是搭配 until do done loop 搭配 nc 使用\
+> initContainer 通常是使用 until do done loop 搭配 nc 使用\
 > 使用 nc 記得搭配 `-z` 參數，這樣就不會真的連線進去\
 > 我們的目的僅僅是確認服務有沒有啟動而已
 
@@ -264,6 +265,40 @@ yaml 檔之間的設定基本上都是透過這種方式操作的
 
 當你要在 deployment 裡面拿到 configMap 的資料的時候，你會透過 `configMapRef` 以及 `secretRef` 取得特定 label 下的特定的資料\
 如果找不到相對應的，比如說 environment variable, 記得檢查 key, value 是不是有打錯字之類的
+
+### Different Labels in Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer # deployment name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer # which pod to manage
+  template:
+    metadata:
+      labels:
+        app: producer # pod name
+    spec:
+      initContainers:
+        ...
+```
+
+所以這些 `producer` label 分別代表什麼意思\
+最外層的 `metadata.name` 是這個 deployment 的名字
+
+我們知道 deployment 實際上是由 pod 組成的\
+所以 `spec` 底下的資料都是 pod 的設定檔\
+`template` 定義了 pod 的規格，包含他要跑的 container, 他的環境變數等等\
+所以 `spec.template.metadata.labels.app` 代表的是 pod 的名字
+
+最後 `spec.selector.matchLabels.app`\
+deployment 需要管理 pod，所以他需要知道是哪個(哪些) pod\
+所以名字符合 `app: producer` 的 pod 就會被這個 deployment 管理
+
+> 其實都把他設定成同一個名字不太好
 
 # k3d
 我們可以使用 [k3d](https://k3d.io/v5.7.2/) 在本機跑 K8s
