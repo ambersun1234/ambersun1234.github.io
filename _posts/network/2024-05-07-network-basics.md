@@ -30,7 +30,7 @@ IP address 則是方便於電腦進行解析的，但卻是不容易理解\
 + Root DNS Server
     + 這些伺服器是整體網路的最高階，共有 13 個組織負責管理
     + Root server 不會直接回 ip address, 它會告訴你誰擁有這些資訊，然後你去找 `TLD DNS Server`
-+ Top-level Domain DNS Server
++ Top-level Domain DNS Server(TLD DNS Server)
     + 高階網域如 `com`, `org`, `edu` 等都會紀錄在 Top-level Domain DNS Server 中
     + 同樣它也不會直接回 ip address, 它會告訴你誰有這些資訊，然後你再去找 `Authoritative DNS Server`
 + Authoritative DNS Server
@@ -53,7 +53,7 @@ IP address 則是方便於電腦進行解析的，但卻是不容易理解\
 CNAME 另一方面則是 `alias` 的功用\
 `doc.example.com` 指向 `example.com` 再指向最終的 ip address\
 你可以發現到，他並不會直接指向 ip address\
-所以這種紀錄，稱之為 `CNAME`\
+所以這種紀錄，稱之為 `CNAME record`\
 他是一個別名，指向另一個 domain name
 
 套用 [什麼是 DNS CNAME 記錄？](https://www.cloudflare.com/zh-tw/learning/dns/dns-records/dns-cname-record/) 所述
