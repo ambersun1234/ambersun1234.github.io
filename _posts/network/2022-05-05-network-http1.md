@@ -180,6 +180,20 @@ HTTP/1.1 新增了不少的 method
 + `CONNECT`: 保留 method, 它可以被用作 [SSL tunneling](https://dzone.com/articles/what-is-ssl-tunneling)
 + `OPTIONS`: 用於測試哪些 methods 可以在該 server 或 URI 上使用
 
+### Request Body with Get Request
+根據 [RFC 2616 §4.3](https://datatracker.ietf.org/doc/html/rfc2616#section-4.3) 所述
+
+> A message-body MUST NOT be included in a request \
+> if the specification of the request method (section 5.1.1) does not allow sending an entity-body in requests.
+
+以及 [RFC 2616 9.3](https://datatracker.ietf.org/doc/html/rfc2616#section-9.3) 所述
+
+> The GET method means retrieve whatever information (in the form of an entity) is identified by the Request-URI.
+
+言下之意是，你可以在 GET request 中帶有 body\
+不過他不應該有任何作用，GET request 僅能夠依據 URI 來取得資源\
+當然你可以帶 body 進去，但是 server 不應該對 body 有任何反應
+
 ### Safe Methods
 一個 method 被視為是安全的定義是 `不會對 target resources 有任何狀態改變`
 
@@ -711,3 +725,4 @@ ngx_http_gzip_header_filter(ngx_http_request_t *r)
 + [HTTP 何時驗證快取 no-cache? no-store?](https://notfalse.net/56/http-stale-response#-no-cache)
 + [How to address weak etags conversion by nginx on gzip compression](https://stackoverflow.com/questions/55305687/how-to-address-weak-etags-conversion-by-nginx-on-gzip-compression)
 + [E-tags missing from response headers with rails 3.2 / nginx / phusion passanger](https://stackoverflow.com/questions/17350884/e-tags-missing-from-response-headers-with-rails-3-2-nginx-phusion-passanger)
++ [HTTP GET with request body](https://stackoverflow.com/questions/978061/http-get-with-request-body)
