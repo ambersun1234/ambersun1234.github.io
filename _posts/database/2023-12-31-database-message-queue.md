@@ -643,6 +643,8 @@ $ docker run -d \
     rabbitmq:3.13-rc-management
 ```
 
+> `rabbitmq` image 是沒有帶管理介面的，記得要用有 management 的 image
+
 container 需要使用兩個 port `5672` 與 `15672`\
 其中 5672 是給 application 使用的，而 15672 則是 GUI 管理界面\
 使用帳號密碼登入後你應該會看到類似以下的東西
