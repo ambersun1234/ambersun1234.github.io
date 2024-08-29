@@ -296,9 +296,11 @@ $ protoc --go_out=. --go_opt=paths=source_relative \
 那它沒用嗎？ 其實不然
 
 gRPC 在 microservices 的架構下擁有出眾的效能\
-得益於 HTTP2，使得其與傳統 HTTP1 在速度上擁有著本質上的差異(因為 HTTP1 使用 plain text 進行傳輸，而 HTTP2 使用二進位封包傳輸)\
+得益於 HTTP2，使得其與傳統 HTTP1 在速度上擁有著本質上的差異(因為 HTTP1 使用 plain text 進行傳輸，而 HTTP2 因為改進了壓縮演算法，效能提升)\
 更遑論提供可插拔的 auth, tracing, load balancing, health checking\
 並且支援多種語言的 gRPC 在開發上有更多種的選擇
+
+> 可參考 [重新認識網路 - HTTP1 與他的小夥伴們](../../network/network-http1/)
 
 回到正題，為了要讓現代瀏覽器能夠支援呼叫 gRPC API, 我們勢必要做一個 `reverse proxy(反向代理)`\
 讓 reverse proxy 將一般常見的 RESTful API 轉換成 gRPC(如下圖所示)\
