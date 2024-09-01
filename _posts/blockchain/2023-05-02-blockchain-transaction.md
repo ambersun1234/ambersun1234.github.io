@@ -191,7 +191,7 @@ function signatureListNFT() public pure returns(bytes4) {
 > view :arrow_right: 讀取但不更改區塊鏈狀態
 
 也可以使用線上的 hash tool 進行驗證
-<iframe src="https://emn178.github.io/online-tools/keccak_256.html" style="width:100%; height:32em"></iframe>
+<iframe src="https://emn178.github.io/online-tools/keccak_256.html" onLoad="self.scrollTo(0,0)" style="width:100%; height:32em"></iframe>
 
 # Block
 blockchain 顧名思義是由一堆 block 所構成的 chain\
