@@ -8,8 +8,9 @@ math: true
 ---
 
 # Speed up Search In Large Data
-![](https://www.rd.com/wp-content/uploads/2019/09/old-dictionary-e1568641564797.jpg)
-> [Here’s How Words Get Added to the Dictionary](https://www.rd.com/article/how-words-get-added-to-the-dictionary/)
+<img src="https://rhollick.wordpress.com/wp-content/uploads/2016/04/img_01661.jpg" width="400" height="600">
+
+> ref: [Making Book](https://rhollick.wordpress.com/2016/11/18/thumb-indexing/)
 
 還記得小時候學習的過程中，一定會用到字典這個東西\
 在沒有網路的時代，字典可以說是查找單字以及成語的少數方法之一了\
@@ -230,7 +231,7 @@ B Tree 在 sequential scan 的情況下，必須來回 parent/child node 之間\
 這樣的作法有助於 **提昇 locality**(資料庫多半會做 pre-load(i.e. disk read-ahead) 增進效能)\
 並且在 full table scan 下的效能海放 B Tree(因為後者必須執行 tree traversal 可能會 **cache miss**, 前者可以依靠連接的 pointer)
 
-![](https://i.stack.imgur.com/l6UyF.png)
+![](https://i.sstatic.net/l6UyF.png)
 > ref: [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
 
 # Fragmentation
