@@ -83,7 +83,7 @@ MinIO 的複製機制預設是非同步的\
 
 同步複製 **並不會等待其他節點寫完**\
 這裡就不一樣囉，傳統上來說同步複製會等待所有節點都寫完之後才會 return\
-MinIO 一樣是先 `一起開寫`，但是當他完成之後就會 return
+MinIO 一樣是先 `一起開寫`，但是當主節點完成之後就會 return
 
 > 注意到 MinIO 仍然會維持 write quorum
 
@@ -138,7 +138,7 @@ MinIO 需要一定數量的節點才能夠正常的工作\
 而他的官網上有提到，`寫入的 quorum` 跟 `讀取的 quorum` 是不一樣的\
 並且寫入的要求會比讀取的要求更高
 
-> 有關 quorum 的概念，可以參考 [資料庫 - 初探分散式資料庫](../../database/database-distributed-database#quorum-consensus)
+> 有關 quorum 的概念，可以參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#quorum-consensus)
 
 ## Erasure Coding
 資料儲存需要額外考慮的一個點是資料的正確性\
