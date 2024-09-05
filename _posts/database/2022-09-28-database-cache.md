@@ -3,7 +3,7 @@ title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
 description: 本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情
 categories: [database]
-tags: [cache, redis, transaction]
+tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached]
 math: true
 ---
 
@@ -205,7 +205,7 @@ REmote DIctionary Server - Redis 是一款 in-memory 的 key-value 系統\
 Redis 可以拿來當作 cache、正規的 database 使用、streaming engine 或 message broker\
 由於其資料都是 in-memory 的特性，因此操作速度極快
 
-除了上述特性，Redis 也提供 replication 以及 clustering 的功能(不過這些細節就留給以後的我來做吧)
+除了上述特性，Redis 也提供 replication 以及 clustering 的功能
 
 ## Redis Data Structures
 Redis 提供了一套完整且常見的資料結構，常見的有以下
@@ -328,6 +328,53 @@ AOF 需要手動啟用
 appendonly yes
 ```
 
+# Redis vs. Memcached
+除了 Redis, 另一個在 memory cache 領域很有名的就是 [Memcached](https://memcached.org/)\
+同樣身為 in-memory cache，該如何正確的選擇？
+
+我最近剛好要開發一個功能是需要使用到 object storage 的\
+但他又不需要到類似 MinIO 這種功能，只是單純的 cache\
+所以我就在思考說，到底哪種方案會比較適合
+
+> 有關 MinIO 的介紹，可以參考 [資料庫 - 大型物件儲存系統 MinIO 簡介 \| Shawn Hsu](../../database/database-minio)
+
+事情是這樣的\
+我需要儲存的資料結構是一個 key to object 的結構\
+其中 object 裡面可以包含若干個欄位\
+舉例來說，他會長這樣
+
+```text
+user1: {
+    name: "Alice",
+    age: 20
+}
+user2: {
+    name: "Bob",
+    age: 21
+}
+```
+
+而這些資料是可以容許一定程度的 data loss 的\
+並且我們要儲存的數量目前不太確定\
+這麼看下來 `in-memory` 就可以先被排除了\
+因為把他直接做在 application 的 memory 裡面，我們會需要自己管控他的生命週期狀態等等的，重點是它的容量是有限的
+
+針對資料結構的部分，其實 Redis 是比較適合的\
+因為 Redis 提供了一套完整的資料結構，而 Memcached 只有 key-value 的結構\
+以我的例子來說，僅僅使用 hash 就可以完美的解決這個功能
+
+另外就是稍早提到 Redis 具有 transaction 的功能\
+而 Memcached 則沒有\
+同一個操作，我會需要使用 transaction 來確保資料的一致性
+
+性能方面，Redis 是單執行緒的，對比 Memcached 多執行緒可能略輸\
+但是 Redis 可以透過 clustering 來提升效能
+
+至於備份機制，雖然 Redis 提供了 [RDB](#rdb---redis-database) 以及 [AOF](#aof---append-only-file)，Memcached 則沒有\
+但是以這個例子來說，他沒有那麼重要，因為我們可以容許一定程度的 data loss
+
+所以最後選擇了 Redis 作為我們的 cache server
+
 # References
 + [Redis persistence](https://redis.io/docs/manual/persistence/#append-only-file)
 + [Difference between Buffering and Caching in OS](https://www.geeksforgeeks.org/difference-between-buffering-and-caching-in-os/)
@@ -339,3 +386,4 @@ appendonly yes
 + [Cache warming: Agility for a stateful service](https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642)
 + [Cache Warming: Know it’s Importance to Improve Website Performance](https://www.payoda.com/cache-warming/)
 + [Cache warming: Agility for a stateful service](https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642)
++ [比較 Redis OSS 與 Memcached](https://aws.amazon.com/tw/elasticache/redis-vs-memcached/)
