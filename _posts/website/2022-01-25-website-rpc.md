@@ -3,7 +3,7 @@ title: 網頁程式設計三兩事 - gRPC 與 JSON-RPC
 description: Remote Procedure Call 是一種傳輸協定，本文將會探討 RPC 與 RESTful API 的差異，並且會介紹 gRPC 以及 JSON-RPC 的使用方式以及 Protocol Buffer 的使用。最後會以實際的 benchmark 結果更直觀的說明
 date: 2022-01-25
 categories: [website]
-tags: [api, grpc, rpc, json-rpc, design pattern, protobuf]
+tags: [api, grpc, rpc, json-rpc, design pattern, protobuf, grpc-gateway, stub]
 redirect_from:
   - /website/website-grpc/
 math: true
@@ -165,6 +165,15 @@ service 包含了所有你定義的 RPC 方法\
 |Client-side Streaming|rpc LotsOfReplies(HelloRequest) returns (**stream** HelloResponse);|
 |Server-side Streaming|rpc LotsOfGreetings(**stream** HelloRequest) returns (HelloResponse);|
 |Bidirectional Streaming|rpc BidiHello(**stream** HelloRequest) returns (**stream** HelloResponse);|
+
+> function 一定需要包含 request 嗎？\
+> 你一定遇過一些 function 是不需要參數的，這時候你可以使用 `google.protobuf.Empty` 這個型別\
+> 用以表示不需要參數\
+> \
+> 但是很多時候你需要考慮相容性(不管是向前還是向後相容)\
+> 推薦的做法是你一樣建立一個 request message，只是裡面的欄位都是空的\
+> 之後如果要新增欄位的時候，就可以直接在裡面加入新的欄位，而不用擔心相容性的問題\
+> ref: [Is google.protobuf.Empty dangerous for backwards compatibility?](https://stackoverflow.com/questions/50993815/is-google-protobuf-empty-dangerous-for-backwards-compatibility)
 
 本篇將專注在 Simple RPC 的部份
 
