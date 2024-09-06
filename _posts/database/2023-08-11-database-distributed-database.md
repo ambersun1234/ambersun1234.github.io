@@ -146,7 +146,7 @@ Values(1, "ambersun1234", "2023-08-07 15:40:06")
 
 由於其高度客製化的特性，也有不少人選擇使用它
 
-> 有關 Store Procedure 可以參考 [資料庫 - 最佳化 Read/Write 設計(軟體層面) \| Shawn Hsu](../../database/database-optimization-software)
+> 有關 Store Procedure 可以參考 [資料庫 - 最佳化 Read/Write 設計(軟體層面) \| Shawn Hsu](../../database/database-optimization)
 
 ## Architecture
 ### Single Leader(Master Slave)

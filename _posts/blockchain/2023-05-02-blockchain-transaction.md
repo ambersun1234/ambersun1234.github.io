@@ -76,7 +76,7 @@ POS 的獎勵為 priority fee
 亦即他的資料都是存在 stack 當中的，當有需要的時候使用 push, pop 就可以拿取以及儲存資料了\
 而這個 stack 大小為 `1024`, 每個 element 大小為 `256 bit`
 
-> 有關 endian 的介紹可以參考 [重新認識網路 - OSI 七層模型 - Endian \| Shawn Hsu](../../http/networking-osi#endian)
+> 有關 endian 的介紹可以參考 [重新認識網路 - OSI 七層模型 - Endian \| Shawn Hsu](../../network/network-osi#endian)
 
 常見的 EVM 實作有
 + [go-ethereum](https://geth.ethereum.org/)
@@ -221,7 +221,7 @@ blockchain 顧名思義是由一堆 block 所構成的 chain\
 試想如果我貢獻了其中一個 block，但是我竄改了其中的交易資料，使得有些紀錄被我抹除了\
 又假如我擁有超過半數的網路節點，而每個節點我都這樣做，會發生什麼事情？
 
-沒錯，[51% Attack](../../blockchain/blockchain-basics/#51-attack)!\
+沒錯，[51% Attack](../../blockchain/blockchain-basics#51-attack)!\
 所以將前一個節點的資訊加入，會大幅度的增加 51% 攻擊的難度\
 由於 block 的資訊依賴於前者 block 的資訊\
 因此，之後的 block 必須要 **全部重新計算**, 導致攻擊者需要花費大幅度的心力去影響整個網路\

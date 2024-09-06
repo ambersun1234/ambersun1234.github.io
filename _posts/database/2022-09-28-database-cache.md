@@ -96,7 +96,7 @@ cache miss 的情況下，很明顯的會比 cache hit 的 `反應時間還要�
 可以把它切成一小塊一小塊，中間擺一個 message queue, 資料塞進去\
 兩邊同時作業(i.e. [producer consumer problem](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem))，可以更快完成
 
-> 有關 message queue 的討論，可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../database-message-queue)
+> 有關 message queue 的討論，可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue)
 
 # Cache Strategies
 ## Cache Aside(Read Aside)
@@ -119,7 +119,7 @@ Cache Aside 在大多數情況下都是很好的解決辦法\
 
 唯一算是缺點的，兩邊的資料可能會 **不一致**(可參考上圖)\
 為什麼？\
-我們的好朋友 [Atomic Operation](../../random/python-gil/#atomic-operation) 解釋了一切\
+我們的好朋友 [Atomic Operation](../../random/python-gil#atomic-operation) 解釋了一切\
 重新審視 cache aside 的實作，你會發現\
 當 cache miss 的時候，你會 query 資料庫，然後再寫入 cache\
 問題出在這裡，多執行緒的狀況下，你沒辦法保證他是 unit of work\

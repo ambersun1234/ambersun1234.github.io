@@ -27,7 +27,7 @@ math: true
 但是讓我們稍微複習，或者是重新認識一下這些術語
 
 ## Auto Scaling
-在 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware) 中我們有提到 scale up 以及 scale out 的概念\
+在 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database) 中我們有提到 scale up 以及 scale out 的概念\
 但是你會希望這些操作可以是自動化的執行\
 也就是說當系統偵測到目前的流量以現有的系統已經無法支撐的情況之下，它能夠自己新增機器\
 以及，當流量下降的時候，它能夠關掉一些資源避免系統的浪費
@@ -156,7 +156,7 @@ docker 有自己內建的 dns server, 這也解釋了為什麼我們可以單純
 所以負載平衡這段其實是由 docker 內建的 dns server 幫你做掉了
 
 > 有關 DNS load balancing\
-> 可參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics)
+> 可參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/network-basics)
 
 你說可是上面我們還是使用了 nginx 阿\
 那是因為每一個 replica service 都使用了相同的 port number(這個會造成 error), 我們需要一個統一的進入點存取\

@@ -19,7 +19,7 @@ IP address 則是方便於電腦進行解析的，但卻是不容易理解\
 因此 DNS 的作用就是將 IP address 轉換成網域名稱
 
 本質上 DNS 分散式架構有助於提昇整體吞吐量\
-包含單一節點失效，效能問題(可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware))
+包含單一節點失效，效能問題(可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database))
 
 ## DNS Server Categories
 ![](https://qph.cf2.quoracdn.net/main-qimg-5ed6b5866ff2e2d1d26095a49aa4c25e)
@@ -168,7 +168,7 @@ TCP 相比 [IP](#ip---internet-protocol) 額外提供了
 + 可靠性傳輸(保證送達以及保證順序送達)
 + 壅塞控制(congestion control)
 
-> 有關傳輸層的討論可以參考 [重新認識網路 - OSI 七層模型 \| Shawn Hsu](../../network/networking-osi)
+> 有關傳輸層的討論可以參考 [重新認識網路 - OSI 七層模型 \| Shawn Hsu](../../network/network-osi)
 
 ## Why Handshake is Important
 TCP 是可靠傳輸，所以它需要花一點時間建立可靠連線\
@@ -435,7 +435,7 @@ TLS 需要跑在可靠性的傳輸協定之上，如 [TCP](#tcp---transmission-c
 
 ## TLS Record Protocol
 record protocol 主要是用於封裝高階 protocol 的資料\
-舉例來說 HTTP(可參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/networking-http1))
+舉例來說 HTTP(可參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/network-http1))
 
 怎麼封裝呢？\
 將 message-based 的資料包裝成一個可管理的封包\

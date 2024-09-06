@@ -12,7 +12,7 @@ message queue 顧名思義他是一個 queue，用來存放 message 的\
 你可以用 Inter-Process Communication 的概念去思考它\
 基本上就是提供一個空間或是，讓兩個 process 進行通訊
 
-> 有關 IPC 的相關討論可以參考 [Goroutine 與 Channel 的共舞 \| Shawn Hsu](../../random/golang-channel/#inter-process-communication)
+> 有關 IPC 的相關討論可以參考 [Goroutine 與 Channel 的共舞 \| Shawn Hsu](../../random/golang-channel#inter-process-communication)
 
 不過，當然 message queue 服務的對象是 application\
 與傳統的 IPC 還是不同的\
@@ -21,7 +21,7 @@ message queue 顧名思義他是一個 queue，用來存放 message 的\
 1. 我用 HTTP, gRPC 之類的 protocol 也能進行通訊
 2. 我透過讀取共享檔案的方式，也能進行通訊
 
-> 有關 gRPC 相關的討論可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../../website/website-grpc)
+> 有關 gRPC 相關的討論可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../../website/website-rpc)
 
 是什麼樣的原因讓我們必須要開發一個新的方式\
 是這些行之有年的技術比較不能做到的？
@@ -314,7 +314,7 @@ topic 是一個 order sequence of event, 我們剛剛提到，事件是會分先
 儲存在硬碟裡，是可以避免掉資料的問題\
 但硬碟不是很慢嗎，Kafka 是如何維持高吞吐量的?\
 well, 他們在 [4.2 Persistence](https://kafka.apache.org/documentation/#persistence) 裡面有詳細說明\
-其中最大的優勢是在 **sequential I/O**(可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware/#random-io-vs-sequential-io))
+其中最大的優勢是在 **sequential I/O**(可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#random-io-vs-sequential-io))
 
 sequential I/O 根據他們的說法，相對於 Random I/O 有高達 6000 倍的效能提昇\
 與其自己維護 in-memory cache 增加維護難度，程式複雜度\
@@ -322,7 +322,7 @@ sequential I/O 根據他們的說法，相對於 Random I/O 有高達 6000 倍�
 我們可以藉著 kernel 的 page cache 自動幫我們做 cache(現代 OS 會利用空閒的記憶體用作 disk cache)，搭配上 sequential I/O\
 使得整體的邏輯更簡單，並且效能也不會差太多
 
-> 有關 cache 的討論，可參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../database-cache)
+> 有關 cache 的討論，可參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
 
 將源源不斷的事件資料，透過適當的 batching 儲存\
 而這些原本屬於 random write 的資料，變成 linear write(因為 batching 可以讓資料緊緊相連，就在旁邊而已)\
@@ -391,7 +391,7 @@ controller 主要負責做兩件事情
 2. 監控並處理已經離線的 node
     + 透過 `heartbeat`，定期發送一個訊號給 controller，如果規定時間內沒有收到訊號，controller 就會將該 node 視為失效
 
-> 有關 single leader replication，可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware/#single-leadermaster-slave)
+> 有關 single leader replication，可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#single-leadermaster-slave)
 
 Kafka 對於節點失效的定義有那麼一點點的不同\
 以下兩種都可以被視為是失效的狀態

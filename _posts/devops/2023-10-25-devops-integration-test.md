@@ -82,7 +82,7 @@ Fake Object 可以提供較為簡單版本的實作\
 假設你需要替換掉資料庫的界面實作，你可以透過 Fake Object 來做測試\
 如此一來你不需要大改你原本的實作，只需要換成 Fake Object 就可以了
 
-> 有關 Test Double 的介紹可以參考 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../../devops/devops-unit-test/#test-double)
+> 有關 Test Double 的介紹可以參考 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../../devops/devops-unit-test#test-double)
 
 # Docker Container
 要測試與資料庫的整合，勢必要起一個 local database\
@@ -244,7 +244,7 @@ E2E 的全名是 End 2 End，也就是端到端\
 有了上次寫單元測試的經驗之後，寫起測試確實是比較順利\
 但我還是遺漏了一些重要的事情
 
-> 可以回顧一下 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../devops-unit-test/#issues-that-i-have-when-writing-tests)
+> 可以回顧一下 [DevOps - 單元測試 Unit Test \| Shawn Hsu](../../devops/devops-unit-test#issues-that-i-have-when-writing-tests)
 
 ## Time is Unreliable
 假設你想要測試某個 test case 有沒有在規定的時間內跑完\

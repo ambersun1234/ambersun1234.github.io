@@ -119,7 +119,7 @@ timeout 設定成一分鐘的情況下\
 在這一方面可謂完美的解決了 [Polling](#polling) 以及 [Long Polling](#long-polling) 建立連線的巨大成本帶來的 overhead\
 看似完美的解決方案，但是它會遇到另一個問題，file descriptor 數量限制
 
-> 有關 socket 的介紹可參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics#socket)
+> 有關 socket 的介紹可參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/network-basics#socket)
 
 我的電腦，預設 file descriptor 上限數量為 `1024`\
 也就是說一個 process 的 file descriptor 上限就那麼多\

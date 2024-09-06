@@ -92,7 +92,7 @@ tree based index 亦即 GiST index 可以使用 B+ tree, R tree 等自平衡樹�
 inverted index 的概念是 hashmap\
 將所有出現的單詞，建立一個 hashmap，其 value 儲存的是所有 occurrence 的位置
 
-> 詳細可以參考 [資料庫 - Index 與 Histogram 篇 \| Shawn Hsu](../../database/database-index-histogram/#non-clustered-index)
+> 詳細可以參考 [資料庫 - Index 與 Histogram 篇 \| Shawn Hsu](../../database/database-index-histogram#non-clustered-index)
 
 所以 GIN index 你能夠推測出幾件事情
 1. 他的 index 更新會比較慢

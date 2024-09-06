@@ -45,7 +45,7 @@ if __name__ == "__main__":
 為了新增某個功能而改變原本的實作本身屬實是不太好的行為\
 這個篇章我們將一窺 [Decorator Pattern](#decorator-pattern) 可以如何解決這個問題
 
-> 有關 gRPC 的相關介紹，可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../../website/website-grpc)\
+> 有關 gRPC 的相關介紹，可以參考 [網頁程式設計三兩事 - gRPC \| Shawn Hsu](../../website/website-rpc)\
 > 詳細的實作程式碼可以參考 [ambersun1234/blog-labs/RESTful_gRPC_JSON-RPC-benchmark](https://github.com/ambersun1234/blog-labs/tree/master/RESTful_gRPC_JSON-RPC-benchmark)
 
 # Open-Closed Principle

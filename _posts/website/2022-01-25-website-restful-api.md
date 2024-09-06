@@ -100,7 +100,7 @@ client 端就勢必要儲存必要資訊(e.g. 使用者登入與否?)\
 
 > 這兩種做法並沒有好壞之分，單純是作法不同
 
-> 有關 HTTP 的討論，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../http/networking-http1)
+> 有關 HTTP 的討論，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/network-http1)
 
 # Version Control
 隨著系統升級改版，API 也會隨之改變\

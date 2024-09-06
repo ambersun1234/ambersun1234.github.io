@@ -26,7 +26,7 @@ redirect_from:
 
 > 單一節點下，Sharding 的作用可以體現於 **寫入** 效能提昇\
 > 針對 **讀取** 的部份，可以搭配 `Replication` 下去使用\
-> 可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware#replication)
+> 可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#replication)
 
 ![](https://miro.medium.com/v2/resize:fit:828/format:webp/0*tOAcT4T5Rdg6Fx5z.png)
 > ref: [System Design — Sharding / Data Partitioning](https://medium.com/must-know-computer-science/system-design-sharding-data-partitioning-b7201596aafa)
@@ -154,7 +154,7 @@ clustered index 是 unique 的，也因此它永遠可以指到 `一筆資料`
 對於常用的 SQL statements, server 會轉換成 internal structure 進行處理, 我們可以讓伺服器 Cache 住這些 structure(這樣在同一個 session 之內，就不用重新載入了)\
 注意到 cache 僅能供同一個 session 存取，不可以跨 session 存取，並且在 session 結束的時候，cache 會一併刪除
 
-> 另外常見的 cache 手段包含像是 Redis 等等的可以參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/datebase-cache)
+> 另外常見的 cache 手段包含像是 Redis 等等的可以參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
 
 server 會針對所謂的 [Prepare Statement](#prepare-statement) 以及 [Store Program](#store-program) 進行 cache\
 但眾所周知，cache 會有所謂的 `過期` 問題, 亦即資料並不新鮮了\
@@ -215,7 +215,7 @@ store procedure 由於其過時的程式語言，難以管理、部屬以及測�
 
 我們之前看過所謂的 N + 1 問題\
 在那個例子下，的確使用 Join 會是較好的選擇
-> 詳細可以參考 [資料庫 - SQL N + 1 問題 \| Shawn Hsu](../../database/database-sqln1.md)
+> 詳細可以參考 [資料庫 - SQL N + 1 問題 \| Shawn Hsu](../../database/database-sqln1)
 
 有什麼樣的情況下你會選擇使用 multiple query?\
 在單台機器的情況下，我想不會有人反對 Join 的速度\

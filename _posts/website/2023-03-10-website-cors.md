@@ -183,7 +183,7 @@ HTTP 的 request 當中，不受限於 [Same Origin Policy](#same-origin-policy)
 `Access-Control-Request-Headers: Authorization`\
 `Access-Control-Request-Method: GET`
 
-> Options Method 為 safe method, 詳細可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../networking-http1#safe-methods)\
+> Options Method 為 safe method, 詳細可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/network-http1#safe-methods)\
 > HTTP header field 並無大小寫之區分，可參考 [RFC 1945 §4.2](https://www.rfc-editor.org/rfc/rfc1945#page-22)
 
 這隻 API 主要會根據 user jwt token 取出對應 user 資料並回傳\

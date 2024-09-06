@@ -41,7 +41,7 @@ HTTP 標準發展初期，只有定義一個基本的概念
 # HTTP/1.0
 在 1996 年 5 月的時候，HTTP/1.0 的規範正式釋出，編號為 [RFC 1945](https://datatracker.ietf.org/doc/html/rfc1945)
 
-HTTP - Hypertext Transfer Protocol 是跑在 [應用層](../networking-osi#application-layer---7) 之上的標準，且基於 request/response 架構\
+HTTP - Hypertext Transfer Protocol 是跑在 [應用層](../../network/network-osi#application-layer---7) 之上的標準，且基於 request/response 架構\
 其工作流程如下
 1. client 對 server 建立連線
 2. client 對 server 發送 request(內容包含: request method, URI, protocol version, request modifiers, client information, body)

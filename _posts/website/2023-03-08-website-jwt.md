@@ -389,7 +389,7 @@ signature 的計算是使用存在 server 上的 signing key 加上前面 header
 如果真的有傳送機密訊息的需求，使用 [JWE](#jwejson-web-encryption) 是最好的選擇\
 不過普遍來說，我們認為 http 的 TLS 已經足夠應付大多數的場景了
 
-> 有關 TLS 的介紹可以參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/networking-basics#ssl---secure-sockets-layertls)
+> 有關 TLS 的介紹可以參考 [重新認識網路 - 從基礎開始 \| Shawn Hsu](../../network/network-basics#ssl---secure-sockets-layertls)
 
 既然 JWS 沒有進行加密\
 一般來說是不建議在上面塞入任何敏感資訊\
@@ -420,7 +420,7 @@ session 逐漸式微的原因，有幾個面向可以討論
 >  HTTP is the typing of data representation, allowing systems to be\
 >  built independently of the data being transferred.
 
-> 有關更多 HTTP 相關探討，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../networking-http1)
+> 有關更多 HTTP 相關探討，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/network-http1)
 
 所以總結起來就是兩點
 + 多台伺服器下，session 如何同步
@@ -450,7 +450,7 @@ HTTP 的 request header 中提供了一個 `Authorization header` 讓你可以�
 你的後端必須額外設定一個 request header\
 `Access-Control-Allow-Credentials` 設定為 `true`
 
-> 有關更多跨網域相關的請求，可以參考 [網頁程式設計三兩事 - 萬惡的 Same Origin 與 CORS \| Shawn Hsu](../website-cors)
+> 有關更多跨網域相關的請求，可以參考 [網頁程式設計三兩事 - 萬惡的 Same Origin 與 CORS \| Shawn Hsu](../../website/website-cors)
 
 ## Authorization Header Schemes
 ### Basic Scheme

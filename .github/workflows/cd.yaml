@@ -9,25 +9,19 @@ jobs:
   redirect_path_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Check redirect path
-        run: |
-          for file in $(find ./_posts -name "*.md"); do
-            oldIfs=$IFS
-            IFS=$'\n'
-            for url in $(cat ${file} | head -n 10 | sed -n '/---/,/---/p' | sed -n '/redirect_from:/,$p' | grep ' -'); do
-                if [[ "${url}" != */ ]]; then
-                    echo "invalid redirect url: '${url}' in '${file}'"
-                    exit 1
-                fi
-            done
-            IFS=$oldIfs
-          done
+      - uses: actions/checkout@v4
+      - run: bash ./scripts/redirect.sh
+
+  internal_link_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash ./scripts/link.sh
 
   # image_cors_check:
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3
+  #     - uses: actions/checkout@v4
   #     - uses: ambersun1234/image-cors-checker@v1.0.2
   #       with:
   #         check_path: ${{ github.workspace }}/_posts
@@ -35,10 +29,10 @@ jobs:
   #         white_list: ${{ env.WHITE_LIST }}
 
   autogen_og_image:
-    needs: [redirect_path_check]
+    needs: [redirect_path_check, internal_link_check]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # - uses: mujo-code/puppeteer-headful@16.6.0
       - uses: ambersun1234/puppeteer-headful@66190b3cf79e5cd4dac6b57ebe42fdc04517da9d
       - name: Install Chinese Font
@@ -71,10 +65,9 @@ jobs:
 
   build_and_deploy:
     runs-on: ubuntu-latest
-    # needs: [autogen_og_image, image_cors_check]
     needs: [autogen_og_image]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2147483647
 

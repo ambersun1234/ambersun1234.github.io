@@ -521,7 +521,7 @@ JSON-RPC 跟 RESTful 平均呼叫時間都幾乎在 $1 \times 10^6$ nanoseconds\
 
 會有這樣的結果其實是因為 gRPC 是基於於 HTTP2\
 所以在速度上與傳統 API call(i.e. HTTP) 有著本質上的差異
-> 有關 HTTP 的介紹，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../http/networking-http1)
+> 有關 HTTP 的介紹，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/network-http1)
 
 # References
 + 深入淺出設計模式 第二版(ISBN: 978-986-502-936-4)

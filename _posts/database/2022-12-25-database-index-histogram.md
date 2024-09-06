@@ -175,7 +175,7 @@ Hash index 顧名思義是用 hash 來達成的\
 因為下一頁的資料不一定在你的旁邊\
 因此這種操作屬於 **Random I/O**
 
-> 詳細可以參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-optimization-hardware)
+> 詳細可以參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database)
 
 ## SSTable(LSM Tree)
 另一種 index 實作的方式是稱為 SSTable(Sorted String Table)\
