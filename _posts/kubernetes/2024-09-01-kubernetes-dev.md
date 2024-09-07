@@ -3,7 +3,7 @@ title: Kubernetes 從零開始 - Local 開發測試好朋友 Skaffold
 date: 2024-09-01
 categories: [kubernetes]
 description: 本文介紹如何使用 Skaffold 來簡化本地開發的流程
-tags: [local development, yaml, skaffold, registry]
+tags: [local development, yaml, skaffold, registry, container, local cluster, k3d]
 math: true
 ---
 
@@ -37,7 +37,10 @@ math: true
 1. Kubernetes 能夠自動監控本地的程式碼，並且自動 build image
 2. 簡化手動推送 image 到 registry 的流程
 
-Skaffold 就是一個能夠解決這些問題的工具
+[Skaffold](https://skaffold.dev/) 就是一個能夠解決這些問題的工具
+
+![](https://skaffold.dev/images/workflow_local.png)
+> ref: [Architecture and Design](https://skaffold.dev/docs/design/)
 
 ## Skaffold Builder
 在你初始化 Skaffold 專案的時候(`$ skaffold init`)，他會需要你選擇 builder\
