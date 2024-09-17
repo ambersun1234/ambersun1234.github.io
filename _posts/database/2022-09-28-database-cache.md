@@ -207,6 +207,8 @@ Redis 可以拿來當作 cache、正規的 database 使用、streaming engine �
 
 除了上述特性，Redis 也提供 replication 以及 clustering 的功能
 
+> 有關 clustering 可以參考 [資料庫 - 如何正確設定高可用的 Redis](../../database/database-redis)
+
 ## Redis Data Structures
 Redis 提供了一套完整且常見的資料結構，常見的有以下
 + strings
