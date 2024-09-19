@@ -76,7 +76,7 @@ slave 收到 RDB 之後，會將資料寫入自己的資料庫\
 master 則會恢復寫入，並且將 buffer 裡面的指令一一執行\
 然後一樣同步給 slave
 
-![](/assets/img/posts/redis-sync.png)
+![](/assets/img/posts/redis-cow.png)
 
 > 上圖可以看到是使用 CoW(Copy on Write) 的方式來實現, 可參考 [資料庫 - Cache Strategies 與常見的 Solutions](../../database/database-cache#rdb---redis-database)
 
@@ -599,7 +599,7 @@ bc8ef33f59cb8181128cc49377c989b5e7cd71a5 172.20.0.3:7000@17000 master - 0 172659
 127.0.0.1:7000> 
 ```
 
-第一部首先我們要知道誰是 master，之後才可以手動 trigger failover\
+第一步首先我們要知道誰是 master，之後才可以手動 trigger failover\
 可以看到，我們連上的 node-1 剛好是 master(輸出旁邊有寫 `myself,master`)
 
 ![](/assets/img/posts/redis-cluster-failover.png)
@@ -623,6 +623,7 @@ bc8ef33f59cb8181128cc49377c989b5e7cd71a5 172.20.0.3:7000@17000 master - 0 172659
 可以看到 `172.20.0.2` 已經是新的 master 了
 
 # References
++ [Redis replication](https://redis.io/docs/latest/operate/oss_and_stack/management/replication/)
 + [Scale with Redis Cluster](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/)
 + [High availability with Redis Sentinel](https://redis.io/docs/latest/operate/oss_and_stack/management/sentinel/)
 + [Redis (六) - 主從複製、哨兵與叢集模式](https://hackmd.io/@tienyulin/redis-master-slave-replication-sentinel-cluster#%E4%B8%BB%E5%BE%9E%E8%A4%87%E8%A3%BD%E6%A8%A1%E5%BC%8F)
