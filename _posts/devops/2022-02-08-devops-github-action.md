@@ -95,6 +95,8 @@ on:
 CI 伺服器，可以是 local 或是 remote 的\
 GitHub Actions 提供了多種平台可以選擇(e.g. Linux, Windows 以及 macOS)
 
+> 有關 local runner 的部分可以參考 [DevOps - 透過 Helm Chart 建立你自己的 GitHub Action Local Runner \| Shawn Hsu](../../devops/devops-ga-arc)
+
 # Variables
 ## Environment Variables
 {% raw %}
