@@ -3,7 +3,7 @@ title: 資料庫 - 大型物件儲存系統 MinIO 簡介
 date: 2024-07-28
 categories: [database]
 description: 物件儲存在雲端叢生的環境裡扮演著重要的角色，本篇文章將會探究 MinIO 在設計上的一些特點，像是 Erasure Coding, Quorum, Object Healing 等等
-tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding]
+tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook]
 math: true
 ---
 
@@ -209,6 +209,111 @@ Erasure Coding 是針對資料的正確性的保護\
 MinIO 透過這兩個機制在各種意義上保護了你的資料\
 而他們的設計也是為了因應不同的狀況 不要搞混
 
+# MinIO Webhook Event
+不同系統之間的溝通對於 MinIO 來說可以透過 webhook 來達成\
+比如說你需要在 object 建立/刪除 的時候做一些事情\
+MinIO 提供除了 API webhook 的方式以外，也可以透過 RabbitMQ, Kafka 來做通知(可參考 [Bucket Notifications](https://min.io/docs/minio/linux/administration/monitoring/bucket-notifications.html?ref=blog.min.io) 裡面有完整的列表)
+
+> 可參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue)
+
+## Webhook Endpoint
+首先你需要啟用 webhook 功能並且設定 webhook URL\
+可以用 environment variable 來設定
+
+```yaml
+environment:
+  MINIO_NOTIFY_WEBHOOK_ENABLE: on
+  MINIO_NOTIFY_WEBHOOK_ENDPOINT: http://localhost:3000/minio/event
+```
+
+那你的 webhook server 需要什麼格式呢？\
+URL 並沒有特定規範，但是它會傳一個 JSON 格式的資料給你\
+所以唯一的限制是這個 endpoint 要是 HTTP `POST` 的
+
+它回傳的資料格式可以參考 [Event-Driven Architecture: MinIO Event Notification Webhooks using Flask](https://blog.min.io/minio-webhook-event-notifications/)\
+不過我用 node express 實際測起來長的不太一樣就是(可能個平台不同)
+
+## Register Notification Event
+你可以透過 mc 工具來註冊 notification event
+
+```shell
+$ mc alias set myminio http://localhost:9000 minio miniominio
+$ mc event add myminio/mybucket arn:minio:sqs::_:webhook --event put,get,delete
+```
+
+其中 arn 是 [Amazon Resource Name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html) 格式\
+基本上你可以直接使用上述例子中的格式即可
+
+> MinIO 是透過 PBAC 來控制權限的，而他是用 ARN\
+> 可以參考 [網頁設計三兩事 - 基礎權限管理 RBAC, ABAC 與 PBAC \| Shawn Hsu](../../website/website-permission)
+
+上述在 `mybucket` 底下註冊了 `put`, `get`, `delete` 這三個事件\
+因此只要這三個事件發生，MinIO 就會通知到你的 webhook server
+
+```
+Server running on port 3000
+2024-10-06T17:52:43.957Z Received webhook s3:ObjectCreated:Put event on key mybucket/chiai.jpg
+```
+
+當你都設定完成之後，基本上就可以收到資料了\
+以上的 log 是我的簡易 express server 產出的，像我只有把 event name 以及 key 印出來
+
+> 詳細的實作可以參考 [ambersun1234/blog-labs/minio-webhook](https://github.com/ambersun1234/blog-labs/tree/master/minio-webhook)
+
+### Event Notification with MinIO Go Client
+上一節 [Register Notification Event](#register-notification-event) 是透過 mc 工具來註冊 notification event\
+在大多數情況下你要手動註冊或者是透過啟另一個 container 自動做掉都顯得不是那麼優雅\
+你可以透過 MinIO Golang SDK 做掉這一段就是
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/minio/minio-go/v7/pkg/notification"
+)
+
+func main() {
+	// connect to minio
+	endpoint := "localhost:9000"
+	accessKeyID := "minio"
+	secretAccess := "miniominio"
+
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccess, ""),
+		Secure: false,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	queueArn := notification.NewArn("minio", "sqs", "", "_", "webhook")
+
+	queueConfig := notification.NewConfig(queueArn)
+	queueConfig.AddEvents(notification.ObjectRemovedDelete, notification.ObjectCreatedPut)
+
+	cfg := notification.Configuration{}
+	cfg.AddQueue(queueConfig)
+
+	bucketName := "mybucket"
+	fmt.Printf("creating minio bucket... %v\n", minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{}))
+	fmt.Printf("registering webhook... %v\n", minioClient.SetBucketNotification(context.Background(), bucketName, cfg))
+}
+```
+
+event 相關設定可以透過 Golang SDK 達成\
+以達到更高的彈性設置，從上述你可以看到，我指定的 event 是 `ObjectRemovedDelete` 以及 `ObjectCreatedPut`\
+並且是針對 `minio:sqq::_:webhook` 這個 ARN 所設定的
+
+notification event 是在 bucket level 設定的\
+不同的 bucket 是不會套用到同一套設定的
+
+> 詳細的實作可以參考 [ambersun1234/blog-labs/minio-webhook](https://github.com/ambersun1234/blog-labs/tree/master/minio-webhook)
+
 # Debug MinIO on Kubernetes
 有的時後你可能會遇到一些問題，比方說無法連線之類的\
 在 K8s 裡，你沒辦法從 host 直接開 GUI 看 log\
@@ -258,3 +363,4 @@ mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可
 + [erasure coding (EC)](https://www.techtarget.com/searchstorage/definition/erasure-coding)
 + [Requirements to Set Up Bucket Replication](https://min.io/docs/minio/kubernetes/upstream/administration/bucket-replication/bucket-replication-requirements.html)
 + [Debugging MinIO Installs](https://blog.min.io/debugging-minio-installs/)
++ [Event-Driven Architecture: MinIO Event Notification Webhooks using Flask](https://blog.min.io/minio-webhook-event-notifications/)
