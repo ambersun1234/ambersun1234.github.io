@@ -91,6 +91,9 @@ MinIO 一樣是先 `一起開寫`，但是當主節點完成之後就會 return
 + 非同步 :arrow_right: 我寫完才開始同步
 + 同步 :arrow_right: 一起同步
 
+## Retention Policy
+TODO
+
 ## Versioning
 儲存在 MinIO 的檔案是可以被版本控制的\
 也就是說所有的版本都會被保存下來\
@@ -242,9 +245,20 @@ $ mc event add myminio/mybucket arn:minio:sqs::_:webhook --event put,get,delete
 ```
 
 其中 arn 是 [Amazon Resource Name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html) 格式\
-基本上你可以直接使用上述例子中的格式即可
+arn 的格式為 `arn:partition:service:region:account-id:resource-id`
 
-> MinIO 是透過 PBAC 來控制權限的，而他是用 ARN\
+其中比較會有疑問的會是 account_id\
+你可以透過內建的 mc 工具查看當前 sqs 的 arn 設定
+
+```shell
+$ mc alias set myminio http://localhost:9000 minio miniominio
+$ mc admin info myminio --json
+```
+
+找到 `sqsARN`(通常在最上面的輸出) 你就可以看到整串 arn 的數值\
+而那個底線就是 account_id
+
+> MinIO 是透過 PBAC 來控制權限的，而他是用 ARN 表示 resource\
 > 可以參考 [網頁設計三兩事 - 基礎權限管理 RBAC, ABAC 與 PBAC \| Shawn Hsu](../../website/website-permission)
 
 上述在 `mybucket` 底下註冊了 `put`, `get`, `delete` 這三個事件\
@@ -364,3 +378,4 @@ mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可
 + [Requirements to Set Up Bucket Replication](https://min.io/docs/minio/kubernetes/upstream/administration/bucket-replication/bucket-replication-requirements.html)
 + [Debugging MinIO Installs](https://blog.min.io/debugging-minio-installs/)
 + [Event-Driven Architecture: MinIO Event Notification Webhooks using Flask](https://blog.min.io/minio-webhook-event-notifications/)
++ [Publish Events to Webhook](https://min.io/docs/minio/linux/administration/monitoring/publish-events-to-webhook.html#minio-bucket-notifications-publish-webhook)
