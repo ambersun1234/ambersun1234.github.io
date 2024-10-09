@@ -3,7 +3,7 @@ title: 資料庫 - 大型物件儲存系統 MinIO 簡介
 date: 2024-07-28
 categories: [database]
 description: 物件儲存在雲端叢生的環境裡扮演著重要的角色，本篇文章將會探究 MinIO 在設計上的一些特點，像是 Erasure Coding, Quorum, Object Healing 等等
-tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook]
+tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook, lifecycle management]
 math: true
 ---
 
@@ -39,6 +39,8 @@ MinIO 為了應對高可用性以及高效能的場景\
 他支援多台伺服器組成 cluster 的架構\
 一個 cluster deployment 可以擁有多個 `server pool`\
 每個 `server pool` 可以擁有多個 `minio server`(又稱為 node) 以及 [Erasure Set](#erasure-set)(儲存用)
+
+![](https://min.io/resources/img/products/hybrid-cloud-storage/versioning/architecture-animation.gif)
 
 ## Active-Active vs Active-Passive Replication
 節點之間會進行資料的同步\
@@ -90,9 +92,6 @@ MinIO 一樣是先 `一起開寫`，但是當主節點完成之後就會 return
 所以最終的差別在於，放入 [replication queue](https://min.io/docs/minio/kubernetes/upstream/administration/bucket-replication.html#minio-replication-process) 的時間點不同
 + 非同步 :arrow_right: 我寫完才開始同步
 + 同步 :arrow_right: 一起同步
-
-## Retention Policy
-TODO
 
 ## Versioning
 儲存在 MinIO 的檔案是可以被版本控制的\
@@ -190,14 +189,6 @@ Erasure Coding 不需要 100% 複製你的資料就可以做到同等的事情
 取而代之的則是 overhead 會增加\
 不過這就是一個 trade-off 啦
 
-# Object Healing
-MinIO 透過 [Erasure Coding](#erasure-coding) 用以保護你的資料\
-具體來說，MinIO 會自動地進行資料的修復
-
-第一個時間點自然是當你存取資料的時候，MinIO 會檢查資料是否正確\
-或者是透過定期的掃描來檢查(透過 Object Scanner)\
-最後則是 admin 手動觸法掃描
-
 # Erasure Coding with Quorum?
 要注意的是這兩個各自解決了不同的問題
 
@@ -211,6 +202,57 @@ Erasure Coding 是針對資料的正確性的保護\
 
 MinIO 透過這兩個機制在各種意義上保護了你的資料\
 而他們的設計也是為了因應不同的狀況 不要搞混
+
+# Object Healing
+MinIO 透過 [Erasure Coding](#erasure-coding) 用以保護你的資料\
+具體來說，MinIO 會自動地進行資料的修復
+
+第一個時間點自然是當你存取資料的時候，MinIO 會檢查資料是否正確\
+或者是透過定期的掃描來檢查(透過 Object Scanner)\
+最後則是 admin 手動觸法掃描
+
+# Object Lifecycle Management
+當系統內部的資料越來越多的時候，手動管理已經不太現實\
+MinIO 提供了兩種方式管理 object 的生命週期
+
+## Object Expiration
+最簡單的方式就是設定 object 的過期時間\
+這些 object 會在過期之後被刪除(由 Object Scanner 自動執行)
+
+lifecycle 的設定是綁定在 bucket level 的\
+但是你可以針對不同的 resource 設定不同的 rule
+
+```go
+minioClient.SetBucketLifecycle(context.Background(), bucketName, &lifecycle.Configuration{
+    Rules: []lifecycle.Rule{
+        {
+            ID:     "expire",
+            Status: "Enabled",
+            Expiration: lifecycle.Expiration{
+                Days: 1,
+            },
+        },
+    },
+})
+```
+
+上述我設定了 object 過期時間為 1 天\
+要注意到的是，lifecycle management 的設定時間單位是 `day`\
+目前好像沒辦法進行調整
+
+並且由於 Object Scanner 是一個 low priority 的 process\
+所以它並沒有辦法很精準的在時間到的時候就刪除\
+因為他要盡量避免影響到 client 的操作
+
+## Object Tiering(Object Transition)
+另一種方式是把 object 搬家，稱為 object tiering\
+[Object Expiration](#object-expiration) 是直接刪除 object，用以應付資料過多的問題\
+而 Object Tiering 則是將 object 搬到不同的 storage class\
+可能是從 SSD 搬到 HDD cluster 這種的冷儲存用
+
+> 比方說有一些資料需要留存個幾年的時間用於 auditing
+
+搬家的 object 仍然可以被存取，因為他有保存相對應的 link
 
 # MinIO Webhook Event
 不同系統之間的溝通對於 MinIO 來說可以透過 webhook 來達成\
@@ -283,39 +325,39 @@ Server running on port 3000
 package main
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/minio/minio-go/v7/pkg/notification"
+    "github.com/minio/minio-go/v7"
+    "github.com/minio/minio-go/v7/pkg/credentials"
+    "github.com/minio/minio-go/v7/pkg/notification"
 )
 
 func main() {
-	// connect to minio
-	endpoint := "localhost:9000"
-	accessKeyID := "minio"
-	secretAccess := "miniominio"
+    // connect to minio
+    endpoint := "localhost:9000"
+    accessKeyID := "minio"
+    secretAccess := "miniominio"
 
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccess, ""),
-		Secure: false,
-	})
-	if err != nil {
-		panic(err)
-	}
+    minioClient, err := minio.New(endpoint, &minio.Options{
+        Creds:  credentials.NewStaticV4(accessKeyID, secretAccess, ""),
+        Secure: false,
+    })
+    if err != nil {
+        panic(err)
+    }
 
-	queueArn := notification.NewArn("minio", "sqs", "", "_", "webhook")
+    queueArn := notification.NewArn("minio", "sqs", "", "_", "webhook")
 
-	queueConfig := notification.NewConfig(queueArn)
-	queueConfig.AddEvents(notification.ObjectRemovedDelete, notification.ObjectCreatedPut)
+    queueConfig := notification.NewConfig(queueArn)
+    queueConfig.AddEvents(notification.ObjectRemovedDelete, notification.ObjectCreatedPut)
 
-	cfg := notification.Configuration{}
-	cfg.AddQueue(queueConfig)
+    cfg := notification.Configuration{}
+    cfg.AddQueue(queueConfig)
 
-	bucketName := "mybucket"
-	fmt.Printf("creating minio bucket... %v\n", minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{}))
-	fmt.Printf("registering webhook... %v\n", minioClient.SetBucketNotification(context.Background(), bucketName, cfg))
+    bucketName := "mybucket"
+    fmt.Printf("creating minio bucket... %v\n", minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{}))
+    fmt.Printf("registering webhook... %v\n", minioClient.SetBucketNotification(context.Background(), bucketName, cfg))
 }
 ```
 
@@ -379,3 +421,6 @@ mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可
 + [Debugging MinIO Installs](https://blog.min.io/debugging-minio-installs/)
 + [Event-Driven Architecture: MinIO Event Notification Webhooks using Flask](https://blog.min.io/minio-webhook-event-notifications/)
 + [Publish Events to Webhook](https://min.io/docs/minio/linux/administration/monitoring/publish-events-to-webhook.html#minio-bucket-notifications-publish-webhook)
++ [MinIO Feature Overview: Object Lifecycle Management](https://resources.min.io/c/object-lifecycle-management?x=p9k0ng)
++ [Object Scanner](https://min.io/docs/minio/linux/operations/concepts/scanner.html)
++ [Object Lifecycle Management](https://min.io/docs/minio/linux/administration/object-management/object-lifecycle-management.html)
