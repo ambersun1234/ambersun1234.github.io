@@ -236,13 +236,29 @@ minioClient.SetBucketLifecycle(context.Background(), bucketName, &lifecycle.Conf
 })
 ```
 
+![](/assets/img/posts/minio2.jpg)
+
 上述我設定了 object 過期時間為 1 天\
 要注意到的是，lifecycle management 的設定時間單位是 `day`\
 目前好像沒辦法進行調整
 
-並且由於 Object Scanner 是一個 low priority 的 process\
-所以它並沒有辦法很精準的在時間到的時候就刪除\
-因為他要盡量避免影響到 client 的操作
+此外，lifecycle subsystem 是每 24 小時才會掃描一次\
+意思是說，當你今天 15:00 的時候設定 object 過期時間為 1 天\
+你有可能需要再等一天的時間，object 才會被刪除
+
+![](/assets/img/posts/minio.jpg)
+
+上圖的 `Expiration` 是 lifecycle 的設定\
+你可以看到，資料是在 `10-09` 建立，但是排定的刪除日期卻是 `10-11`
+
+> 並且由於 Object Scanner 是一個 low priority 的 process\
+> 所以它並沒有辦法很精準的在時間到的時候就刪除\
+> 因為他要盡量避免影響到 client 的操作
+
+需要注意到的是，`PutObject` 裡面你可以設定 `Expires`\
+但它不是同一個東西\
+文件上我沒有找到相對應的參數說明，我猜測他是跟 cache 類似的作用，並不會真的刪除 object\
+上圖你也很清楚的看到 `Expires` 的時間老早已經過期了，但是 object 仍然存在
 
 ## Object Tiering(Object Transition)
 另一種方式是把 object 搬家，稱為 object tiering\
@@ -424,3 +440,4 @@ mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可
 + [MinIO Feature Overview: Object Lifecycle Management](https://resources.min.io/c/object-lifecycle-management?x=p9k0ng)
 + [Object Scanner](https://min.io/docs/minio/linux/operations/concepts/scanner.html)
 + [Object Lifecycle Management](https://min.io/docs/minio/linux/administration/object-management/object-lifecycle-management.html)
++ [lifecycle does not work](https://github.com/minio/minio/issues/9240)
