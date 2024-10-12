@@ -150,8 +150,21 @@ JSON patch 是一個 array, 每個 object 包含 `op`, `path`, `value`\
 ]
 ```
 
-然後
+如果是遇到 array, 假設是
+```yaml
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - image: nginx:1.14.2
+```
 
+你想要換 image\
+他的 JSON patch 會是 `/spec/containers/0/image`
+
+<hr>
+
+patch 的指令會長這樣
 ```shell
 $ kubectl patch HelmChart myredis --type json --patch-file ./patch.json
 ```
