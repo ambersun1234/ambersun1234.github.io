@@ -31,7 +31,7 @@ math: true
 太多的問題需要考慮，於是專門特化的檔案儲存系統就出現了
 
 # MinIO
-[Minio](https://min.io/) 是一個開源的物件儲存系統\
+[Minio](https://min.io/) 是一個開源的物件儲存系統並且兼容 S3 規格\
 為了高可用性以及高效能，所有的分散式系統的設計基本上他都有\
 不過有一些不同
 
@@ -299,7 +299,13 @@ URL 並沒有特定規範，但是它會傳一個 JSON 格式的資料給你\
 所以唯一的限制是這個 endpoint 要是 HTTP `POST` 的
 
 它回傳的資料格式可以參考 [Event-Driven Architecture: MinIO Event Notification Webhooks using Flask](https://blog.min.io/minio-webhook-event-notifications/)\
-不過我用 node express 實際測起來長的不太一樣就是(可能個平台不同)
+需要注意的是，不是每一種類型的 event 都會回傳同等的資料\
+比如說針對 delete object 的 event，根據 S3 的設計他是不會帶 metadata 的\
+可參考 [s3:ObjectRemoved:Delete does not include the context of the deleted object userMetadata, contentType, eTag, ...](https://github.com/minio/minio/issues/20478)
+
+也就是說你可能不會有足夠的資訊區分不同的 event\
+針對 single endpoint multiple event，你能依靠的資訊有限\
+這時候除了利用 user metadata(e.g. tags)，你也可以透過 prefix 以及 suffix 來幫助你
 
 ## Register Notification Event
 你可以透過 mc 工具來註冊 notification event
