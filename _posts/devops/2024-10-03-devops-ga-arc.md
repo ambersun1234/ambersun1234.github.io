@@ -240,11 +240,14 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:6.0 AS build
 # source: https://github.com/actions/runner/releases
 # ex: 2.303.0
 ARG RUNNER_VERSION="2.320.0"
-ARG RUNNER_ARCH="x64"
+ARG TARGETARCH
 # Replace value with the latest runner-container-hooks release version
 # source: https://github.com/actions/runner-container-hooks/releases
 # ex: 0.3.1
 ARG RUNNER_CONTAINER_HOOKS_VERSION="0.6.1"
+
+ARG DOCKER_VERSION=27.1.1
+ARG BUILDX_VERSION=0.16.2
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV RUNNER_MANUALLY_TRAP_SIG=1
@@ -254,7 +257,9 @@ WORKDIR /home/runner
 
 RUN apt update -y && apt install curl unzip -y
 
-RUN curl -f -L -o runner.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz \
+RUN export RUNNER_ARCH=${TARGETARCH} \
+    && if [ "$RUNNER_ARCH" = "amd64" ]; then export RUNNER_ARCH=x64 ; fi \
+    && curl -f -L -o runner.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz \
     && tar xzf ./runner.tar.gz \
     && rm runner.tar.gz
 
@@ -262,11 +267,21 @@ RUN curl -f -L -o runner-container-hooks.zip https://github.com/actions/runner-c
     && unzip ./runner-container-hooks.zip -d ./k8s \
     && rm runner-container-hooks.zip
 
+RUN export RUNNER_ARCH=${TARGETARCH} \
+    && if [ "$RUNNER_ARCH" = "amd64" ]; then export DOCKER_ARCH=x86_64 ; fi \
+    && if [ "$RUNNER_ARCH" = "arm64" ]; then export DOCKER_ARCH=aarch64 ; fi \
+    && curl -fLo docker.tgz https://download.docker.com/linux/static/stable/${DOCKER_ARCH}/docker-${DOCKER_VERSION}.tgz \
+    && tar zxvf docker.tgz \
+    && rm -rf docker.tgz \
+    && mkdir -p /usr/local/lib/docker/cli-plugins
+
+RUN curl -fLo /usr/local/lib/docker/cli-plugins/docker-buildx \
+    "https://github.com/docker/buildx/releases/download/v${BUILDX_VERSION}/buildx-v${BUILDX_VERSION}.linux-${TARGETARCH}" \
+    && chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
+
 FROM mcr.microsoft.com/dotnet/runtime-deps:6.0 AS final
 
 WORKDIR /home/runner
-
-COPY --from=build /home/runner /home/runner
 
 RUN adduser --disabled-password --gecos "" --uid 1001 runner \
     && groupadd docker --gid 123 \
@@ -275,12 +290,19 @@ RUN adduser --disabled-password --gecos "" --uid 1001 runner \
     && echo "%sudo   ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers \
     && echo "Defaults env_keep += \"DEBIAN_FRONTEND\"" >> /etc/sudoers
 
-RUN chown -R runner /home/runner
+COPY --from=build /home/runner /home/runner
+COPY --from=build /usr/local/lib/docker/cli-plugins/docker-buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 RUN apt update -y && apt install ssh build-essential git -y
 
+RUN chown -R runner /home/runner
+RUN install -o root -g root -m 755 docker/* /usr/bin/ && rm -rf docker
+
 USER runner
 ```
+
+> 你也可以手動 build\
+> `$ docker build -t ambersun1234/arc-runner:latest -f Dockerfile .`
 
 runner base image 有兩個大要求，就是必須要有 [actions/runner](https://github.com/actions/runner) 以及 [actions/runner-container-hooks](https://github.com/actions/runner-container-hooks) 兩者的 binary 在 `/home/runner` 底下\
 所以前半的 multi-stage build 就是在做這件事情
@@ -288,6 +310,19 @@ runner base image 有兩個大要求，就是必須要有 [actions/runner](https
 後面的部分就是安裝一些我需要的工具，像是 `ssh`, `build-essential`, `git` 之類的\
 然後要設定 runner user 用以執行
 
+## Docker in Docker
+然後如果你的 action 需要執行 build image 之類的事情\
+你需要開啟 [Docker in Docker mode](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/deploying-runner-scale-sets-with-actions-runner-controller#using-docker-in-docker-mode)
+
+> 上面的 Dockerfile 我們有安裝了 `docker` 以及 `docker-buildx`
+
+透過設定 values.yaml(往下看有完整範例)
+```yaml
+containerMode:
+  type: "dind
+```
+
+## Install
 基本上你可以參考 [Creating your own runner image](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/about-actions-runner-controller#creating-your-own-runner-image) 進行魔改就可以了\
 但是呢，這篇沒跟你講怎麼用
 
@@ -297,6 +332,8 @@ runner base image 有兩個大要求，就是必須要有 [actions/runner](https
 ```yaml
 githubConfigUrl: https://github.com/ORGANIZATION
 githubConfigSecret: arc-secrets
+containerMode:
+  type: "dind"
 template:
   spec:
     containers:
@@ -308,6 +345,11 @@ controllerServiceAccount:
   namespace: arc-runners
   name: arc-controller-gha-rs-controller
 ```
+
+> 上述 values.yaml 啟用了 Docker in Docker mode\
+> 設定了 runner image 為 `ambersun1234/arc-runner`\
+> config secret 以及 config url\
+> 你可以根據你的需要適當的進行微調
 
 安裝也一樣
 ```shell
@@ -329,3 +371,4 @@ $ helm install "self-hosted" \
 + [Runner Scale Set: "No gha-rs-controller deployment found" when rendering Helm chart](https://github.com/actions/actions-runner-controller/issues/3043)
 + [Creating your own runner image](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/about-actions-runner-controller#creating-your-own-runner-image)
 + [Configuring the runner image](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/deploying-runner-scale-sets-with-actions-runner-controller#configuring-the-runner-image)
++ [Using Docker-in-Docker mode](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/deploying-runner-scale-sets-with-actions-runner-controller#using-docker-in-docker-mode)
