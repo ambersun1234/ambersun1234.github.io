@@ -1,0 +1,28 @@
+name: Create Search Index
+
+on: workflow_dispatch
+
+jobs:
+  create_search_index:
+    runs-on: ubuntu-latest
+    env:
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      CLIENT_EMAIL: ${{ secrets.CLIENT_EMAIL }}
+    steps:
+      - uses: actions/setup-node@v4
+      - name: create json file
+        run: |
+          mkdir ~/.gis
+          cat << EOF > ~/.gis/service_account.json
+          {
+            "private_key": "$(printenv PRIVATE_KEY)",
+            "client_email": "$(printenv CLIENT_EMAIL)"
+          }
+          EOF
+      - name: Install Google Indexing Script
+        run: |
+          npm install -g google-indexing-script
+      - name: Create Search Index
+        continue-on-error: true
+        run: |
+          google-indexing-script https://ambersun1234.github.io
