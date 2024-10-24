@@ -15,4 +15,4 @@ All of the content is based on my own experiences and insights that I have learn
 Hope you'll find something interesting here :)
 
 # Resume
-<iframe src="https://drive.google.com/file/d/1ag8KNak-MwvyMoR7g6ZblUiBZSrF6CKM/preview" width="100%" height="1215px" allow="autoplay"></iframe>
+<iframe src="https://drive.google.com/file/d/1ag8KNak-MwvyMoR7g6ZblUiBZSrF6CKM/preview" width="100%" height="1230px" allow="autoplay"></iframe>
