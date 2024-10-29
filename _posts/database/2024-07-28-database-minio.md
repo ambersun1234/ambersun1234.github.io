@@ -294,6 +294,8 @@ environment:
   MINIO_NOTIFY_WEBHOOK_ENDPOINT: http://localhost:3000/minio/event
 ```
 
+> 用 `$ mc admin config get myminio` 來查看目前的設定
+
 那你的 webhook server 需要什麼格式呢？\
 URL 並沒有特定規範，但是它會傳一個 JSON 格式的資料給你\
 所以唯一的限制是這個 endpoint 要是 HTTP `POST` 的
