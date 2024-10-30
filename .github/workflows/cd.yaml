@@ -95,6 +95,7 @@ jobs:
 
   create_search_index:
     runs-on: ubuntu-latest
+    needs: [build_and_deploy]
     env:
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
       CLIENT_EMAIL: ${{ secrets.CLIENT_EMAIL }}
