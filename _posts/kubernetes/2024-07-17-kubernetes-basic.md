@@ -345,6 +345,8 @@ control plane 必須管理底下所有的 node 用以進行諸如 scheduling 等
     + 對於 k8s cluster 來說，我們需要一個 [controller](https://kubernetes.io/docs/concepts/architecture/controller/) 用以監控 cluster 的 `state(狀態)`
     + 透過 controller 這個 process 一點一點的將 cluster state 導向 desired state
 
+> 有關 controller 的介紹可以參考 [Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理](../../kubernetes/kubernetes-controller)
+
 ## Node
 node(節點) 是組成 cluster 的重要單位，節點可以是 `virtual machine` 或者是 `physical machine`\
 每一個 node 都是由 control plane 直接控制的, 而 node 裡面包含有 pod 用以運行 container
