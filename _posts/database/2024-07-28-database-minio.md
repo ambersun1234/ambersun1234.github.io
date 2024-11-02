@@ -41,6 +41,7 @@ MinIO 為了應對高可用性以及高效能的場景\
 每個 `server pool` 可以擁有多個 `minio server`(又稱為 node) 以及 [Erasure Set](#erasure-set)(儲存用)
 
 ![](https://min.io/resources/img/products/hybrid-cloud-storage/versioning/architecture-animation.gif)
+> ref: [MinIO object storage provides AWS S3 versioning compatibility](https://min.io/product/object-versioning-bucket-versioning)
 
 ## Active-Active vs Active-Passive Replication
 節點之間會進行資料的同步\
@@ -394,7 +395,7 @@ func main() {
 
 event 相關設定可以透過 Golang SDK 達成\
 以達到更高的彈性設置，從上述你可以看到，我指定的 event 是 `ObjectRemovedDelete` 以及 `ObjectCreatedPut`\
-並且是針對 `minio:sqq::_:webhook` 這個 ARN 所設定的
+並且是針對 `minio:sqs::_:webhook` 這個 ARN 所設定的
 
 notification event 是在 bucket level 設定的\
 不同的 bucket 是不會套用到同一套設定的
