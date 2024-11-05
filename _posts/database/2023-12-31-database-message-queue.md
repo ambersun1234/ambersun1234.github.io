@@ -632,6 +632,28 @@ consumer 的 for loop 裡面，你可以選擇執行完再進行 ACK\
 > 這裡手動 ACK 是怕 consumer 直接 panic(nil pointer dereference 之類的), 資料丟失的問題\
 > retry 是因為處理失敗，所以要重新 re-enqueue([Re-enqueue Message](#re-enqueue-message))
 
+### Auto Reconnect
+網路超級不可靠，它會一直斷斷續續的\
+我自身的例子來說，本地 docker 開發連線都非常的穩定\
+一旦上到 server 就會開始時常斷線\
+擁有自動重新連線的功能是非常重要的
+
+RabbitMQ 你可以透過 [NotifyClose](https://pkg.go.dev/github.com/streadway/amqp#Connection.NotifyClose) 監聽 connection close 的事件(channel 或 connection)\
+寫起來大概長這樣
+
+```go
+for {
+    select {
+    case <-r.conn.NotifyClose(make(chan *amqp.Error)):
+        fmt.Println("RabbitMQ connection closed, reconnecting...")
+        // do reconnect
+
+    default:
+        // nop
+    }
+}
+```
+
 ## Example
 ### Installation
 一樣使用 docker 將服務跑起來
