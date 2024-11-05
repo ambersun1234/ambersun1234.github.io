@@ -82,6 +82,7 @@ for {
             if err := callback(string(msg.Body)); err != nil {
                 mq.logger.Error("Failed to process message", zap.Error(err))
             }
+            msg.Ack(false)
         }
     }
 ```
@@ -682,13 +683,14 @@ func publishToMessageQueue(ch *amqp.Channel) {
 }
 
 func consumeFromMessageQueue(ch *amqp.Channel) {
-    queue, err := ch.Consume("test", "", true, false, false, false, nil)
+    queue, err := ch.Consume("test", "", false, false, false, false, nil)
     if err != nil {
         log.Panic("Failed to consume from queue")
     }
 
     for msg := range queue {
         log.Printf("Received message: %s", msg.Body)
+        msg.Ack(false)
     }
 }
 
