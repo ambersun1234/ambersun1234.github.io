@@ -1,5 +1,5 @@
 ---
-title: 網頁設計三兩事 - 基礎權限管理 RBAC, ABAC 與 PBAC
+title: 網頁程式設計三兩事 - 基礎權限管理 RBAC, ABAC 與 PBAC
 date: 2024-08-06
 categories: [website]
 description: 龐大的系統架構下要如何有效率的進行權限的管理是值得程式設計師們共同思考的問題，本篇文章將會帶你學習權限管理的基礎概念，以及如何透過 Casbin 來實作權限管理
