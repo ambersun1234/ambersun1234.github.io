@@ -31,6 +31,8 @@ math: true
 所有的 Resource 都必須要轉型成 unstructed object 來操作\
 本質上它只是 `map[string]any`
 
+> 有關 CRD 的介紹可以參考 [Kubernetes 從零開始 - client-go 實操 CRD \| Shawn Hsu](../../kubernetes/kubernetes-crd)
+
 ## Unstructured Object
 如果你用 [operator-sdk](https://sdk.operatorframework.io/docs/building-operators/golang/tutorial/) 建構 Custom Resource\
 你會擁有一個 Resource structure 可以直接操作，client 也可以直接吃這個 structure\

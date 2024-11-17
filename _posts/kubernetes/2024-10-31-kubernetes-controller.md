@@ -261,6 +261,8 @@ deployment 有自己的 `Deployment Controller`，job 也有自己的 `Job Contr
 為了可以更好的管理自己的 Custom Resource，我們可以透過 CRD (Custom Resource Definition) 來定義自己的 Resource\
 要管理這些自定義的 Resource 的狀態，我們就需要自己的 controller 來管理
 
+> 有關 CRD 的介紹可以參考 [Kubernetes 從零開始 - client-go 實操 CRD \| Shawn Hsu](../../kubernetes/kubernetes-crd)
+
 這種自定義的 controller 通常被稱為 Operator
 
 > 每個 resource 一定要有 controller 嗎？\
