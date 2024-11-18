@@ -134,6 +134,46 @@ spec:
 `$ kubectl apply -f crd.yaml`\
 建立 CRD 之後你的所有 kubectl 操作都跟內建的 Resource 一樣
 
+## Cluster Role
+要能夠操作 CRD 你需要一定的權限\
+一般情況下你是 cluster admin 你不一定需要設定 rule 才可以操作 CRD\
+對於服務來說，你需要設定一個 `ClusterRole` 來讓你的服務可以操作 CRD
+
+Kubernetes 本身是使用 RBAC 來控制權限\
+所以寫起來就是 `你有沒有權限去操作這個 Resource，你可以做什麼操作`
+
+當然 ClusterRole 本身需要搭配 ClusterRoleBinding 以及 ServiceAccount 來使用
+
+> `ClusterRole` 作用域是整個 cluster\
+> `Role` 作用域是 namespace
+
+```yaml
+kind: ClusterRole
+metadata:
+  name: foo-editor-role
+rules:
+- apiGroups:
+  - foo.example.com
+  resources:
+  - foos
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - foo.example.com
+  resources:
+  - foos/status
+  verbs:
+  - get
+```
+
+> 你可以使用 `$ kubectl auth can-i get foo` 測試你有沒有權限
+
 ## client-go with CRD
 ```go
 func (s *Service) CreateFoo(name, value string) error {
@@ -176,3 +216,4 @@ client-go 在建立 CR 的時候需要使用 `dynamic-client`\
 + [Extend the Kubernetes API with CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/)
 + [Kubernetes API Aggregation Layer](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/)
 + [Set up an Extension API Server](https://kubernetes.io/docs/tasks/extend-kubernetes/setup-extension-api-server/)
++ [Role and ClusterRole](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole)
