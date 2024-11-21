@@ -624,6 +624,9 @@ RabbitMQ 會使用 ACK 來確保資料被正確的消化(可參考 [重新認識
 自動 ACK 很方便，但是當 consumer 直接 crash 的時候，資料就會丟失了\
 因為你已經自動確認消化了，producer 就會把資料刪掉
 
+> 如果你 disable auto ack 要記得手動 ACK\
+> 不然東西會卡住
+
 但是 consumer panic 可能並非你的本意，所以你可以選擇手動 ACK 避免這個問題\
 consumer 的 for loop 裡面，你可以選擇執行完再進行 ACK\
 這樣既可以確保資料被正確的消化，又可以避免 application 直接 crash 資料丟失的問題
