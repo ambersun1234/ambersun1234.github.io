@@ -129,12 +129,11 @@ spec:
 需要注意的是 Resource name 需要使用 **複數**\
 而這個名字需要符合 DNS subdomain 的規則(可參考 [DNS Subdomain Names](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names))
 
-<hr>
-
+## Installation
 `$ kubectl apply -f crd.yaml`\
 建立 CRD 之後你的所有 kubectl 操作都跟內建的 Resource 一樣
 
-## Cluster Role
+# CRD Cluster Role
 要能夠操作 CRD 你需要一定的權限\
 一般情況下你是 cluster admin 你不一定需要設定 rule 才可以操作 CRD\
 對於服務來說，你需要設定一個 `ClusterRole` 來讓你的服務可以操作 CRD
@@ -174,7 +173,7 @@ rules:
 
 > 你可以使用 `$ kubectl auth can-i get foo` 測試你有沒有權限
 
-## client-go with CRD
+# CRD Example with client-go
 ```go
 func (s *Service) CreateFoo(name, value string) error {
     foo := &crd.Foo{
