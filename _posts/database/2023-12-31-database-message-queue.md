@@ -233,6 +233,11 @@ exchange 有 5 種模式(direct, topic, fanout, headers 以及 system)，但是�
     + subscriber 可以根據自己有興趣的主題(topic) 進行訂閱
     + 而它就是透過 [binding](#binding) 定義的 pattern 進行轉送的
 
+> 既然我可以直接將 message 送到 [message queue](#message-queue) 上(default exchange)，那為什麼還要經過 exchange 呢?\
+> 考慮 fan-out 的情況，如果多個 consumer 都對同一件事情有興趣\
+> 手動控制需要丟到很多不同的 [message queue](#message-queue) 很顯然是不合理的\
+> 透過 exchange 做 routing 可以簡化這個部份，設計也更合理(i.e. topic exchange)
+
 #### message queue
 message queue 主要負責儲存資料，直到它被安全的被 consumer 處理掉\
 它可以儲存在 memory 或者是 disk 裡面
