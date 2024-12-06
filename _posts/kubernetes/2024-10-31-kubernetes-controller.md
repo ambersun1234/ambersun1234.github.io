@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理
 date: 2024-10-31
 categories: [kubernetes]
-tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk]
+tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer]
 description: Kubernetes Controller 是實現 self-healing 的核心，透過 controller 來管理 cluster 的狀態。本文將介紹 Kubernetes Object 以及 Kubernetes Controller 的概念，並且透過 Operator SDK 來實作一個簡單的 operator
 math: true
 ---
@@ -272,6 +272,71 @@ deployment 有自己的 `Deployment Controller`，job 也有自己的 `Job Contr
 HelmController 是用來管理 `HelmChart` 以及 `HelmRelease` 這兩個 resource\
 而這就是自己寫一個 controller 一個很好的例子
 
+## Finite State Machine(FSM)
+我在撰寫 Controller 的時候發現，既然要管理狀態，那是不是可以考慮使用 `有限狀態機`?\
+每一個狀態的轉移都是有一定的規則的，即使每個 CRD 都不盡相同，但它一定可以被歸類出來\
+比如說，`pending` -> `running` -> `finished` 這樣的狀態轉移
+
+這些狀態事實上是一個 DAG(Directed Acyclic Graph)\
+因為不太可能 finished 又回去 running 這樣的事情
+
+善加利用 FSM 可以使你管理 CRD 狀態更容易\
+我的作法會是每個 object 都有一個獨立的 FSM，這樣的會是 O(n) n 為 object 數量\
+因為 controller 會負責管理 "所有符合的 CRD"\
+想當然這樣會造成一定的 overhead 但就看你的需求了
+
+> Reddit 有實作一套 controller SDK [reddit/achilles-sdk](https://github.com/reddit/achilles-sdk)\
+> 最主要就是提供了 FSM 的功能
+
+## Finalizer
+object 被刪除的時候，你可能會需要執行一些清理工作\
+透過 finalizer 可以很優雅的處理這些事情
+
+```yaml
+metadata:
+  ...
+  finalizers:
+  - my-finalizer
+```
+
+> 你可以指定多個 finalizer 執行
+
+finalizers 裡面本質上就只是一堆的 key\
+這些 key 很類似於 annotation，他的目的在於告訴 K8s 這個 object 還有一些事情要處理
+
+<hr>
+
+當你有設定 finalizer 的時候，K8s 並不會直接將 object 從 etcd 中刪除\
+它會處於一個 `Terminating` 的狀態，直到 finalizer 執行完畢(所以才叫做 hook)
+
+具體來說 K8s 會更新 object 的 `metadata`\
+它會寫上 `deletionTimestamp`\
+由於 controller 會監控 object 的變化，所以這次更新會被 controller 感知到\
+然後執行 reconcile
+
+```yaml
+metadata:
+...
+  deletionTimestamp: "2020-10-22T21:30:34Z"
+  finalizers:
+  - my-finalizer
+```
+
+這時候因為你會感知到 object 變化\
+所以你可以去看 `.metadata.deletionTimestamp` 有沒有存在\
+有的話就根據你指定的 finalizer 去執行清理工作
+
+這段就跟你平常在寫 reconcile 一樣
+
+> 如果你指定了一個 controller 不認識的 finalizer，那麼這個 object 就會永遠留在 `Terminating` 狀態
+
+當你事情做完之後，要如何觸發 K8s 刪除 object 呢？\
+只要把 `.metadata.finalizers` 刪除就可以了
+
+整理的操作會像這樣
+![](https://kubernetes.io/images/blog/2021-05-14-using-finalizers-to-control-deletion/state-diagram-finalize.png)
+> ref: [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/)
+
 ## Operator SDK
 雖然說 [kubernetes/sample-controller](https://github.com/kubernetes/sample-controller) 提供了一個很好的範例\
 實務上撰寫 controller 有其他的選擇，不一定只能拿官方的範例下去改\
@@ -471,3 +536,6 @@ controller 的 log 裡面你可以看到有正確的進行做動\
 + [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/#deploying-operators)
 + [Operator SDK](https://sdk.operatorframework.io/docs/building-operators/golang/)
 + [API Overview](https://kubernetes.io/docs/reference/using-api/)
++ [Kubernetes: Finalizers in Custom Resources](https://blog.anynines.com/posts/kubernetes-finalizers-in-custom-resources/)
++ [Finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
++ [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/)
