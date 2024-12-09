@@ -7,8 +7,7 @@ serve:
 		-p 4000:4000 -p 35729:35729 jekyll/jekyll \
 		sh -c "git config --system --add safe.directory '*' && \
 				jekyll serve --trace \
-				--watch \
-				--limit_posts 5\
+				--incremental \
 				--livereload \
 				--force_polling true"
 
