@@ -31,6 +31,14 @@ Kueue 本身有兩種策略
 $ kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releases/download/v0.9.0/manifests.yaml
 ```
 
+或者是用 Helm
+```bash
+$ helm install kueue oci://us-central1-docker.pkg.dev/k8s-staging-images/charts/kueue \
+  --version="v0.9.1" \
+  --create-namespace \
+  --namespace=kueue-system
+```
+
 # Affinity
 `Affinity` 指的是親和力，在計算機裡面通常指 CPU 的親和力\
 由於 CPU 會 context switch, 同一個 process 可能會被排程到不同的 CPU 核心上執行\
