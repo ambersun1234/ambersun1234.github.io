@@ -231,20 +231,20 @@ Local Queue 本身是 per namespace 的設計\
 要執行 kueue, 你需要將 [Cluster Queue](#Cluster-Queue), [Local Queue](#Local-Queue) 與 [Resource Flavor](#resource-flavor) 部署到你的 cluster 上(缺一不可)\
 然後透過以下的範例 Job 觀察排隊的行為
 
-這裡使用 `completions` 紀錄我們要有 10 個 Job 成功的次數\
-而 `parallelism` 則是同時執行的 Job 數量\
-根據上述 [Cluster Queue](#cluster-queue) 的設定，同一時間只能有 1 個 Job 在執行\
-又因為同時可以有 2 個 Job 在執行，所以整個完成預計要 (10 / 2) * 30s = `150s`
+你會需要加兩個設定
+1. Job metadata 裡面需要新增 `kueue.x-k8s.io/queue-name` 的 label, 它需要指定到你的 [Local Queue](#local-queue) 的名稱
+2. 將 Job 預設的狀態設定成 `suspend`
 
-注意到，Job 的寫法基本上與一般的 Job 沒有太大的差異\
-除了 label 要加上目標的 [Local Queue](#local-queue) 之外\
-`suspend: true` 代表這個 Job 不會立即執行，而是等待排程
-
+為什麼要 suspend Job 呢？\
 原因也是很簡單，因為我們要讓 Kueue 控制 Job 的執行\
 如果你直接讓它執行不就沒用了\
 因此，所有要使用 Kueue 的 Job 預設都要讓它暫停\
 把控制權交給 Kueue 進行處理
 
+這裡使用 `completions` 紀錄我們要有 10 個 Job 成功的次數\
+而 `parallelism` 則是同時執行的 Job 數量\
+根據上述 [Cluster Queue](#cluster-queue) 的設定，同一時間只能有 1 個 Job 在執行\
+又因為同時可以有 2 個 Job 在執行，所以整個完成預計要 (10 / 2) * 30s = `150s`
 
 ```yaml
 apiVersion: batch/v1
@@ -265,6 +265,20 @@ spec:
           args: ["30s"]
       restartPolicy: Never
 ```
+
+## Internal error occurred: failed calling webhook "mresourceflavor.kb.io": failed to call webhook
+如果你在 apply Kueue 的設定檔的時候碰到類似以下的錯誤
+
+```
+Error from server (InternalError): error when creating "mykueue.yaml": 
+Internal error occurred: failed calling webhook "mresourceflavor.kb.io": 
+failed to call webhook: 
+Post "https://kueue-webhook-service.mynamespace.svc:443/mutate-kueue-x-k8s-io-v1beta1-resourceflavor?timeout=10s":
+no endpoints available for service "kueue-webhook-service"
+```
+
+這是因為 Kueue 的 webhook service 還沒有起來\
+稍微的等它一下就可以了
 
 # References
 + [Taints and Tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
