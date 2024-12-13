@@ -350,7 +350,7 @@ Kubernetes Controller 可以只監聽特定 namespace 底下的 object\
 如果沒有指定它會是 cluster scoped 的\
 這種情況會有可能造成混亂
 
-具體來說，使用 [Operator SDK]() 在初始化 manager 的時候就可以指定，像這樣
+具體來說，使用 [Operator SDK](#operator-sdk) 在初始化 manager 的時候就可以指定，像這樣
 
 ```go
 mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
