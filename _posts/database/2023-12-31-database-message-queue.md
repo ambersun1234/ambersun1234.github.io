@@ -662,6 +662,62 @@ for {
 }
 ```
 
+## Default RabbitMQ Queue
+像有一些資料庫有一個功能是它可以有預設的 table\
+RabbitMQ 也有一樣的東西
+
+需要先開啟載入 definition 的設定開關
+```conf
+# rabbitmq.conf
+management.load_definitions = /etc/rabbitmq/load_definitions`.json
+```
+
+這裡 queue 就是你預設要建立的 queue 相關的設定\
+user 會需要是因為要登入才有權限可以操作\
+注意到 permission 還是需要寫，即使你的 application 也是使用同一組帳號
+
+import definitions 的時候，vhost 必須要設定\
+不然你會遇到 `exit:{error,<<"Please create virtual host \"/\" prior to importing definitions.">>}`
+
+> 完整範例可以參考 [ambersun1234/blog-labs/message-queue](https://github.com/ambersun1234/blog-labs/tree/master/message-queue)
+
+{% raw %}
+```json
+// load_definitions.json
+{
+    "users": [
+        {
+            "name": "rabbitmq",
+            "password": "rabbitmq",
+            "tags": ["administrator"]
+        }
+    ],
+    "queues":[
+        {
+            "name": "my_queue",
+            "vhost":"/",
+            "durable":true,
+            "auto_delete":false,
+            "arguments":{}
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/"
+        }
+    ],
+    "permissions":[
+        {
+            "user":"rabbitmq",
+            "vhost":"/",
+            "configure":".*",
+            "read":".*",
+            "write":".*"}
+    ]
+}
+```
+{% endraw %}
+
 ## Example
 ### Installation
 一樣使用 docker 將服務跑起來
@@ -840,3 +896,5 @@ RabbitMQ 有提供 message acknowledgement，亦即你可以確保 consumer 有�
 + [KIP-500 Early Access Release](https://github.com/a0x8o/kafka/blob/master/KIP-500.md)
 + [KIP-500 Early Access Release](https://www.youtube.com/watch?v=vYp4LYbnnW8)
 + [Offset management configuration](https://docs.confluent.io/platform/current/clients/consumer.html#offset-management-configuration)
++ [How to create a queue in RabbitMQ upon startup](https://stackoverflow.com/questions/58266688/how-to-create-a-queue-in-rabbitmq-upon-startup)
++ [Nuances of Boot-time Definition Import](https://www.rabbitmq.com/docs/definitions#import-on-boot-nuances)
