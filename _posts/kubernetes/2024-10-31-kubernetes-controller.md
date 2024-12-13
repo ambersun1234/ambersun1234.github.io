@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理
 date: 2024-10-31
 categories: [kubernetes]
-tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer]
+tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator]
 description: Kubernetes Controller 是實現 self-healing 的核心，透過 controller 來管理 cluster 的狀態。本文將介紹 Kubernetes Object 以及 Kubernetes Controller 的概念，並且透過 Operator SDK 來實作一個簡單的 operator
 math: true
 ---
@@ -345,6 +345,29 @@ metadata:
 以本文，我選擇使用 [Operator SDK](https://sdk.operatorframework.io/docs/building-operators/golang/)\
 Operator SDK 提供了非常完整的 framework 讓你可以開發，而且他是基於 [kubebuilder](https://book.kubebuilder.io/) 的
 
+### Namespaced Scoped Operator
+Kubernetes Controller 可以只監聽特定 namespace 底下的 object\
+如果沒有指定它會是 cluster scoped 的\
+這種情況會有可能造成混亂
+
+具體來說，使用 [Operator SDK]() 在初始化 manager 的時候就可以指定，像這樣
+
+```go
+mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+    Scheme:             scheme,
+    MetricsBindAddress: metricsAddr,
+    Port:               9443,
+    LeaderElection:     enableLeaderElection,
+    LeaderElectionID:   "f1c5ece8.example.com",
+    Cache: cache.Options{
+      DefaultNamespaces: map[string]cache.Config{"operator-namespace": cache.Config{}},
+    },
+})
+```
+
+其中 `operator-namespace` 就是你要監聽的 namespace\
+你可能發現它其實是一個 map 的結構，亦即你可以監聽多個 namespace
+
 ### Example
 遵照官方的 tutorial 其實很簡單\
 兩個步驟就可以完成一個 operator
@@ -539,3 +562,4 @@ controller 的 log 裡面你可以看到有正確的進行做動\
 + [Kubernetes: Finalizers in Custom Resources](https://blog.anynines.com/posts/kubernetes-finalizers-in-custom-resources/)
 + [Finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 + [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/)
++ [Watching resources in specific Namespaces](https://sdk.operatorframework.io/docs/building-operators/golang/operator-scope/#watching-resources-in-specific-namespaces)
