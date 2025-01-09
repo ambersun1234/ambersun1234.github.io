@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理
 date: 2024-10-31
 categories: [kubernetes]
-tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator]
+tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator, livenessprobe, readinessprobe, health check]
 description: Kubernetes Controller 是實現 self-healing 的核心，透過 controller 來管理 cluster 的狀態。本文將介紹 Kubernetes Object 以及 Kubernetes Controller 的概念，並且透過 Operator SDK 來實作一個簡單的 operator
 math: true
 ---
@@ -367,6 +367,51 @@ mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 
 其中 `operator-namespace` 就是你要監聽的 namespace\
 你可能發現它其實是一個 map 的結構，亦即你可以監聽多個 namespace
+
+### Livenessprobe and Readinessprobe of Operator
+```go
+if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+    setupLog.Error(err, "unable to set up health check")
+    os.Exit(1)
+}
+if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+    setupLog.Error(err, "unable to set up ready check")
+    os.Exit(1)
+}
+```
+
+Operator SDK 自動幫你生成的程式碼裡面有包含基本的 health check endpoint\
+`healthz.Ping` 是 Operator SDK 自帶的一個 health check function\
+透過 `AddHealthzCheck` 以及 `AddReadyzCheck` 你可以將這個 health check endpoint 加入到你的 operator 裡面\
+但注意到它只是註冊而已，你還是需要手動呼叫它才有用
+
+> 所以你不需要自己用 http 寫一個 healthz
+
+所以你的 livenessprobe 寫起來大概會像這樣
+```yaml
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8081
+  initialDelaySeconds: 3
+  periodSeconds: 3
+  timeoutSeconds: 1
+  failureThreshold: 3
+```
+
+我們註冊進去的 URL 就是 `/healthz`\
+然後那個 port `8081` 就很有意思了\
+generate 出來的程式碼裡面，他是手動 bind health probe 的 port\
+你可以從這裡看到，它其實是透過參數的方式 `--health-probe-bind-address=:8081` 傳遞進去的(ref: [manager_auth_proxy_patch.yaml](https://github.com/ambersun1234/blog-labs/blob/master/k8s-controller/config/default/manager_auth_proxy_patch.yaml))\
+所以這個 8081 是這裡來的
+
+> 如果你不是用 kustomize 你就在 container 那邊加個 arg 傳進去就好了
+
+> operator 本身的 port 預設是 8080, 你也可以在 manager 初始化的時候指定(像這裡是 9443)\
+> 可以參考 [Migrate main.go](https://sdk.operatorframework.io/docs/building-operators/golang/migration/#migrate-maingo)
+
+然後測試的時候你可以用 `$ kubectl port-forward` 來測試\
+預設會回 200 OK
 
 ### Example
 遵照官方的 tutorial 其實很簡單\
