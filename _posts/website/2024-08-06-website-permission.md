@@ -3,7 +3,7 @@ title: 網頁程式設計三兩事 - 基礎權限管理 RBAC, ABAC 與 PBAC
 date: 2024-08-06
 categories: [website]
 description: 龐大的系統架構下要如何有效率的進行權限的管理是值得程式設計師們共同思考的問題，本篇文章將會帶你學習權限管理的基礎概念，以及如何透過 Casbin 來實作權限管理
-tags: [permission, acl, rbac, abac, pbac, casbin, permission granularity]
+tags: [permission, acl, rbac, abac, pbac, casbin, permission granularity, role inheritance, role, policy, request, matcher, effect]
 math: true
 ---
 
@@ -136,6 +136,9 @@ RBAC 與 ABAC 各有優缺點\
 適用何種情況取決於系統的複雜程度以及需求
 
 # Casbin
+[Casbin](https://casbin.org/) 是一套基於 PERM Metamodel 的權限管理系統\
+它可以支援 [RBAC](#role-based-access-control-rbac) 以及 [ABAC](#attribute-based-access-control-abac) 的權限管理方式
+
 ## PERM Metamodel
 無論 [RBAC](#role-based-access-control-rbac) 或者是 [ABAC](#attribute-based-access-control-abac) 都是一種權限的管理方式\
 他們都可以使用一種方式來表達權限\
@@ -153,8 +156,20 @@ RBAC 與 ABAC 各有優缺點\
 > 注意到你可以擴展 PERM Metamodel 來符合你的需求\
 > 比如說 policy 跟 request 之間可以再做一層 role 的映射
 
-<hr>
+## Role Inheritance
+Casbin 裡面你可以做到 role 的繼承\
+比如說 `Admin` 可以繼承 `User` 的權限\
+在撰寫 policy 的時候，你可以透過 role 的繼承來簡化 policy 的重複性
 
+不過這個 "功能" 嘛，我個人覺的有點不太方便\
+雖然 policy 的撰寫會變得更簡單(i.e. 重複的 policy 只需要定義一遍)\
+但是這樣會讓你的 policy 變得不太直觀\
+你必須要稍加思考才能理解該 role 到底有沒有該 subject 的權限
+
+然後又因為 policy 是定義在 csv 裡面\
+變成說寫註解也有點難度，這只能透過測試來確保了
+
+## Example
 舉例來說
 
 `admin` 可以 `讀取` `data1` 的資料\
