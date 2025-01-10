@@ -161,34 +161,34 @@ Reflector 底層的實作有兩種方法，一種是 `Watch` 一種是 `List`
 
 ```go
 func (r *Reflector) ListAndWatch(stopCh <-chan struct{}) error {
-	klog.V(3).Infof("Listing and watching %v from %s", r.typeDescription, r.name)
-	var err error
-	var w watch.Interface
-	useWatchList := ptr.Deref(r.UseWatchList, false)
-	fallbackToList := !useWatchList
+    klog.V(3).Infof("Listing and watching %v from %s", r.typeDescription, r.name)
+    var err error
+    var w watch.Interface
+    useWatchList := ptr.Deref(r.UseWatchList, false)
+    fallbackToList := !useWatchList
 
-	if useWatchList {
-		w, err = r.watchList(stopCh)
-		if w == nil && err == nil {
-			// stopCh was closed
-			return nil
-		}
-		if err != nil {
-			klog.Warningf("The watchlist request ended with an error, falling back to the standard LIST/WATCH semantics because making progress is better than deadlocking, err = %v", err)
-			fallbackToList = true
-			// ensure that we won't accidentally pass some garbage down the watch.
-			w = nil
-		}
-	}
+    if useWatchList {
+      w, err = r.watchList(stopCh)
+      if w == nil && err == nil {
+        // stopCh was closed
+        return nil
+      }
+      if err != nil {
+        klog.Warningf("The watchlist request ended with an error, falling back to the standard LIST/WATCH semantics because making progress is better than deadlocking, err = %v", err)
+        fallbackToList = true
+        // ensure that we won't accidentally pass some garbage down the watch.
+        w = nil
+      }
+    }
 
-	if fallbackToList {
-		err = r.list(stopCh)
-		if err != nil {
-			return err
-		}
-	}
+    if fallbackToList {
+      err = r.list(stopCh)
+      if err != nil {
+        return err
+      }
+    }
 
-	klog.V(2).Infof("Caches populated for %v from %s", r.typeDescription, r.name)
+    klog.V(2).Infof("Caches populated for %v from %s", r.typeDescription, r.name)
 }
 ```
 
@@ -452,19 +452,19 @@ CRD 的部份我們需要新增一個欄位儲存 value\
 ```go
 // FooSpec defines the desired state of Foo
 type FooSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+    // INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+    // Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Foo. Edit foo_types.go to remove/update
-	Value string `json:"value,omitempty"`
+    // Foo is an example field of Foo. Edit foo_types.go to remove/update
+    Value string `json:"value,omitempty"`
 }
 
 // FooStatus defines the observed state of Foo
 type FooStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+    // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+    // Important: Run "make" to regenerate code after modifying this file
 
-	Conditions []metav1.Condition `json:"conditions,omitempty"`
+    Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -472,11 +472,11 @@ type FooStatus struct {
 
 // Foo is the Schema for the foos API
 type Foo struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
+    metav1.TypeMeta   `json:",inline"`
+    metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   FooSpec   `json:"spec,omitempty"`
-	Status FooStatus `json:"status,omitempty"`
+    Spec   FooSpec   `json:"spec,omitempty"`
+    Status FooStatus `json:"status,omitempty"`
 }
 ```
 
