@@ -588,6 +588,34 @@ controller 的 log 裡面你可以看到有正確的進行做動\
 
 既解決了 single point failure 的問題，又可以方便的管理
 
+# unable to decode an event from the watch stream: context canceled
+我在開發 operator 的時候有一個問題，時常我的 operator 跑得好好的但它會突然掛掉\
+然後被 k8s 重啟，這顯然不太好
+
+根據 [Consistently Seeing Reflector Watch Errors on Controller Shutdown](https://github.com/kubernetes-sigs/controller-runtime/issues/2723)，這看起來是一個已知問題\
+似乎是跟 cache 有關係，那留言內的解法是把 cache 停掉
+
+你可以在 `client.Object` 裡面指定哪些 object 不要被 cache
+
+```go
+import (
+    ctrl "sigs.k8s.io/controller-runtime"
+    "sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+func main() {
+    ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+        Client: client.Options{
+            Cache: &client.CacheOptions{
+                DisableFor: []client.Object{
+                    &coreV1.Pod{},
+                }
+            }
+        }
+    })
+}
+```
+
 # References
 + [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)
 + [Cluster Architecture](https://kubernetes.io/docs/concepts/architecture/#control-plane-components)
