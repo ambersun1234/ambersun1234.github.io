@@ -141,6 +141,8 @@ spec:
 Kubernetes 本身是使用 RBAC 來控制權限\
 所以寫起來就是 `你有沒有權限去操作這個 Resource，你可以做什麼操作`
 
+> 有關 RBAC 可以參考 [網頁程式設計三兩事 - 基礎權限管理 RBAC, ABAC 與 PBAC \| Shawn Hsu](../../website/website-permission)
+
 當然 ClusterRole 本身需要搭配 ClusterRoleBinding 以及 ServiceAccount 來使用
 
 > `ClusterRole` 作用域是整個 cluster\
