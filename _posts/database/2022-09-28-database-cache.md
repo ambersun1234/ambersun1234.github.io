@@ -3,7 +3,7 @@ title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
 description: 本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情
 categories: [database]
-tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached]
+tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock]
 math: true
 ---
 
@@ -219,6 +219,15 @@ Redis 提供了一套完整且常見的資料結構，常見的有以下
 
 使用方法你可以參考官方的 [documentation](https://redis.io/commands/), 操作直覺容易理解，我就不在這裡贅述了
 
+### Distributed Lock
+你也可以利用 Redis 實作所謂的 distributed lock\
+使用單純的 key-value 來實作配合 NX 參數來達到 distributed lock 的效果
+
+由於 Redis 本身是單線程的，所以並不會有競爭的問題存在\
+SetNX 如果沒有成功就表示已經有人拿到 lock 了，這樣就可以達到 distributed lock 的效果
+
+另外你也可以設定一個 TTL，這樣即使你的程式掛掉，也不會造成 deadlock
+
 ### Sorted Sets vs. Lists
 我想把這個單獨拉出來做一個比較\
 因為我看到了一個討論([Why use Sorted Set instead of List Redis](https://stackoverflow.com/questions/48630763/why-use-sorted-set-instead-of-list-redis))說 sorted sets 跟 lists 在某些情況下效能會有差別
@@ -389,3 +398,4 @@ user2: {
 + [Cache Warming: Know it’s Importance to Improve Website Performance](https://www.payoda.com/cache-warming/)
 + [Cache warming: Agility for a stateful service](https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642)
 + [比較 Redis OSS 與 Memcached](https://aws.amazon.com/tw/elasticache/redis-vs-memcached/)
++ [Distributed Locks with Redis](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)
