@@ -399,6 +399,8 @@ livenessProbe:
   failureThreshold: 3
 ```
 
+> 有關 probe 可以參考 [Kubernetes 從零開始 - Self Healing 是如何運作的 \| Shawn Hsu](../../kubernetes/kubernetes-self-healing)
+
 我們註冊進去的 URL 就是 `/healthz`\
 然後那個 port `8081` 就很有意思了\
 generate 出來的程式碼裡面，他是手動 bind health probe 的 port\
