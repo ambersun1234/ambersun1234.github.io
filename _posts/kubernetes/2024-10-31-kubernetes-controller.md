@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理
 date: 2024-10-31
 categories: [kubernetes]
-tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator, livenessprobe, readinessprobe, health check]
+tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator, livenessprobe, readinessprobe, health check, leader election, leader with lease, leader for life]
 description: Kubernetes Controller 是實現 self-healing 的核心，透過 controller 來管理 cluster 的狀態。本文將介紹 Kubernetes Object 以及 Kubernetes Controller 的概念，並且透過 Operator SDK 來實作一個簡單的 operator
 math: true
 ---
@@ -407,6 +407,16 @@ generate 出來的程式碼裡面，他是手動 bind health probe 的 port\
 你可以從這裡看到，它其實是透過參數的方式 `--health-probe-bind-address=:8081` 傳遞進去的(ref: [manager_auth_proxy_patch.yaml](https://github.com/ambersun1234/blog-labs/blob/master/k8s-controller/config/default/manager_auth_proxy_patch.yaml))\
 所以這個 8081 是這裡來的
 
+對應到 source code 會是這樣定義的
+```go
+flag.StringVar(
+    &probeAddr, 
+    "health-probe-bind-address", 
+    ":8081", 
+    "The address the probe endpoint binds to.",
+)
+```
+
 > 如果你不是用 kustomize 你就在 container 那邊加個 arg 傳進去就好了
 
 > operator 本身的 port 預設是 8080, 你也可以在 manager 初始化的時候指定(像這裡是 9443)\
@@ -585,10 +595,128 @@ controller 的 log 裡面你可以看到有正確的進行做動\
 
 ## How to Deploy your Controller
 另一個問題是如何部署你的 controller\
-為了避免 single point failure 的問題，你應該要部署多個 controller\
-但問題其實可以被簡化，就直接 deploy 一個 deployment 就好了
+你可以選擇跑一個 deployment 起來就可以
 
-既解決了 single point failure 的問題，又可以方便的管理
+不過 controller 在重新啟動(rollout restart)的時候，有可能會沒有接到 event\
+導致 CRD 會少監聽到一些 event\
+這並不是我們想要的
+
+當然你可以選擇跑多個 replica, 但這樣另一個問題油然而生\
+多個執行的個體會不會互相干擾呢？ 答案是肯定的
+
+Operator SDK 是採用 `Single Leader` 的方式解決\
+同一時間只會有一個 "leader" 來執行 reconcile，而剩餘的 replica 則會待機
+
+> 有關 Single Leader Replication 可以參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database/#single-leadermaster-slave)
+
+Leader 的選舉機制有兩種 [Leader-with-Lease](#leader-with-lease) 以及 [Leader-for-Life](#leader-for-life)\
+預設的機制是 `Leader-with-Lease`
+
+### Leader with Lease
+leader 的權利是具有 `時效性的`，當 lease 過期的時候，leader 就會被換掉\
+然後其他人就會想辦法成為 leader
+
+這種實作保證了快速的 failover, 不過，它也逃不掉 **腦分裂的問題**\
+在 [client-go](https://github.com/kubernetes/client-go/blob/master/tools/leaderelection/leaderelection.go) 的實作當中有明確指出\
+leaderelection 這套實作是依靠時間區間來做判斷的(`RenewDeadLine` 以及 `LeaseDuration`)\
+也就是說他是依靠 "時間差" 而非絕對時間決定 leader 是否該被替換掉(因為在分散式系統下，時間是不可靠的)
+
+但如果節點的時鐘跑得比較快/慢，leaderelection 也仍然沒有辦法處理這種狀況，進而導致 **腦分裂**
+
+> 有關腦分裂可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue)
+
+基本上你只要將 `LeaderElection` 設為 `true` 就可以了
+```go
+mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+    LeaderElection:         enableLeaderElection,
+    LeaderElectionID:       "3601af7f.example.com",
+})
+```
+
+從下列的 log 你可以很明顯的看到，同一時間只會有一個 leader 正在執行\
+而其他的 replica 則是在等待
+```shell
+$ kubectl get pods -A                                                                     
+NAMESPACE               NAME                                                 READY   STATUS      RESTARTS   AGE
+k8s-controller-system   k8s-controller-controller-manager-65689fb949-85ff2   2/2     Running     0          27s
+k8s-controller-system   k8s-controller-controller-manager-65689fb949-98fqg   2/2     Running     0          27s
+k8s-controller-system   k8s-controller-controller-manager-65689fb949-dtm74   2/2     Running     0          27s
+
+$ kubectl logs -n k8s-controller-system k8s-controller-controller-manager-65689fb949-85ff2 
+2025-01-20T17:55:33Z    INFO    setup   starting manager
+2025-01-20T17:55:33Z    INFO    controller-runtime.metrics      Starting metrics server
+2025-01-20T17:55:33Z    INFO    starting server {"kind": "health probe", "addr": "[::]:8081"}
+2025-01-20T17:55:33Z    INFO    controller-runtime.metrics      Serving metrics server  {"bindAddress": "127.0.0.1:8080", "secure": false}
+I0120 17:55:33.965082       1 leaderelection.go:250] attempting to acquire leader lease k8s-controller-system/3601af7f.example.com...
+I0120 17:55:33.973538       1 leaderelection.go:260] successfully acquired lease k8s-controller-system/3601af7f.example.com
+
+$ kubectl logs -n k8s-controller-system k8s-controller-controller-manager-65689fb949-98fqg 
+2025-01-20T17:55:34Z    INFO    setup   starting manager
+2025-01-20T17:55:34Z    INFO    controller-runtime.metrics      Starting metrics server
+2025-01-20T17:55:34Z    INFO    starting server {"kind": "health probe", "addr": "[::]:8081"}
+2025-01-20T17:55:34Z    INFO    controller-runtime.metrics      Serving metrics server  {"bindAddress": "127.0.0.1:8080", "secure": false}
+I0120 17:55:34.148711       1 leaderelection.go:250] attempting to acquire leader lease k8s-controller-system/3601af7f.example.com...
+
+$ kubectl logs -n k8s-controller-system k8s-controller-controller-manager-65689fb949-dtm74 
+2025-01-20T17:55:34Z    INFO    setup   starting manager
+2025-01-20T17:55:34Z    INFO    controller-runtime.metrics      Starting metrics server
+2025-01-20T17:55:34Z    INFO    starting server {"kind": "health probe", "addr": "[::]:8081"}
+2025-01-20T17:55:34Z    INFO    controller-runtime.metrics      Serving metrics server  {"bindAddress": "127.0.0.1:8080", "secure": false}
+I0120 17:55:34.149087       1 leaderelection.go:250] attempting to acquire leader lease k8s-controller-system/3601af7f.example.com...
+```
+
+### Leader for Life
+相較只能坐擁王位一段時間的 leader, `Leader for Life` 講求的是主動退位\
+只有當 leader 被刪除的時候，才會進行下一任的選舉
+
+要使用 `Leader for Life` 要改的 code 會比較多
+1. 新增 env `POD_NAME`
+2. 新增 pods, nodes 的 role(get 權限即可)
+
+當然最重要的就是主程式這裡
+```go
+import (
+    "github.com/operator-framework/operator-lib/leader"
+)
+
+if err := leader.Become(context.TODO(), "mycontroller-lock"); err != nil {
+    setupLog.Error(err, "unable to become leader")
+    os.Exit(1)
+  }
+```
+
+> 這部份的實作可以參考 commit [5b9ac77](https://github.com/ambersun1234/blog-labs/commit/5b9ac7764dfecae0d7f058a9bc48c266c83f7dd4)
+
+然後一樣看輸出結果，也是只有一個 leader 會負責執行 reconcile
+```shell
+$ kubectl get pods -A
+NAMESPACE               NAME                                                READY   STATUS      RESTARTS   AGE
+k8s-controller-system   k8s-controller-controller-manager-7f444cb5c-6xmlt   1/2     Running     0          56s
+k8s-controller-system   k8s-controller-controller-manager-7f444cb5c-9d9zm   1/2     Running     0          56s
+k8s-controller-system   k8s-controller-controller-manager-7f444cb5c-cf6sj   2/2     Running     0          56s
+
+$ kubectl logs -n k8s-controller-system k8s-controller-controller-manager-7f444cb5c-6xmlt 
+2025-01-20T18:36:27Z    INFO    leader  Trying to become the leader.
+2025-01-20T18:36:27Z    DEBUG   leader  Found podname   {"Pod.Name": "k8s-controller-controller-manager-7f444cb5c-6xmlt"}
+2025-01-20T18:36:27Z    DEBUG   leader  Found Pod       {"Pod.Namespace": "k8s-controller-system", "Pod.Name": "k8s-controller-controller-manager-7f444cb5c-6xmlt"}
+2025-01-20T18:36:27Z    INFO    leader  Found existing lock     {"LockOwner": "k8s-controller-controller-manager-7f444cb5c-cf6sj"}
+2025-01-20T18:36:27Z    INFO    leader  Not the leader. Waiting.
+
+$ kubectl logs -n k8s-controller-system k8s-controller-controller-manager-7f444cb5c-9d9zm 
+2025-01-20T18:36:27Z    INFO    leader  Trying to become the leader.
+2025-01-20T18:36:27Z    DEBUG   leader  Found podname   {"Pod.Name": "k8s-controller-controller-manager-7f444cb5c-9d9zm"}
+2025-01-20T18:36:27Z    DEBUG   leader  Found Pod       {"Pod.Namespace": "k8s-controller-system", "Pod.Name": "k8s-controller-controller-manager-7f444cb5c-9d9zm"}
+2025-01-20T18:36:27Z    INFO    leader  Found existing lock     {"LockOwner": "k8s-controller-controller-manager-7f444cb5c-cf6sj"}
+2025-01-20T18:36:27Z    INFO    leader  Not the leader. Waiting.
+
+$ kubectl logs -n k8s-controller-system k8s-controller-controller-manager-7f444cb5c-cf6sj 
+2025-01-20T18:35:26Z    INFO    leader  Trying to become the leader.
+2025-01-20T18:35:26Z    DEBUG   leader  Found podname   {"Pod.Name": "k8s-controller-controller-manager-7f444cb5c-cf6sj"}
+2025-01-20T18:35:26Z    DEBUG   leader  Found Pod       {"Pod.Namespace": "k8s-controller-system", "Pod.Name": "k8s-controller-controller-manager-7f444cb5c-cf6sj"}
+2025-01-20T18:35:26Z    INFO    leader  No pre-existing lock was found.
+2025-01-20T18:35:26Z    INFO    leader  Became the leader.
+2025-01-20T18:35:26Z    INFO    setup   starting manager
+```
 
 # unable to decode an event from the watch stream: context canceled
 我在開發 operator 的時候有一個問題，就是會遇到這種錯誤 `unable to decode an event from the watch stream: context canceled`
@@ -637,3 +765,4 @@ func main() {
 + [Finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
 + [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/)
 + [Watching resources in specific Namespaces](https://sdk.operatorframework.io/docs/building-operators/golang/operator-scope/#watching-resources-in-specific-namespaces)
++ [Leader election](https://sdk.operatorframework.io/docs/building-operators/golang/advanced-topics/#leader-election)
