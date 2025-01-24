@@ -3,7 +3,7 @@ title: DevOps - 單元測試 Unit Test
 date: 2022-05-09
 description: 測試在軟體開發當中是很重要的一環，它可以確保程式不會因為不當的輸入而產生不如預期的結果。本文將會介紹單元測試的基本觀念，並且提供一些簡單的例子
 categories: [devops]
-tags: [unit test, mock, TDD, dependency injection]
+tags: [unit test, TDD, dependency injection]
 math: true
 ---
 
@@ -151,101 +151,7 @@ const getUser = async (userID) => {
 mocking 可以替代原有的 function 或 object, 使其可以 **模擬原有行為**\
 這樣的好處是可以讓我們專注於要測試對象本身的邏輯
 
-> 可參考 [Test Double](#Test-Double)
-
-# Test Double
-雖然常常講要 mock 這個 mock 那個\
-不過人家的正式名稱是 `Test double`(測試替身)
-
-## Type
-![](https://yu-jack.github.io/images/unit-test/unit-test-best-practice-12.png)
-
-Test Double 以功能性分為兩派 [State Verification](#state-verification) 以及 [Behaviour Verification](#behaviour-verification)
-
-### Verification Type
-#### State Verification
-狀態，指的是系統內的狀態\
-軟體工程裡系統的狀態通常是 variable, object properties 等等
-
-通俗點說，你的變數狀態在經過一系列的操作之後，必須要符合某種狀態\
-比如說一個計算器，當前數值為 10\
-當我進行加法 +1 的時候，它應該要變成 11\
-這就是狀態驗證
-
-而 Stub 類型多以模擬狀態(資料)為主
-
-#### Behaviour Verification
-這裡的行為就指的是，你的運行過程，狀態遷移的 **過程** 合不合理\
-像是他有沒有跟對的 component 互動
-
-符合這個類型的，歸類在 Mock 類型裡面，以模擬行為為主
-
-<hr>
-
-Test Double 內部又分五個種類
-
-+ `Dummy`
-    + 用於填充目標物件(i.e. 參數)，僅僅是為了不讓測試掛掉的作用
-+ `Fake Object`
-    + 較為 **簡單版本** 的實作
-    + 比如說用 in-memory database 取代原本的 MySQL 之類的
-+ `Stub`
-    + 根據不同的輸入，給定相對應的輸出
-+ `Spy`(Partial Mock)
-    + 原本的定義是用以監看，各種被呼叫的實作的各項數據(被 call 了幾次, 誰被 call) :arrow_right: 跟間諜一樣
-    + 有時候也指 Partial Mock, 不同的是，只有實作中的 **部份內容** 被替代
-+ `Mock`
-    + 跟 `Stub` 一樣，此外還包含了 [Behaviour Verification](#behaviour-verification)
-
-整理成表格的話就如下
-
-|Object Type|Have Implementation|Verification Type|
-|:--|:--:|:--:|
-|Dummy|:x:|[State Verification](#state-verification)|
-|Fake Object|:heavy_check_mark:|[State Verification](#state-verification) or [Behaviour Verification](#behaviour-verification)|
-|Stub|:x:|[State Verification](#state-verification)|
-|Spy|:heavy_check_mark:|[Behaviour Verification](#behaviour-verification)|
-|Mock|:heavy_check_mark:|[State Verification](#state-verification) or [Behaviour Verification](#behaviour-verification)|
-
-> Dummy 為什麼可以做狀態驗證？\
-> 它沒有在 check 輸出阿？\
-> 事實上狀態驗證也包含了驗證參數數量這種，即使 Dummy 只有填充物件的用途，它仍然可以做驗證
-
-> Fake Object 可以驗證狀態或行為的原因在於\
-> 他是簡單版本的實作，同時因為他是實作，代表它能驗證輸出是否符合預期\
-> 更重要的是實作本身可以驗證行為(i.e. 確保執行順序像是 A :arrow_right: B :arrow_right: C)
-
-## Manually Create Mock Implementation
-那你要怎麼建立 mock 的實作呢？\
-通常來講是建議使用第三方的 library 如 [mockery](https://github.com/vektra/mockery) 自動產生\
-但你能不能自己寫呢？當然可以 但不建議
-
-![](/assets/img/posts/dip.jpg)
-
-考慮以上的關係圖，要建立 mock 的實作，你只要將所有的 interface 實作一遍就好\
-但是這個實作是需要非常小心的
-
-什麼意思？\
-mock 的實作 **應該最小化商業邏輯，甚至不應該有**\
-舉例來說你要實作一個 `function GetUser(userID string): User` 的 mock\
-他不應該真的去查詢什麼東西，確認他存在/不存在 再回傳\
-這樣的實作是不對的，因為這樣的實作會讓你的測試變得複雜，且不容易維護
-
-取而代之的是，他要回應一個固定的數值\
-或者是 **根據不同的輸入，給定相對應的輸出**\
-在調用的時候就會類似像這樣
-
-```js
-userMock.On("GetUser", "myuserid").Return(User{
-    ID: "myuserid",
-    Name: "myname",
-    Age: 18,
-})
-```
-
-當參數為 `myuserid` 的時候，回傳一個固定的 User 物件\
-不過如今都有現代化的 testing framework 提供了這樣的功能\
-就不需要自己寫了
+> 可參考 [DevOps - 詳解 Mock 概念以及如何 Mock HTTP Request \| Shawn Hsu](../../devops/devops-mock/)
 
 # Dependency Inversion Principle
 ![](https://upload.wikimedia.org/wikipedia/commons/9/96/Dependency_inversion.png)\
@@ -507,4 +413,3 @@ describe("pageNumber", () => {
 + [Unit Test 觀念學習 - 3A Pattern、名詞 (SUT、DOC)](https://ithelp.ithome.com.tw/m/articles/10299052)
 + [Unit Test 實踐守則 (五) - 如何有效使用 Test Double](https://yu-jack.github.io/2020/10/12/unit-test-best-practice-part-5/)
 + [unit test 該怎麼用? 又該如何在 express 開發上實作 unit test?](https://yu-jack.github.io/2019/12/10/unit-test-express/#test-double-%E6%B8%AC%E8%A9%A6%E6%9B%BF%E8%BA%AB)
-+ [Test Double（2）：五種替身簡介](https://teddy-chen-tw.blogspot.com/2014/09/test-double2.html)
