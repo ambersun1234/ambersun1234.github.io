@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 資源排隊神器 Kueue
 date: 2024-11-12
 categories: [kubernetes]
-tags: [job, queue, kueue, resource, scheduling, taints, toleration, affinity, taskset]
+tags: [job, queue, kueue, resource, scheduling, taints, toleration, affinity, taskset, kubectl wait, cluster queue, local queue, resource flavor, cohort]
 description: 針對有限的硬體資源，為了避免過度使用造成分配不均以及效能低落，Kueue 這個工具提供了一個排隊機制，所有資源被集中管理並統一分配，使得所有 Job 都能免於 starving 的狀況。本文將會介紹 Kueue 的基本概念以及如何使用它
 math: true
 ---
@@ -266,12 +266,23 @@ spec:
       restartPolicy: Never
 ```
 
-## Internal error occurred: failed calling webhook "mresourceflavor.kb.io": failed to call webhook
+## Intercept Specific Resource Instance Only
+目前 Kueue 的實作(`v0.10.1`)它會監聽所有的 Job，這在某種程度上是不合理的\
+理論上它只需要管理，並且監聽特定的 Job
+
+我遇到的狀況是，起 backend 的時候有一些 one-time Job 需要被執行\
+這個 Job 跟 Kueue 是脫勾的，它不應該要被 Kueue 管理\
+但是由於 Kueue 的 [MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) 沒有辦法過濾特定的 Job\
+導致這個美麗的錯誤發生
+
+> ref: [Kueue mutating admission webhook should intercept specific resource instance only](https://github.com/kubernetes-sigs/kueue/issues/4141)
+
+## Internal error occurred: failed calling webhook "myresourceflavor.kb.io": failed to call webhook
 如果你在 apply Kueue 的設定檔的時候碰到類似以下的錯誤
 
 ```
 Error from server (InternalError): error when creating "mykueue.yaml": 
-Internal error occurred: failed calling webhook "mresourceflavor.kb.io": 
+Internal error occurred: failed calling webhook "myresourceflavor.kb.io": 
 failed to call webhook: 
 Post "https://kueue-webhook-service.mynamespace.svc:443/mutate-kueue-x-k8s-io-v1beta1-resourceflavor?timeout=10s":
 no endpoints available for service "kueue-webhook-service"
@@ -279,6 +290,31 @@ no endpoints available for service "kueue-webhook-service"
 
 這是因為 Kueue 的 webhook service 還沒有起來\
 稍微的等它一下就可以了
+
+你可以使用 `$ kubectl wait` 的指令等待\
+service 本身其實是 expose `kueue-controller-manager` 這個 deployment\
+另外，你也可以等待 `ClusterQueue`, `LocalQueue` 等的資源\
+注意到他們聽的狀態是不同的
+
+```shell
+$ kubectl wait \
+  -n my-ns \
+  --timeout=1h \
+  --for='jsonpath={.status.conditions[?(@.type==\"Available\")].status}=True' \
+  deployments.app/kueue-controller-manager
+
+$ kubectl wait \
+  -n my-ns \
+  --timeout=1h \
+  --for='jsonpath={.status.conditions[?(@.type==\"Active\")].status}=True' \
+  ClusterQueue/my-cluster-queue
+
+$ kubectl wait \
+  -n my-ns \
+  --timeout=1h \
+  --for='jsonpath={.status.conditions[?(@.type==\"Active\")].status}=True' \
+  LocalQueue/my-local-queue
+```
 
 # References
 + [Taints and Tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
