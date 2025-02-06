@@ -225,6 +225,13 @@ Indexer 的作用就像是資料庫的 Index 一樣，可以快速的找到 obje
 存取的部份是透過 Lister([cache/lister](https://github.com/kubernetes/client-go/blob/master/tools/cache/listers.go)) 實現的\
 所以這邊算是一個隱藏的 component
 
+<hr>
+
+Indexer 也會遇到資料過期的問題，就像一般的 cache 一樣\
+我目前開發的 controller 就會遇到這些狀況\
+比如說我把狀態更新成 `Success` 之後，但是我之後在 Get 的時候發現他還是 `Running`\
+所以在處理的時候需要特別注意
+
 ### Control Loop
 ![](https://miro.medium.com/v2/resize:fit:720/format:webp/1*kTG2i9HYxGplJaBWF03HnA.png)
 > ref: [如何编写自定义的 Kubernetes Controller](https://able8.medium.com/how-to-write-a-kubernetes-custom-controller-622841d1d3f6#:~:text=Kubernetes%20%E6%8E%A7%E5%88%B6%E5%99%A8%E6%98%AF%E4%B8%80%E4%B8%AA,%E7%8A%B6%E6%80%81%E6%9B%B4%E6%8E%A5%E8%BF%91%E6%9C%9F%E6%9C%9B%E7%8A%B6%E6%80%81%E3%80%82&Kubernetes%20%E9%80%9A%E8%BF%87%E6%8E%A7%E5%88%B6%E5%99%A8%E6%A8%A1%E5%BC%8F,%E6%88%96%E8%80%85%E8%B5%84%E6%BA%90%E7%9A%84%E7%BC%96%E6%8E%92%E6%93%8D%E4%BD%9C%E3%80%82)
@@ -766,3 +773,4 @@ func main() {
 + [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/)
 + [Watching resources in specific Namespaces](https://sdk.operatorframework.io/docs/building-operators/golang/operator-scope/#watching-resources-in-specific-namespaces)
 + [Leader election](https://sdk.operatorframework.io/docs/building-operators/golang/advanced-topics/#leader-election)
++ [Understand the cached clients](https://ahmet.im/blog/controller-pitfalls/#understand-the-cached-clients)
