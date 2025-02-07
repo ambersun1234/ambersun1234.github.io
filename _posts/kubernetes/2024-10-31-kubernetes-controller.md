@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理
 date: 2024-10-31
 categories: [kubernetes]
-tags: [kubernetes controller, state, wrangler, kubernetes operator, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator, livenessprobe, readinessprobe, health check, leader election, leader with lease, leader for life]
+tags: [kubernetes controller, state, wrangler, kubernetes operator, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator, livenessprobe, readinessprobe, health check, leader election, leader with lease, leader for life, event filter, predicate]
 description: Kubernetes Controller 是實現 self-healing 的核心，透過 controller 來管理 cluster 的狀態。本文將介紹 Kubernetes Object 以及 Kubernetes Controller 的概念，並且透過 Operator SDK 來實作一個簡單的 operator
 math: true
 ---
@@ -178,6 +178,54 @@ flag.StringVar(
 
 然後測試的時候你可以用 `$ kubectl port-forward` 來測試\
 預設會回 200 OK
+
+### Event Filter with Predicate
+我在測試 controller 的時候有發現一個問題，就是同樣的 CR 會被觸發兩次\
+但是他的狀態其實是相同的，比如說 `Running` -> `Running`\
+這樣的情況以我的需求來說是不需要的
+
+Operator-SDK 本身有提供所謂的 `Predicate`\
+他的作用是，可以允許你自定義 filter 過濾掉一些不必要的 event\
+當狀態被改變的時候我才需要觸發 reconcile
+
+寫起來大概會像這樣\
+注意到，只有回傳 true 的情況下該 event 才會被觸發\
+那你會問為什麼我需要先做 type assertion 呢？\
+因為有可能 event object 不一定是你的 CRD, 有可能是其他的 object\
+針對其他的 object 我還是讓它觸發，只過濾掉 CRD 的 event
+
+```go
+import (
+    "sigs.k8s.io/controller-runtime/pkg/event"
+    "sigs.k8s.io/controller-runtime/pkg/predicate"
+)
+
+func statusFilter() predicate.Predicate {
+    return predicate.Funcs{
+        UpdateFunc: func(e event.UpdateEvent) bool {
+            oldCR, ok := e.ObjectOld.(*v1.MyCRD)
+            if !ok {
+                return true
+            }
+
+            newCR, ok := e.ObjectNew.(*v1.MyCRD)
+            if !ok {
+                return true
+            }
+
+            return oldCR.Status != newCR.Status
+      },
+    }
+}
+
+func (r *MemcachedReconciler) SetupWithManager(mgr ctrl.Manager) error {
+    return ctrl.NewControllerManagedBy(mgr).
+        For(&cachev1alpha1.Memcached{}).
+        Owns(&corev1.Pod{}).
+        WithEventFilter(statusFilter()).
+        Complete(r)
+}
+```
 
 ### Example
 遵照官方的 tutorial 其實很簡單\
@@ -516,3 +564,7 @@ func main() {
 + [Watching resources in specific Namespaces](https://sdk.operatorframework.io/docs/building-operators/golang/operator-scope/#watching-resources-in-specific-namespaces)
 + [Leader election](https://sdk.operatorframework.io/docs/building-operators/golang/advanced-topics/#leader-election)
 + [Understand the cached clients](https://ahmet.im/blog/controller-pitfalls/#understand-the-cached-clients)
++ [How can i ignore CRD modify event on status update of custom resource objects](https://stackoverflow.com/questions/59788734/how-can-i-ignore-crd-modify-event-on-status-update-of-custom-resource-objects)
++ [Reconcile is triggered after status update](https://github.com/kubernetes-sigs/controller-runtime/issues/2831)
++ [Using Predicates for Event Filtering with Operator SDK](https://sdk.operatorframework.io/docs/building-operators/golang/references/event-filtering/)
++ [10 Things You Should Know Before Writing a Kubernetes Controller](https://medium.com/@gallettilance/10-things-you-should-know-before-writing-a-kubernetes-controller-83de8f86d659)
