@@ -428,7 +428,7 @@ TLS(現在比較常說 TLS) 是一種補強的 protocol\
 
 TLS 需要跑在可靠性的傳輸協定之上，如 [TCP](#tcp---transmission-control-protocol)
 
-+ 隱私性是透過 `對稱性加密演算法` 或 `非對稱式加密演算法` 所提供
++ 隱私性是透過 `對稱性加密演算法` 以及 `非對稱式加密演算法` 所提供
 + 資料的完整性是透過 `Message Authenticate Codes(MACs)` 所提供
 
 基本上 TLS 是由兩部份組成 [TLS Record Protocol](#tls-record-protocol) 以及 [TLS Handshake Protocol](#tls-handshake-protocol)
@@ -715,3 +715,4 @@ UDP Multicast 就有意思的多了\
 + [TCP擁塞控制](https://zh.wikipedia.org/zh-tw/TCP%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6)
 + [How do multiple clients connect simultaneously to one port, say 80, on a server? [duplicate]](https://stackoverflow.com/questions/3329641/how-do-multiple-clients-connect-simultaneously-to-one-port-say-80-on-a-server)
 + [什麼是 DNS CNAME 記錄？](https://www.cloudflare.com/zh-tw/learning/dns/dns-records/dns-cname-record/)
++ [HTTPS uses Asymmetric or Symmetric encryption?](https://stackoverflow.com/questions/37791013/https-uses-asymmetric-or-symmetric-encryption)
