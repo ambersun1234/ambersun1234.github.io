@@ -164,7 +164,7 @@ Attributes 所表示的資料是整個 Span 的 metadata，而 Events 所表示�
 
 > 其實不只是單個 Trace，Baggage 也可以在不同 [Traces](#traces), [Logs](#logs) 以及 [Metrics](#metrics) 之間傳遞
 
-![](https://opentelemetry.io/img/otel-baggage.svg)
+![](https://opentelemetry.io/docs/concepts/signals/otel-baggage.svg)
 > ref: [Baggage](https://opentelemetry.io/docs/concepts/signals/baggage/)
 
 # Distributed Traces and Logs with Uptrace
