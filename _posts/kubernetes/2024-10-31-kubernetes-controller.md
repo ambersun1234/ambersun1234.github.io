@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理
 date: 2024-10-31
 categories: [kubernetes]
-tags: [kubernetes controller, state, wrangler, kubernetes operator, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator, livenessprobe, readinessprobe, health check, leader election, leader with lease, leader for life, event filter, predicate]
+tags: [kubernetes controller, state, wrangler, kubernetes operator, reconcile, crd, control loop, controller pattern, operator pattern, self healing, operator sdk, fsm, finalizer, namespaced operator, livenessprobe, readinessprobe, health check, leader election, leader with lease, leader for life, event filter, predicate, conversion webhook, crd migration]
 description: Kubernetes Controller 是實現 self-healing 的核心，透過 controller 來管理 cluster 的狀態。本文將介紹 Kubernetes Object 以及 Kubernetes Controller 的概念，並且透過 Operator SDK 來實作一個簡單的 operator
 math: true
 ---
@@ -357,6 +357,7 @@ $ kubectl config current-context
 ```shell
 $ make docker-build
 $ k3d image import -c mycluster controller:latest
+$ make deploy
 ```
 
 > docker-build 裡面的指令記得下 `--no-cache`\
@@ -394,6 +395,27 @@ controller 的 log 裡面你可以看到有正確的進行做動\
 你可以針對這個 operator 做更多的事情，比如說加入更多的檢查，或者是加入更多的欄位
 
 > 詳細的實作可以參考 [ambersun1234/blog-labs/k8s-controller](https://github.com/ambersun1234/blog-labs/tree/master/k8s-controller)
+
+# Handle CRD Migration with your Controller
+需要注意到的是，如果你的 CRD 同時會有多個版本在服務，你的 Controller 必須要能夠處理不同版本的 CRD
+
+Migration 算是滿常見的需求之一，比如說新的欄位或者是舊的欄位要棄用之類的\
+如果支援 v2 的 Controller 碰到 v1 的 CRD 那麼有可能會出現問題\
+以 Kubernetes 來說，你可以透過 `Conversion Webhook` 進行轉換\
+這樣即使之前遺留的 v1 CRD 也可以被正確的轉換成 v2，被 Controller 識別
+
+當然同時你的 Controller 也必須要做升級，支援新資料格式才行
+
+> 有關 Conversion Webhook 可以參考 [Kubernetes 從零開始 - client-go 實操 CRD \| Shawn Hsu](../../kubernetes/kubernetes-crd)
+
+注意到，以 Operator-SDK 的例子來說，你沒辦法監聽到不同版本的 CRD
+```
+2025-02-16T09:41:27Z    ERROR   setup   unable to create controller     
+{
+  "controller": "Foo", 
+  "error": "For(...) should only be called once, could not assign multiple objects for reconciliation"
+}
+```
 
 # How to Deploy your Controller
 另一個問題是如何部署你的 controller\
