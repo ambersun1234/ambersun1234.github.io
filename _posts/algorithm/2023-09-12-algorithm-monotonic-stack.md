@@ -77,7 +77,7 @@ func nextGreaterValue(nums []int) []int {
     monotonic := make([]int, 0)
     nextGreater := make([]int, len(nums))
 
-    for i := len(nums); i >= 0; i-- {
+    for i := len(nums) - 1; i >= 0; i-- {
         for {
             if empty(monotonic) {
                 break
