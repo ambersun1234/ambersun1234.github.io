@@ -3,7 +3,7 @@ title: 神奇的演算法 - Subarray Sum
 date: 2023-02-19
 description: 本篇文章將詳細的分解 subarray sum 的問題，並且從累計相對次數獲得啟發，進而優化時間複雜度
 categories: [algorithm]
-tags: [algorithm]
+tags: [kadane's algorithm, subarray, subarray sum, cumulative sum, dynamic programming, prefix sum]
 math: true
 ---
 

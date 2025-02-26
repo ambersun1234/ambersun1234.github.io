@@ -3,7 +3,7 @@ title: 神奇的演算法 - Binary Indexed Tree
 date: 2023-08-01
 description: Binary Indexed Tree 是一種特殊的資料結構，適用於需要大範圍的紀錄更新資料，其更新查找的時間極為快速，且空間占用極小，本文將介紹其核心概念以及實作
 categories: [algorithm]
-tags: [algorithm]
+tags: [binary indexed tree, binary tree, fenwick tree, cumulative]
 math: true
 ---
 
