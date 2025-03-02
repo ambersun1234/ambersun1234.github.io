@@ -2,28 +2,31 @@
 title: Kubernetes 從零開始 - Helm Controller
 date: 2024-10-06
 categories: [kubernetes]
-description: 本文介紹如何使用 Helm Controller 來管理 Helm chart，建立簡單的 Redis Helm Release 並且使用 kubectl patch 來更新並觀察 Helm Chart 的變化
-tags: [helm chart, helm controller, crd, terratest, json patch patch, strategic merge patch, json patch, kubectl patch]
+description: 本文介紹如何使用 Helm Controller 來管理 Helm Chart，建立簡單的 Redis Helm Release 並且使用 kubectl patch 來更新並觀察 Helm Chart 的變化
+tags: [helm chart, helm controller, crd, terratest, json patch patch, strategic merge patch, json patch, kubectl patch, helm upgrade]
 math: true
 ---
 
 # Introduction to Helm Controller
-如果你是使用 Helm chart 來管理你的 Kubernetes 資源\
+如果你是使用 Helm Chart 來管理你的 Kubernetes 資源\
 一個常見的需求會是，你可能會需要更新你的 chart\
 不管是 image version 還是一些設定檔的更新
 
 當然你可以手動 `$ helm upgrade` 來更新你的 chart\
 不過官方有提供一個更好的方式，就是使用 Helm Controller
 
-Helm Controller 允許你用 declarative 的方式來管理 Helm chart\
+Helm Controller 允許你用 declarative 的方式來管理 Helm Chart\
 並且主動監控任何 CRD(Custom Resource Definition) 的變化\
 因此你只需要透過更新 CRD 告訴他你想要的狀態，Helm Controller 會自己去更新相對應的 chart
+
+> 可參考 [Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理 \| Shawn Hsu](../../kubernetes/kubernetes-controller) 以及 [Kubernetes 從零開始 - Deployment 管理救星 Helm Chart \| Shawn Hsu](../../kubernetes/kubernetes-helm-chart)
 
 # Use Helm Controller
 [k3d](https://k3d.io/v5.7.4/)(i.e. k3s) 預設就已經安裝了 Helm Controller 以及相對應的 CRD\
 所以不需要特別安裝就可以直接使用
 
-> `HelmChart` 以及 `HelmChartConfig` 這兩個 CRD 可以用 `$ kubectl get crd` 來查看
+> `HelmChart` 以及 `HelmChartConfig` 這兩個 CRD 可以用 `$ kubectl get crd` 來查看\
+> 有關 CRD 可以參考 [Kubernetes 從零開始 - client-go 實操 CRD \| Shawn Hsu](../../kubernetes/kubernetes-crd)
 
 如果是其他的 Kubernetes cluster，可以參考 [k3s-io/helm-controller](https://github.com/k3s-io/helm-controller/blob/master/manifests/deploy-cluster-scoped.yaml) 給的設定檔進行操作
 
@@ -55,7 +58,7 @@ spec:
 
 # Patching Helm Chart
 ## Install Redis Helm Chart
-以 bitnami/redis 為例，透過 HelmChart CRD 建立 Custom Resource(CR)
+以 [bitnami/redis](https://github.com/bitnami/charts/blob/main/bitnami/redis) 為例，透過 HelmChart CRD 建立 Custom Resource(CR)
 
 ```yaml
 apiVersion: helm.cattle.io/v1
