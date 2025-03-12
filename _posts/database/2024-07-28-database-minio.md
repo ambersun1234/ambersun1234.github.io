@@ -3,7 +3,7 @@ title: 資料庫 - 大型物件儲存系統 MinIO 簡介
 date: 2024-07-28
 categories: [database]
 description: 物件儲存在雲端叢生的環境裡扮演著重要的角色，本篇文章將會探究 MinIO 在設計上的一些特點，像是 Erasure Coding, Quorum, Object Healing 等等
-tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook, lifecycle management]
+tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook, lifecycle management, object expiration, object tiering, object transition, object versioning, object lifecycle management, mc ping, mc admin, mc event, mc alias, mc stat, mc admin config, mc admin info]
 math: true
 ---
 
@@ -402,7 +402,8 @@ notification event 是在 bucket level 設定的\
 
 > 詳細的實作可以參考 [ambersun1234/blog-labs/minio-webhook](https://github.com/ambersun1234/blog-labs/tree/master/minio-webhook)
 
-# Debug MinIO on Kubernetes
+# MinIO on Kubernetes
+## How to Debug MinIO on Kubernetes
 有的時後你可能會遇到一些問題，比方說無法連線之類的\
 在 K8s 裡，你沒辦法從 host 直接開 GUI 看 log\
 但用 cli 還是可行的
@@ -444,6 +445,29 @@ mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可
 最後我發現是我的 ENV 沒有正確的設定\
 透過以上簡單的步驟，你就可以快速的 debug 你的 MinIO 啦
 
+## MinIO Health Check
+你可以透過 mc 工具來測試 MinIO 是否正常運作\
+指令是 `$ mc ping`
+
+指令如其名，它可以測試目標主機是否已經可以連線了\
+你可以將它設定為 backend 的 initContainer，在 backend 起來之前保證 MinIO 已經可以連線
+
+![](/assets/img/posts/minio.png)
+
+上圖你可以看到，mc ping 會不斷的 ping 目標主機(也可以針對集群本身 ping)\
+如果是為了做 initContainer, 你可以設定 `--exit`，當連線成功之後就會結束
+
+```shell
+$ docker run -itd \
+  -p 9000:9000 -p 9001:9001 \
+  -e MINIO_ROOT_USER="minio" -e MINIO_ROOT_PASSWORD="miniominio" \
+  --name test-minio \
+  minio/minio server /data --console-address ":9001"
+$ docker exec -it test-minio bash
+# mc alias set myminio http://localhost:9000 minio miniominio
+# mc ping myminio --error-count 30 --exit
+```
+
 # References
 + [Core Operational Concepts](https://min.io/docs/minio/linux/operations/concepts.html)
 + [很酷的糾刪碼(erasure code)技術](https://samkuo.me/post/2015/09/python-with-erasure-code/)
@@ -457,3 +481,4 @@ mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可
 + [Object Scanner](https://min.io/docs/minio/linux/operations/concepts/scanner.html)
 + [Object Lifecycle Management](https://min.io/docs/minio/linux/administration/object-management/object-lifecycle-management.html)
 + [lifecycle does not work](https://github.com/minio/minio/issues/9240)
++ [mc ping](https://min.io/docs/minio/linux/reference/minio-mc/mc-ping.html#id6)
