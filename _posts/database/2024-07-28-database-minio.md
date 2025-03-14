@@ -3,7 +3,7 @@ title: 資料庫 - 大型物件儲存系統 MinIO 簡介
 date: 2024-07-28
 categories: [database]
 description: 物件儲存在雲端叢生的環境裡扮演著重要的角色，本篇文章將會探究 MinIO 在設計上的一些特點，像是 Erasure Coding, Quorum, Object Healing 等等
-tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook, lifecycle management, object expiration, object tiering, object transition, object versioning, object lifecycle management, mc ping, mc admin, mc event, mc alias, mc stat, mc admin config, mc admin info]
+tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook, lifecycle management, object expiration, object tiering, object transition, object versioning, object lifecycle management, mc ping, mc admin, mc event, mc alias, mc stat, mc admin config, mc admin info, provisioning]
 math: true
 ---
 
@@ -402,6 +402,36 @@ notification event 是在 bucket level 設定的\
 
 > 詳細的實作可以參考 [ambersun1234/blog-labs/minio-webhook](https://github.com/ambersun1234/blog-labs/tree/master/minio-webhook)
 
+# MinIO Access Control Policy
+上面我們有大概提到說 MinIO 本身是使用 PBAC 的方法進行權限控管的(可以參考 [網頁設計三兩事 - 基礎權限管理 RBAC, ABAC 與 PBAC \| Shawn Hsu](../../website/website-permission))\
+它內建有一些預設的 policy 如 `readwrite`, `readonly` 以及 `writeonly`\
+你也可以自己定義客製化的權限控管機制
+
+以 [bitnami/minio](https://github.com/bitnami/charts/blob/main/bitnami/minio/README.md) 來說，可以定義在 `provisioning.policies` 這裡\
+不過，實務上在設定的時候有個小東西需要注意
+
+以下是 mybucket 的 policy\
+可以看到很簡單的，這個 policy 允許 `mybucket` 底下特定的操作，比如說上傳、下載等\
+只不過多了 `s3:GetBucketLocation` 以及 `s3:HeadBucket` 這兩個操作，那他們是針對 bucket 本身的操作\
+我自己測試的時候，少了這兩個基本上你就會得到 **Access Denied** 的錯誤
+
+> 定義好 policy 之後要跟 user 進行綁定才會正確做動
+
+```yaml
+name: mybucket-policy
+  statements:
+    - effect: "Allow"
+      resources:
+        - "arn:aws:s3:::mybucket/*"
+        - "arn:aws:s3:::mybucket"
+      actions:
+        - "s3:GetBucketLocation"
+        - "s3:PutObject"
+        - "s3:GetObject"
+        - "s3:ListBucket"
+        - "s3:HeadBucket"
+```
+
 # MinIO on Kubernetes
 ## How to Debug MinIO on Kubernetes
 有的時後你可能會遇到一些問題，比方說無法連線之類的\
@@ -430,7 +460,9 @@ spec:
 ```
 
 將這個 pod 部署到你的 cluster 上面\
-然後你可以透過 mc 這個工具連線進去你的 MinIO\
+然後 exec 進去 MinIO 的 pod(注意到不是 mc 的 pod)\
+你就可以透過 mc 這個工具連線進去你的 MinIO
+
 我遇到的問題是連線連不上，因為不確定是 application config 沒讀到所以出錯\
 還是本身設定就有問題了，因此我的首要目的會是測試連線
 
@@ -482,3 +514,4 @@ $ docker exec -it test-minio bash
 + [Object Lifecycle Management](https://min.io/docs/minio/linux/administration/object-management/object-lifecycle-management.html)
 + [lifecycle does not work](https://github.com/minio/minio/issues/9240)
 + [mc ping](https://min.io/docs/minio/linux/reference/minio-mc/mc-ping.html#id6)
++ [Access Management](https://min.io/docs/minio/linux/administration/identity-access-management/policy-based-access-control.html)
