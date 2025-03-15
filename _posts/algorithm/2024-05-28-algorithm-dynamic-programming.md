@@ -3,7 +3,7 @@ title: 神奇的演算法 - 動態規劃 Dynamic Programming
 date: 2024-05-28
 description: 動態規劃的題目是我覺的演算法中數一數二困難的問題，能夠清楚的理解並活用需要一點耐心與技巧。本文會透過幾個實際的例子分享我的解題思路與一些技巧
 categories: [algorithm]
-tags: [dynamic programming, dp]
+tags: [dynamic programming, dp, fibonacci, coin change, recursion, leetcode-322, leetcode-120, leetcode-97]
 math: true
 ---
 

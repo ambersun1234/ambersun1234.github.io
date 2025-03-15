@@ -3,7 +3,7 @@ title: 神奇的演算法 - Monotonic Stack
 date: 2023-09-12
 description: Monotonic stack 是一個用來解決 Next Greater Element 的演算法，本篇文章會介紹它的概念以及如何實作
 categories: [algorithm]
-tags: [array, stack, monotonic]
+tags: [array, stack, monotonic, next greater element, leetcode, leetcode-496, leetcode-503, leetcode-1475]
 math: true
 ---
 

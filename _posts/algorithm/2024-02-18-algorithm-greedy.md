@@ -3,7 +3,7 @@ title: 神奇的演算法 - Greedy Algorithm
 date: 2024-02-18
 description: 貪婪演算法，顧名思義，這種演算法的概念是以 "貪婪" 為優先選擇，不考慮後果只注重當下的最佳選擇，就是貪婪演算法的核心概念
 categories: [algorithm]
-tags: [greedy]
+tags: [greedy, greedy algorithm, optimal, leetcode, leetcode-322, leetcode-55, leetcode-222]
 math: true
 ---
 
