@@ -212,7 +212,7 @@ Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然
 注意到它跟 lost update 是不同的狀況，write skew 是對 **不同** 資料進行更新(而 lost update 是對相同資料做更新)
 
 所以何謂 write skew?\
-![](https://i.stack.imgur.com/FhcV9.png)
+![](https://i.sstatic.net/FhcV9.png)
 > ref: [Why write skew can happen in Repeatable reads?](https://stackoverflow.com/questions/48417632/why-write-skew-can-happen-in-repeatable-reads)
 
 醫生 on call 班表，其中 Alice, Bob 皆為醫師\
