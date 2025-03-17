@@ -500,6 +500,13 @@ $ docker exec -it test-minio bash
 # mc ping myminio --error-count 30 --exit
 ```
 
+<hr>
+
+或者是單純的使用 curl 也是可以的\
+MinIO 有提供 `/minio/health/live`, `/minio/health/ready` 等的 public API endpoint 來做健康檢查
+
+> 可參考 [MinIO Healthcheck](https://github.com/minio/minio/blob/master/docs/metrics/healthcheck/README.md?ref=blog.min.io)
+
 # References
 + [Core Operational Concepts](https://min.io/docs/minio/linux/operations/concepts.html)
 + [很酷的糾刪碼(erasure code)技術](https://samkuo.me/post/2015/09/python-with-erasure-code/)
