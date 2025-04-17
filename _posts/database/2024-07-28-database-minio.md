@@ -111,9 +111,14 @@ MinIO 一樣是先 `一起開寫`，但是當主節點完成之後就會 return
 具體的做法是新增一個 `DeleteMarker` 物件(0 byte)，這個物件會標記這個物件已經被刪除了\
 不過你也可以指定刪除特定的版本，因為他是刪除其中的一個版本，所以接下來存取的版本就會是上一個版本
 
-> 多版本的物件預設會指向最新的版本\
-> 所有的版本是透過 UUID v4 來做識別的
+![](/assets/img/posts/minio2.png)
 
+> 多版本的物件預設會指向最新的版本\
+> 所有的版本是透過 UUID v4 來做識別的\
+> 上圖你可以看到兩個版本的 uuid, 以及最新的版本是一個 0 byte 的標記\
+> 註明說它已經被刪除了
+
+### Versioning by Namespace
 ```
 databucket/object.blob
 databucket/blobs/object.blob
@@ -492,7 +497,7 @@ mc 這個工具除了可以連線到 MinIO, 其他 S3-compatible 的服務也可
 ```shell
 $ docker run -itd \
   -p 9000:9000 -p 9001:9001 \
-  -e MINIO_ROOT_USER="minio" -e MINIO_ROOT_PASSWORD="miniominio" \
+  -e MINIO_ROOT_USER="miniominio" -e MINIO_ROOT_PASSWORD="miniominio" \
   --name test-minio \
   minio/minio server /data --console-address ":9001"
 $ docker exec -it test-minio bash
