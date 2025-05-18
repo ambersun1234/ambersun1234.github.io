@@ -649,15 +649,33 @@ consumer 的 for loop 裡面，你可以選擇執行完再進行 ACK\
 RabbitMQ 你可以透過 [NotifyClose](https://pkg.go.dev/github.com/streadway/amqp#Connection.NotifyClose) 監聽 connection close 的事件(channel 或 connection)\
 寫起來大概長這樣
 
+注意到，不能寫 `case <- r.conn.NotifyClose(make(chan *amqp.Error))`\
+他有可能會接不到 notify close 的訊號\
+然後他也不會死掉，就是會整個無回應
+
+> 建議使用 buffered channel 避免 deadlock
+
 ```go
+msgs, err := r.channel.Consume(key, "", false, false, false, false, nil)
+if err != nil {
+    panic(err)
+}
+
+connectionChan := r.conn.NotifyClose(make(chan *amqp.Error, 1))
+channelChan := r.channel.NotifyClose(make(chan *amqp.Error, 1))
+
 for {
     select {
-    case <-r.conn.NotifyClose(make(chan *amqp.Error)):
+    case msg := <-msgs:
+        // consume message
+    
+    case <-connectionChan:
         fmt.Println("RabbitMQ connection closed, reconnecting...")
         // do reconnect
 
-    default:
-        // nop
+    case <-channelChan:
+        fmt.Println("RabbitMQ channel closed, reconnecting...")
+        // do reconnect
     }
 }
 ```
