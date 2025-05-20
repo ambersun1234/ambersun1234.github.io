@@ -299,6 +299,20 @@ spec:
 > 多版本的 CRD 定義裡面需要新增 `//+kubebuilder:storageversion` 這個註解\
 > 告訴 Operator-SDK 這個版本是用來儲存的
 
+## Version Convention
+在設計不同版本的 CRD 的時候，版本號的規則在這裡有點不同\
+比方說你要從 `v1` 升級到 `v1.1` 之類的，這件事情是不被允許的
+
+```shell
+Invalid value: "v1.1": a DNS-1035 label must consist of lower case alphanumeric characters or '-', 
+start with an alphabetic character, and end with an alphanumeric character 
+(e.g. 'my-name',  or 'abc-123', regex used for validation is '[a-z]([-a-z0-9]*[a-z0-9])?')
+```
+
+而根據 [Versions in CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/) 裡面的說明\
+一個合法且常見的做法為 `stability level` + `version number`\
+也就是組成類似 `v1alpha1`, `v1beta1`, `v1` 這樣的格式
+
 ## Conversion Webhook
 注意到上面 CRD 裡面有一個 `conversion` 的欄位\
 這是讓你拿來處理新舊版本資料格式轉換的地方
@@ -445,6 +459,9 @@ spec:
     deprecationWarning: foos.foo.example.com/v1 is deprecated. Use foos.foo.example.com/v2 instead.
 ```
 
+> 如果你是透過 Operator-SDK 建立 CRD\
+> 需要加上 `//+kubebuilder:deprecatedversion` 註記這個版本被棄用
+
 然後你在使用的時候就可以看到警告\
 注意到即使 deprecated 仍然可以使用，要把 `served` 設為 `false` (或刪除)才會真的不支援 
 
@@ -471,3 +488,4 @@ spec:
 + [Versions in CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#webhook-conversion)
 + [What does 'storage' means in Kubernetes CRD?](https://stackoverflow.com/questions/69558910/what-does-storage-means-in-kubernetes-crd)
 + [Managing different versions of CRD in the operator-idk controller](https://github.com/operator-framework/operator-sdk/issues/6324)
++ [Add deprecated information for API](https://github.com/kubernetes-sigs/kubebuilder/issues/2116)
