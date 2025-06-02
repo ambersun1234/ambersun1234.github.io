@@ -3,7 +3,7 @@ title: 資料庫 - 新手做 Data Migration 資料遷移
 date: 2024-02-08
 description: 隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題
 categories: [database]
-tags: [data migration, sql, prisma]
+tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas]
 math: true
 ---
 
@@ -26,6 +26,9 @@ math: true
 以 [Prisma](https://www.prisma.io/) 來說\
 每一次的搬遷，它都會新增一筆新的 entry\
 針對該欄位的更新 sql 就會寫在裡面
+
+> 各個語言其實都已經有不同的 Migration 工具\
+> 如 Node.js 裡的 [Prisma](https://www.prisma.io/) 以及 Python 裡的 [Alembic](https://alembic.sqlalchemy.org/en/latest/)
 
 <hr>
 
@@ -80,6 +83,22 @@ math: true
 如果遇到複雜的商業邏輯的部份，則可能要寫個小程式執行
 
 # Possible Issues
+## Backward Compatibility
+有的時候資料升級，你會遇到無法向後相容的部分\
+也就是說新的資料格式沒辦法正確的套用到舊有的資料上\
+倒也不是你資料錯誤導致，而是 **資料缺失** 造成的
+
+導致說更新完的資料會沒辦法與新版的系統正確的匹配運作\
+舉例來說，我目前碰到的狀況是我想要 "發文分類" 這個功能\
+但是早期建立的文章並沒有任何欄位可以區分(比方說 `個人空間` 還是 `公開空間`)\
+這樣的狀況你無從知道這些資料是屬於哪一個分類
+
+無可避免的，這種時候各種做法都會有它的缺點
++ 全部搬遷到 個人空間/公開空間
++ 保留 NULL 值，更改處理資料邏輯
+
+當然我們能做的，就是盡量將損失降到最低
+
 ## Data Loss
 執行資料搬遷，我們絕對不希望它更改到其他不相干的部份\
 但它仍然是可能會發生的，所以測試是必要的
@@ -125,6 +144,20 @@ INSERT INTO (xxx) VALUES(yyy) ON CONFLICT(zzz) DO UPDATE SET id = EXCLUDED.id
 當然這時候，使用 `transaction` 是相對比較好的選擇
 
 > 有關 transaction 的討論，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction)
+
+# On-premise vs. SAAS Migration
+有些產品是落地的，資料並不在我們的控制之下\
+在這種情況下，資料升級無疑是相當困難的
+
+SAAS 的產品，我們可以直接存取到資料庫本身\
+而我們很清楚服務內存在著什麼樣的資料\
+升級失敗復原相對容易且容易掌控\
+因為執行資料升級的會是開發服務本身的廠商
+
+到了 On-premise 這裡，事情會完全不一樣\
+客戶並不一定擁有足夠的知識能夠處理，甚至可以說是沒有這樣的知識\
+支援是相對薄弱的，這時候如果升級失敗將會是一場災難\
+若是遇到 [Backward Compatibility](#backward-compatibility) 的問題，無疑是雪上加霜
 
 # References
 + [Hassle-Free Database Migrations with Prisma Migrate](https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b)
