@@ -3,7 +3,7 @@ title: Kubernetes 從零開始 - Sidecar 與 Lifecycle Hook 組合技
 date: 2025-05-18
 categories: [kubernetes]
 description: Kubernetes 1.28 之後引入了新版本的 Sidecar Container 的機制，本篇文章將會帶你深入了解如何利用 Sidecar Container 與 Lifecycle Hook 以建構複雜但優雅的架構，並以 Tcpdump 為例，探討 Kubernetes Event 與 Exit Code 是如何影響 Sidecar Container 的結束流程
-tags: [sidecar, container pattern, ambassador, adapter, logging, monitoring, tcpdump, init container, liveness, readiness, probe, lifecycle hook, post start, pre stop, sigterm, sigkill, exit code, signal, trap, wait, sleep, background process, foreground process, netshoot, event, killing event, terminationGracePeriodSeconds]
+tags: [sidecar, container pattern, ambassador, adapter, logging, monitoring, tcpdump, init container, liveness, readiness, probe, lifecycle hook, post start, pre stop, sigterm, sigkill, exit code, signal, trap, wait, sleep, background process, foreground process, netshoot, event, killing event, terminationGracePeriodSeconds, feature gate]
 math: true
 ---
 
@@ -98,6 +98,36 @@ spec:
   volumes:
   - name: data
       emptyDir: {}
+```
+
+## Sidecar Container Feature Gate
+不過注意到，Kubernetes `1.28` 仍需要手動開啟相對應的 feature gate 才能使用
+
+> Kubernetes 1.28 adds a new restartPolicy field to init containers that is available when the SidecarContainers feature gate is enabled.
+
+你可以透過以下指令檢查是否已經開啟
+```shell
+$ kubectl get --raw /metrics | grep kubernetes_feature_enabled | grep Sidecar
+kubernetes_feature_enabled{name="SidecarContainers",stage="ALPHA"} 0
+
+$ kubectl version 
+Client Version: v1.30.1
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.28.15+k3s1
+```
+可以看到說這台機器是 `1.28` 的版本，並且 feature gate 是關閉的(0: off, 1: on)
+
+至於說 `1.29` 版本，則是預設開啟的
+```shell
+$ kubectl get --raw /metrics | grep kubernetes_feature_enabled | grep Sidecar
+kubernetes_feature_enabled{name="SidecarContainers",stage="BETA"} 1
+```
+
+如果你是使用 [k3d](https://k3d.io/) 來建立 cluster 的話，可以透過以下指令來開啟
+```shell
+$ k3d cluster create mycluster \
+    --image rancher/k3s:v1.28.15-k3s1 \
+    --k3s-arg '--kube-apiserver-arg=feature-gates=SidecarContainers=true@server:*'
 ```
 
 ## Sidecar Container Lifecycle
