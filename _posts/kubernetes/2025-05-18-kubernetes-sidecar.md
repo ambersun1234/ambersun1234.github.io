@@ -117,18 +117,24 @@ Server Version: v1.28.15+k3s1
 ```
 可以看到說這台機器是 `1.28` 的版本，並且 feature gate 是關閉的(0: off, 1: on)
 
+![](/assets/img/posts/sidecar-1.28.png)
+
 至於說 `1.29` 版本，則是預設開啟的
 ```shell
 $ kubectl get --raw /metrics | grep kubernetes_feature_enabled | grep Sidecar
 kubernetes_feature_enabled{name="SidecarContainers",stage="BETA"} 1
 ```
 
-如果你是使用 [k3d](https://k3d.io/) 來建立 cluster 的話，可以透過以下指令來開啟
+![](/assets/img/posts/sidecar-1.29.png)
+
+如果你是使用 [k3d](https://k3d.io/) 來建立 cluster 的話，可以透過以下指令來手動開啟 feature gate
 ```shell
 $ k3d cluster create mycluster \
     --image rancher/k3s:v1.28.15-k3s1 \
     --k3s-arg '--kube-apiserver-arg=feature-gates=SidecarContainers=true@server:*'
 ```
+
+![](/assets/img/posts/sidecar-1.28-overwrite.png)
 
 ## Sidecar Container Lifecycle
 既然是作為輔助容器，很多時候你會要求
