@@ -131,8 +131,11 @@ kubernetes_feature_enabled{name="SidecarContainers",stage="BETA"} 1
 ```shell
 $ k3d cluster create mycluster \
     --image rancher/k3s:v1.28.15-k3s1 \
-    --k3s-arg '--kube-apiserver-arg=feature-gates=SidecarContainers=true@server:*'
+    --k3s-arg '--kube-apiserver-arg=feature-gates=SidecarContainers=true@server:*' \
+    --k3s-arg '--kubelet-arg=feature-gates=SidecarContainers=true@agent:*'
 ```
+
+> 如果是 K3s 只要開 `--kube-apiserver-arg` 即可
 
 ![](/assets/img/posts/sidecar-1.28-overwrite.png)
 
@@ -468,3 +471,4 @@ $ trap 'exit 0' TERM; sleep 86400 & wait
 + ["trap ... INT TERM EXIT" really necessary?](https://unix.stackexchange.com/questions/57940/trap-int-term-exit-really-necessary)
 + [Cannot trap SIGINT and SIGTERM when using "sleep infinity" [duplicate]](https://stackoverflow.com/questions/78432948/cannot-trap-sigint-and-sigterm-when-using-sleep-infinity/78432970#78432970)
 + [shell中trap的使用](https://blog.csdn.net/qing101hua/article/details/93619508)
++ [FAQ](https://k3d.io/v5.8.3/faq/faq/)
