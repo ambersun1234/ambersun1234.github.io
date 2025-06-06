@@ -3,7 +3,7 @@ title: 神奇的演算法 - Monotonic Stack
 date: 2023-09-12
 description: Monotonic stack 是一個用來解決 Next Greater Element 的演算法，本篇文章會介紹它的概念以及如何實作
 categories: [algorithm]
-tags: [array, stack, monotonic, next greater element, leetcode, leetcode-496, leetcode-503, leetcode-1475]
+tags: [array, stack, monotonic, next greater element, leetcode, leetcode-496, leetcode-503, leetcode-1475, leetcode-2434]
 math: true
 ---
 
@@ -134,6 +134,76 @@ func pop(stack []int) []int {
 答案是 2 次，哪 2 次？\
 每個元素只會被寫入一次，在 outer loop 的時候做的，而 inner loop 只負責 pop(已經被移出 stack 的元素不可能再寫回去)\
 所以整體的複雜度為 $O(2n)$
+
+# [LeetCode 2434. Using a Robot to Print the Lexicographically Smallest String](https://leetcode.com/problems/using-a-robot-to-print-the-lexicographically-smallest-string/description/)
+題目是這樣子的，給定一個字串 `s` 然後你可以做以下任一的一個操作
++ 從 `s` 中移除 **前面** 的字元到 `t` 的後面
++ 從 `t` 中移除 **後面** 的字元到 答案 的後面
+
+重複操作直到 `s` 以及 `t` 皆為空，然後在眾多答案的組合中，找到字典序最小的答案是哪一個
+
+比如說 `vzhofnpo` 的答案是 `fnohopzv`
+
+<hr>
+
+看完你應該馬上要知道，這題會需要用到 stack 來解決\
+原因是從 `s` 移除前面的字元，又在 `t` 中移除後面的字元\
+這個情況是符合 **FILO** 的特性
+
+第二個重點是，答案的組合是所有可能的組合中，字典序最小的那一個\
+字典序最小的範例是 `abcdef...`，也就是最小的在最前面\
+你可能會覺得我直接算字母頻率然後依照字典序組合起來就行，但由於轉換規則的限制，這並不是正確的\
+你也可以看到答案說，兩個字母 o 並沒有相依
+
+題目本質是 stack, 答案又要是字典序最小的\
+意味著字典序小的字母會需要出現在前面，依序變大\
+這很明顯是符合 Monotonic Stack 的特性
+
+為了需要知道哪些字母是當前最小的，你會需要一個 frequency map 來紀錄\
+如果 a 出現了三次，我會希望這三次都盡量靠前 甚至黏在一起 對吧？\
+但根據規則，這其實不太可能(就像例子中的 o 一樣)
+
+但是為了能夠靠在一起，我需要等到最後一個字母出現的時候才開始將她寫入答案\
+什麼意思？ `a----a------------a` 的字串，如果我在第一個 a 的時候就寫入，答案會是 **字典序最小** 的可能性就會降低了對吧？\
+要最大機率可以得到正確的答案是不是要等所有 a 都出現了才開始寫入？\
+而事實證明，這的確可以得到全局最佳解，也因此這題會需要搭配 [Greedy Algorithm](../../algorithm/algorithm-greedy) 來解決
+
+## Implementation
+```go
+func robotWithString(s string) string {
+    m := make(map[int]int, 0)
+
+    for _, c := range s {
+        m[int(c - 'a')] += 1
+    }
+
+    stack := make([]rune, 0)
+    result := make([]string, 0)
+    for _, c := range s {
+        stack = append(stack, c)
+        m[int(c - 'a')] -= 1
+
+        // 找到當前最小的字母
+        minc := 'a'
+        for minc < 'z' && m[int(minc - 'a')] == 0 {
+            minc++
+        }
+
+        // 執行 Monotonic 的操作
+        for len(stack) > 0 && stack[len(stack) - 1] <= minc {
+            result = append(result, string(stack[len(stack) - 1]))
+            stack = stack[:len(stack) - 1]
+        }
+    }
+
+    for len(stack) > 0 {
+        result = append(result, string(stack[len(stack) - 1]))
+        stack = stack[:len(stack) - 1]
+    }
+
+    return strings.Join(result, "")
+}
+```
 
 # Examples
 
