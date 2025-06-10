@@ -187,6 +187,29 @@ Chart Hook 總共有 9 種 Hook ，其實可以大略分成 4 + 1 種\
     + Helm 對於事件之前的定義是，當 templates 已經完全渲染完成但還沒安裝進去之前
 + `post`: 在 **事件之後** 執行，比如說，刪除之後、復原之後
 
+## Hook Weight
+範例可以參考 [Example](#example)
+
+> hook-weight 是個字串
+
+`hook-weight` 用來定義執行的順序，**數字越小越早執行**(可為負值)\
+如果數字相同，會按照 `Resource Kind` 的順序(ASC)\
+如果 `Resource Kind` 相同，會按照 `Resource Name` 的順序(ASC)
+
+權重設計，依照慣例，通常會留有一定的空間\
+比如說間隔 100 來設定，這樣可以確保你可以在中間插入其他的工作\
+傳統的 Linux 的 init scripts 也是使用類似的方法(現已被 systemd 取代)
+
+![](http://ithelp.ithome.com.tw/upload/images/20131008/2013100821432552540bfd1178c_resize.png)
+> ref: [Linux Pi的奇幻旅程(16)-大改造(續)](https://ithelp.ithome.com.tw/articles/10135276)
+
+透過檔案名稱排序，依序執行相對應的 script\
+為了保有一定的彈性，每個權重之間不一定是緊密相連的\
+允許你在之後安插不同的依賴，這樣就不需要調整權重
+
+而這當然也會有問題，像是如果預留的空間仍然不足，手動調整空間還是必要的\
+這也是傳統 [runlevel](https://en.wikipedia.org/wiki/Runlevel) 實作上的一個問題
+
 ## Lifecycle
 Hook Lifecycle 其實相對簡單，以 `install` 為例
 
@@ -194,9 +217,10 @@ Hook Lifecycle 其實相對簡單，以 `install` 為例
 2. 呼叫內部 install API
 3. 安裝 `crds/` 裡面的 CRD
 4. 驗證以及渲染 `templates/` 裡面的 yaml
-5. `pre-install` hook
-6. `post-install` hook
-7. 完成
+5. `pre-install` hook(並等待完成)
+6. 正式安裝
+7. `post-install` hook(並等待完成)
+8. 完成
 
 你可能會好奇要怎麼定義 Hook 已經被執行完成與否？\
 針對 Job 或是 Pod 這類 resource 主要是判斷成功與否，其他資源則是寫進去就算完成
@@ -212,8 +236,9 @@ annotations:
 ```
 
 你可以在一個 yaml 裡面定義多個 Hook(用逗號分隔)\
-`hook-weight` 用來定義執行的順序，**數字越小越早執行**\
+`hook-weight` 用來定義執行的順序，可參考 [Hook Weight](#hook-weight)\
 `hook-delete-policy` 用來定義 Hook 的刪除策略，有三種
+
 + `before-hook-creation`: 在新的 Hook 創建之前刪除先前的 Hook(預設)
 + `hook-succeeded`: 在 Hook 執行成功之後刪除
 + `hook-failed`: 在 Hook 執行失敗之後刪除
@@ -232,3 +257,4 @@ annotations:
 + [Custom Resource Definitions](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/)
 + [Limitations on CRDs](https://helm.sh/docs/topics/charts/#limitations-on-crds)
 + [Chart Hooks](https://helm.sh/docs/topics/charts_hooks/)
++ [linux系统脚本启动顺序 /etc/rc.d/ 与/etc/rc.d/init.d](https://blog.csdn.net/u013921164/article/details/118176417)
