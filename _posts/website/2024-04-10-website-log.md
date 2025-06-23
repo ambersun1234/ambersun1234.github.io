@@ -74,7 +74,7 @@ request body 之類的可以放在 `Debug` level 裡面\
 
 `Fatal` 則是當系統崩潰無法繼續服務的時候，就是使用 `Fatal` level
 
-![](https://i.stack.imgur.com/z5Fim.png)
+![](https://i.sstatic.net/z5Fim.png)
 > ref: [When to use the different log levels](https://stackoverflow.com/a/64806781)
 
 # Structured logging
