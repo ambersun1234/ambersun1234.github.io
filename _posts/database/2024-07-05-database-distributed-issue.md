@@ -53,39 +53,56 @@ math: true
 # Data Consistency
 在分散式系統中，根據 [CAP Theorem](../../database/database-distributed-database) 我們知道\
 AP 系統，沒辦法保證所有節點在收到相同的資料的時候維持一致(因為還沒同步完成)\
-所以這類系統提供的保證通常都是 `Eventually Consistent`\
+所以這類系統提供的保證通常都是 **Eventually Consistent**\
 也就是他最終會趨於一致，只是時間不好說
 
-但是對於使用者來說，我剛剛發佈的文章看不到，顯然是一件奇怪的事情\
-常見的解法
-1. 使用同步複製的方法(可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#replication))
-    + 單一節點掛掉會癱瘓整個系統，這顯然喪失了分散式系統的優勢
-2. 針對自己的資料，讓他讀取 leader 的 replica，這樣就保證不會有未同步的問題
-    + 當讀取自己的資料量大的時候，速度就會變慢了
-2. 依靠時間戳記
-    + 但時間並不可靠，可參考 [Unreliable Clock](#unreliable-clock)
+也因此這個保證是非常弱的\
+那最強的保證是什麼？ 是 **Strong Consistency**\
+強一致性的系統，在高階角度看下來就好像只有一個資料副本\
+也就是說他並不會出現一些奇奇怪怪的狀況，例如說寫進去的資料過一段時間才出來之類的
+
+> 一個可線性化的系統(強一致性)，本身就會提供近新保證\
+> 單台資料庫並不一定可以線性化，要看隔離機制\
+> snapshot isolation 不能保證 linearizability，因為 snapshot 不能讀到比他新的資料
+
+> 有關 isolation 的介紹，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction)
+
+但是，最終一致性與強一致性，跨距太遠了\
+我們需要有一些介於兩者之間的保證 [Read-after-write](#read-after-write), [Monotonic Read](#monotonic-read), [Same Prefix Read](#same-prefix-read)\
+這些都在一定程度上保證了資料的一致性
+
+## Read-after-write
+一個常見的問題是，我寫入的資料，我馬上讀取，卻讀不到\
+而原因在於你寫入與讀取的 replica 可能是不同台機器，資料還沒有同步這麼快\
+對於使用者來說這無疑是很奇怪的，我應該要能夠看到我剛剛做的改變
+
+`read-after-write` 保證了，你寫入的資料，你馬上讀取，就會讀到\
+但是對於別人的資料，就無法保證
+
+解法可以針對自己的資料，讓他讀取 leader 的 replica，這樣就保證不會有未同步的問題\
+缺點是當讀取自己的資料量大的時候，速度就會變慢了
 
 ## Monotonic Read
 更糟糕的是，如果多次查詢，返回的結果不一致，這可能比查不到還要糟糕\
 比如說，你查詢一個商品的庫存，第一次查詢是 10，第二次查詢是 0，第三次又是 10\
-那他到底是有還是沒有？
+那他到底是有還是沒有？ 這種 **時間倒流的現象** 是 Monotonic Read 想要避免的問題
 
-分散式系統中，一個 partition 可以有多個 replica\
-當你查詢的時候，可能會查到不同的 replica\
-如果某幾個 follower 還在同步，那他們的結果就會不一樣\
+問題同樣也在讀取不同的 replica 資料同步問題\
 解決的辦法也滿簡單的，你只要確保，該 user 的所有 request 都是由同一個 replica 處理就好了\
 比如說用 hash function 將特定的使用者全部導向特定的機器上\
 稱之為 `Monotonic read`
 
 > 為什麼叫做單調讀取？ 因為當你讀了新的資料，就保證不會讀到舊的
 
-## Same Prefix Read
-分散式系統，由於需要進行節點之間的同步，他的同步資料的方式有可能是沒按照順序的\
-也就是說假設資料有順序性，比如說留言板，我們希望留言是按照時間順序排列的\
-他同步的順序如果錯亂了，你讀到的可能就有問題了
+問題是出在讀取不同的 replica 資料，那解法很自然就是讀取相同的 replica
 
-也因為事件順序的重要性，所以需要額外的工具協助\
-比如說 vector clock
+## Same Prefix Read
+假設資料有順序性或者說因果關係\
+讀取不同 replica 的資料，也同樣是遇到同步問題，導致使用者會看到牛頭不對馬尾的資料\
+比如說留言板，留言的順序是有因果關係/時間關係的
+
+一樣是因為讀取不同 replica 資料造成的\
+解法可以讀取相同的 replica, 或者是依靠時間戳記，但時間並不可靠，可參考 [Unreliable Clock](#unreliable-clock)
 
 # Read/Write Phenomena
 單一節點(以及 single leader)的讀寫異常，我們在 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction#database-read-write-phenomena) 已經看了滿多的\
