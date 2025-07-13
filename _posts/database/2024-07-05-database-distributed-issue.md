@@ -3,7 +3,7 @@ title: 資料庫 - 分散式系統中的那些 Read/Write 問題
 date: 2024-07-05
 description: 分散式系統是如今系統架構中最重要的一個概念之一，由於其複雜程度高，因此也衍生出了許多需要考慮的事情。本文將一一列舉這些問題，並且更深入的理解分散式系統的設計
 categories: [database]
-tags: [database, distributed, cluster, byzantine fault, split brain, network, clock, monotonic read, vector clock, version vector, last write wins, lamport timestamp, transaction, 2PC, 3PC]
+tags: [database, distributed, cluster, byzantine fault, split brain, network, clock, monotonic read, vector clock, version vector, last write wins, lamport timestamp, transaction, 2PC, 3PC, netflix, tudum, raw hollow, hollow, read after write, eventually consistent, linearizability, zookeeper]
 math: true
 ---
 
@@ -51,6 +51,7 @@ math: true
 錯誤的時鐘，有可能會導致錯誤的資料被寫入，而這種錯誤是無法被感知到的
 
 # Data Consistency
+## Eventually Consistent
 在分散式系統中，根據 [CAP Theorem](../../database/database-distributed-database) 我們知道\
 AP 系統，沒辦法保證所有節點在收到相同的資料的時候維持一致(因為還沒同步完成)\
 所以這類系統提供的保證通常都是 **Eventually Consistent**\
@@ -68,21 +69,21 @@ AP 系統，沒辦法保證所有節點在收到相同的資料的時候維持�
 > 有關 isolation 的介紹，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction)
 
 但是，最終一致性與強一致性，跨距太遠了\
-我們需要有一些介於兩者之間的保證 [Read-after-write](#read-after-write), [Monotonic Read](#monotonic-read), [Same Prefix Read](#same-prefix-read)\
+我們需要有一些介於兩者之間的保證 [Read-after-Write](#read-after-write), [Monotonic Read](#monotonic-read), [Same Prefix Read](#same-prefix-read)\
 這些都在一定程度上保證了資料的一致性
 
-## Read-after-write
+### Read-after-Write
 一個常見的問題是，我寫入的資料，我馬上讀取，卻讀不到\
 而原因在於你寫入與讀取的 replica 可能是不同台機器，資料還沒有同步這麼快\
 對於使用者來說這無疑是很奇怪的，我應該要能夠看到我剛剛做的改變
 
-`read-after-write` 保證了，你寫入的資料，你馬上讀取，就會讀到\
+`Read-after-Write` 保證了，你寫入的資料，你馬上讀取，就會讀到\
 但是對於別人的資料，就無法保證
 
 解法可以針對自己的資料，讓他讀取 leader 的 replica，這樣就保證不會有未同步的問題\
 缺點是當讀取自己的資料量大的時候，速度就會變慢了
 
-## Monotonic Read
+### Monotonic Read
 更糟糕的是，如果多次查詢，返回的結果不一致，這可能比查不到還要糟糕\
 比如說，你查詢一個商品的庫存，第一次查詢是 10，第二次查詢是 0，第三次又是 10\
 那他到底是有還是沒有？ 這種 **時間倒流的現象** 是 Monotonic Read 想要避免的問題
@@ -96,13 +97,119 @@ AP 系統，沒辦法保證所有節點在收到相同的資料的時候維持�
 
 問題是出在讀取不同的 replica 資料，那解法很自然就是讀取相同的 replica
 
-## Same Prefix Read
+### Same Prefix Read
 假設資料有順序性或者說因果關係\
 讀取不同 replica 的資料，也同樣是遇到同步問題，導致使用者會看到牛頭不對馬尾的資料\
 比如說留言板，留言的順序是有因果關係/時間關係的
 
 一樣是因為讀取不同 replica 資料造成的\
 解法可以讀取相同的 replica, 或者是依靠時間戳記，但時間並不可靠，可參考 [Unreliable Clock](#unreliable-clock)
+
+## Netflix Raw Hollow System for Tudum
+Netflix 的 Tudum 網站提供了一些獨家專訪，花絮以及特別收錄的內容\
+讓使用者可以更深層的探索他們最喜歡的影視作品\
+這個系統主要的角色就是 內容編輯者 以及 檢視者(使用者)
+
+![](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*i_LBGZ4i7QWeiDLES88HoA.png)
+> ref: [Netflix Tudum Architecture: from CQRS with Kafka to CQRS with RAW Hollow](https://netflixtechblog.com/netflix-tudum-architecture-from-cqrs-with-kafka-to-cqrs-with-raw-hollow-86d141b72e52)
+
+一開始是由編輯者編輯一些有趣的內容比如說花絮照片等等\
+透過他發布到 CMS 系統內做儲存，同時也同步到 Ingestion 服務拆解內容並轉換成讀取優化的資料(原因在於這些內容需要根據不同使用者做客製化)，透過 Kafka 發布進一步處理，並儲存在一個獨立的高可用性的資料庫內\
+每當使用者查看內容的時候，Page Data Service 會讀取這些拆解過後的資料，重組成客製化的資料並呈現給使用者看\
+為了更快速的處理資料，internal cache 的方案被採用，為了降低從資料庫讀取的時間
+
+這個系統可以很好的工作，讀寫分離讓他可以很輕鬆的擴展\
+非同步的資料處理也可以很好的使系統達到高可用性\
+架構上屬於 Event driven
+
+你可以看得出來，非同步的方式意味著這個系統是提供 **Eventual Consistency** 的保證\
+而 Netflix 團隊發現到，他們犧牲了能快速預覽內容的方便性，即使該系統提供了足高的可用性\
+Page Data Service 為了能夠更快速的取得資料，其內部擁有 near cache 的機制\
+這個內部的 near cache 可以在背景執行同步更新，每隔一段 refresh cycle 資料就會從 KVDAL(Key Value Data Abstraction Layer) 同步\
+那他造成的問題就會是，當資料量大起來的時候，使用者會看到過期的資料
+
+也就是說目前 Event Driven 的架構是沒有近新保證的
+
+### Raw Hollow System
+為了解決這種近新保證的問題，Netflix 團隊開發了 [Raw Hollow](https://hollow.how/raw-hollow-sigmod.pdf)(Read After Write [Hollow](#hollow-system)) System
+
+`Raw Hollow` 加強了 [Hollow](#hollow-system) 系統\
+系統如其名，他擁有 [Read-after-Write](#read-after-write) 的近新保證，並且允許更新 near cache 的資料
+
+> Raw Hollow 也自動滿足 Eventual Consistency 的保證(因為它提供了 Read-after-Write 的保證)
+
+#### Architecture
+![](/assets/img/posts/raw-hollow.png)
+> ref: [Introducing RAW Hollow: An In-Memory, Co-Located, Compressed Object Store with Opt-In Strong Consistency](https://hollow.how/raw-hollow-sigmod.pdf)
+
+架構上你可以看到，與 [Hollow](#hollow-system) 系統不同的是，`source of truth` 不見了\
+意味著任何 `local client` 都可以透過 `writer` 更新 near cache 的資料
+
+整個系統的資料包含了兩個部分
++ base dataset
++ in-flight changes(還沒被正式寫入的資料)
+
+角色的部分
++ `writer`: 負責處理寫入資料(single leader 可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database))
++ `local client`: 負責處理讀取資料
++ `producer`: 負責推播新的資料(非完整 dataset, 僅包含差異資料)
++ `logkeeper`: 儲存資料的暫存的地方，1GB 大小的 circular log
+
+整體的操作圍繞在 base dataset 之上\
+每個 `local client` 都可以更新 base dataset 的資料\
+他們需要透過發送 request 到 `writer` 來更新
+
+`writer` 也具備高可用性(使用 [ZooKeeper](https://zookeeper.apache.org/) 來協調)，同一時間只有一個 writer 負責寫入\
+當他意外下線，其他 hot standby writer 會接手
+
+資料會暫時的儲存在 `logkeeper` 內\
+`writer` 會將資料同步至多個 `logkeeper` 內，直到所有 Quorum 內的 `logkeeper` 都擁有資料\
+才會視為操作成功
+
+後續 `producer` 將會從 `logkeeper` 取得資料，計算差異化資料並推播至 `local client` 身上
+
+#### Writer Self Healing
+`writer` 會等待 **所有 Quorum 內的 logkeeper 都擁有資料** 才會視為操作成功\
+所以如果寫到一半, 即使 `writer` 掛掉，部分 `logkeeper` 內還是會有暫存資料對吧\
+所以新的 leader 上位，他需要跟所有 Quorum 內的 `logkeeper` 取得 in-flight changes 的資料\
+最大化的避免 data loss
+
+如果所有 `logkeeper` 都掛了呢？\
+`producer` 每隔 30 秒就會上傳完整的 in-flight changes 至 S3\
+即使全掛，資料損失也降到最低，對於 Netflix 來說，這樣的損失是可以接受的
+
+#### Constantly up-to-date
+你說，透過 pub/sub 接收推播資料，這也有延遲不是\
+因此，為了能夠極大化的接收到最新 base dataset 的資料\
+`local client` 其實會偷跑
+
+我們說 Raw Hollow 資料由 base dataset 以及 in-flight changes 組成\
+除了 pub/sub 過來的 base dataset 以外\
+`local client` 會嘗試透過 Long Polling 的機制將處理中的 in-flight changes 同步過來
+
+那如果 `logkeeper` Quorum 不滿足怎麼辦\
+Quorum 會動態調整，使得 Quorum 內的 `logkeeper` **始終 Strongly Consistent**
+
+### Hollow System
+`Hollow` 是一個分散式的 in-memory near cache 的系統，透過將資料壓縮至記憶體內，並允許應用程式快速的讀取\
+透過讀取 `source of truth` 的資料，透過 pub/sub 的機制同步到不同的節點上\
+注意到，`Hollow` 系統是一個 read-only 的系統，它只允許讀取資料，不允許寫入(或者說更改)資料
+
+![](/assets/img/posts/hollow.png)
+> ref: [Introducing RAW Hollow: An In-Memory, Co-Located, Compressed Object Store with Opt-In Strong Consistency](https://hollow.how/raw-hollow-sigmod.pdf)
+
+### Adoption of Raw Hollow System
+乍看之下 [Raw Hollow](#raw-hollow-system) 好像跟原本的 near cache 沒什麼兩樣\
+但要注意的是 `Raw Hollow` 系統內部儲存的是 "完整的資料集"(被壓縮過)\
+他本質上是資料庫而非 cache\
+而 Raw Hollow 系統帶來了以下的好處
++ 每個節點可以儲存高達 `1 億` 筆資料，因為壓縮的資料使得整個資料集可以載入記憶體當中
++ 快速的存取資料，減少 I/O 的消耗
++ 減少了資料傳遞的等待時間
+
+最終的 Tudum 架構如下
+![](https://miro.medium.com/v2/resize:fit:2000/format:webp/1*XpvbAvfxMmfUq4oBC_E_BA.png)
+> ref: [Netflix Tudum Architecture: from CQRS with Kafka to CQRS with RAW Hollow](https://netflixtechblog.com/netflix-tudum-architecture-from-cqrs-with-kafka-to-cqrs-with-raw-hollow-86d141b72e52)
 
 # Read/Write Phenomena
 單一節點(以及 single leader)的讀寫異常，我們在 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction#database-read-write-phenomena) 已經看了滿多的\
@@ -279,3 +386,6 @@ old leader 恢復上線，並開始運作\
 # References
 + 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
 + [宇航级CPU是如何做到抗辐射的？中美间有多大差距？ ](https://www.sohu.com/a/195189780_609521)
++ [Introducing Netflix’s Key-Value Data Abstraction Layer](https://netflixtechblog.com/introducing-netflixs-key-value-data-abstraction-layer-1ea8a0a11b30)
++ [Netflix Tudum Architecture: from CQRS with Kafka to CQRS with RAW Hollow](https://netflixtechblog.com/netflix-tudum-architecture-from-cqrs-with-kafka-to-cqrs-with-raw-hollow-86d141b72e52)
++ [Introducing RAW Hollow: An In-Memory, Co-Located, Compressed Object Store with Opt-In Strong Consistency](https://hollow.how/raw-hollow-sigmod.pdf)
