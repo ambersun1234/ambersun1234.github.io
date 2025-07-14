@@ -3,7 +3,7 @@ title: 資料庫 - 新手做 Data Migration 資料遷移
 date: 2024-02-08
 description: 隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題
 categories: [database]
-tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility]
+tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint]
 math: true
 ---
 
@@ -145,11 +145,17 @@ def downgrade() -> None:
 資料庫系統的更新，因為會佔用一定的連線數量，以及一定的 I/O\
 系統的反應速度可能會變慢
 
+或者是 migration 的檔案數量過多，導致執行時間需要拉長\
+如果遭遇頻繁的資料庫遷移，這種事情是可能發生的\
+一個解決方法是使用 `checkpoint` 的機制\
+我們知道，migration 是基於目前 "資料庫的狀態" 往上疊加的\
+所以 checkpoint 的概念是，我重設資料庫的狀態，然後以往的 migration 檔案因為狀態改變就不需要執行\
+這樣就可以減少 migration 的執行時間
+
 為了系統的可用性，我們通常會希望系統的 down time 越低越好\
 盡可能的提高使用者體驗
 
-你可以借助現有第三方的資料搬遷服務，降低此種意外的方法\
-或者是可以選擇在半夜這種不會有太多使用者在線上的時候，執行系統升級
+你可以選擇在半夜這種不會有太多使用者在線上的時候，執行系統升級
 
 ## Idempotent
 最後也是最重要的一點，你的自動化搬遷的執行檔案\
