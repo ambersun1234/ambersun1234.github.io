@@ -3,7 +3,7 @@ title: Kubernetes 從零開始 - Sidecar 與 Lifecycle Hook 組合技
 date: 2025-05-18
 categories: [kubernetes]
 description: Kubernetes 1.28 之後引入了新版本的 Sidecar Container 的機制，本篇文章將會帶你深入了解如何利用 Sidecar Container 與 Lifecycle Hook 以建構複雜但優雅的架構，並以 Tcpdump 為例，探討 Kubernetes Event 與 Exit Code 是如何影響 Sidecar Container 的結束流程
-tags: [sidecar, container pattern, ambassador, adapter, logging, monitoring, tcpdump, init container, liveness, readiness, probe, lifecycle hook, post start, pre stop, sigterm, sigkill, exit code, signal, trap, wait, sleep, background process, foreground process, netshoot, event, killing event, terminationGracePeriodSeconds, feature gate]
+tags: [sidecar, container pattern, ambassador, adapter, logging, monitoring, tcpdump, init container, liveness, readiness, probe, lifecycle hook, post start, pre stop, sigterm, sigkill, exit code, signal, trap, wait, sleep, background process, foreground process, netshoot, event, killing event, terminationGracePeriodSeconds, feature gate, image pull policy]
 math: true
 ---
 
@@ -99,6 +99,29 @@ spec:
   - name: data
       emptyDir: {}
 ```
+
+## Sidecar Container ImagePullPolicy
+我們知道，設定為 `Always` 的 `initContainer` 是 Sidecar Container\
+如果你沒有指定 ImagePullPolicy 會發生什麼事情？
+
+根據 [Default image pull policy](https://kubernetes.io/docs/concepts/containers/images/#imagepullpolicy-defaulting) 所述
+
+> if you omit the `imagePullPolicy` field, and you specify the digest for the container image, the `imagePullPolicy` is automatically set to `IfNotPresent`.\
+> if you omit the `imagePullPolicy` field, and the tag for the container image is `:latest`, `imagePullPolicy` is automatically set to `Always`.\
+> if you omit the `imagePullPolicy` field, and you don't specify the tag for the container image, `imagePullPolicy` is automatically set to `Always`.\
+> if you omit the `imagePullPolicy` field, and you specify a tag for the container image that isn't :latest, the `imagePullPolicy` is automatically set to `IfNotPresent`.
+
+簡易好讀版就是
++ `digest` :arrow_right: `IfNotPresent`
++ `:latest` :arrow_right: `Always`
++ 沒有 tag :arrow_right: `Always`
++ 指定 tag 但不是 `:latest` :arrow_right: `IfNotPresent`
+
+如果你的 initContainer 剛好使用 `:latest` tag, 你又剛好沒設定 `imagePullPolicy` 的話\
+那麼 `imagePullPolicy` 會被自動設定為 `Always`\
+換句話說，本來你可能是拿來做啟動檢查的 initContainer 會被自動升級成 Sidecar Container
+
+而這顯然是有問題的，所以在使用 Sidecar Container 的時候，建議你還是明確的設定 `imagePullPolicy`
 
 ## Sidecar Container Feature Gate
 不過注意到，Kubernetes `1.28` 仍需要手動開啟相對應的 feature gate 才能使用
@@ -472,3 +495,4 @@ $ trap 'exit 0' TERM; sleep 86400 & wait
 + [Cannot trap SIGINT and SIGTERM when using "sleep infinity" [duplicate]](https://stackoverflow.com/questions/78432948/cannot-trap-sigint-and-sigterm-when-using-sleep-infinity/78432970#78432970)
 + [shell中trap的使用](https://blog.csdn.net/qing101hua/article/details/93619508)
 + [FAQ](https://k3d.io/v5.8.3/faq/faq/)
++ [Default image pull policy](https://kubernetes.io/docs/concepts/containers/images/#imagepullpolicy-defaulting)
