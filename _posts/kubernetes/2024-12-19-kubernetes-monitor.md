@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - 如何在 MicroService 架構下，跨服務找出 API 效能瓶頸
 date: 2024-12-19
 categories: [kubernetes]
-tags: [telemetry, opentelemetry, trace, log, metric, uptrace, slog, golang, gin, slog-multi, otelgin, distributed trace, context propagation, baggage, span, span attribute, span link, trace id, trace parent, sampling]
+tags: [telemetry, opentelemetry, trace, log, metric, uptrace, slog, golang, gin, slog-multi, otelgin, distributed trace, context propagation, baggage, span, span attribute, span link, trace id, trace parent, sampling, textmappropagator]
 description: 服務穩定性是很重要的一件事情，出問題的時候，監控系統可以幫助你更快速的找到問題所在。本文會使用 OpenTelemetry 以及 uptrace 實作一套可以追蹤 "跨服務" request 的監控系統
 math: true
 ---
@@ -149,6 +149,13 @@ Attributes 所表示的資料是整個 Span 的 metadata，而 Events 所表示�
 
 > propagation 主要是 instrumentation library 會幫你做掉\
 > instrument 指的是將你的程式碼加入一些額外的資訊，比如說 log message, metrics 以及 trace
+
+通常來說，只有在極少數狀況下會需要手動設定 trace_id 以及 span_id\
+根據 [Propagation](https://opentelemetry.io/docs/languages/js/propagation) 的說明
+
+> It is only in rare cases that you will need to propagate context manually.
+
+如果你跨服務追蹤需要的不是 HTTP, gRPC 等等可以做到的，可以使用 [TextMapPropagator](https://opentelemetry.io/docs/specs/otel/context/api-propagators/#textmap-propagator) 之類的東西
 
 ## Baggage the Additional Information
 我們知道 Span 裡面可以儲存額外的資訊(i.e. `Span Attributes`)\
