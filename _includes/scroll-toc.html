@@ -1,0 +1,221 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      console.log("TOC nav not found");
+      return;
+    }
+
+    console.log("TOC nav found:", sidebarNav);
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+      console.log("Using nav.toc as scroll container");
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+        console.log("Using .toc__menu as scroll container");
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            console.log("Using child element as scroll container:", child);
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      console.log("No scrollable container found");
+      return;
+    }
+
+    console.log("Scroll container:", scrollContainer);
+    console.log("Container scrollHeight:", scrollContainer.scrollHeight);
+    console.log("Container offsetHeight:", scrollContainer.offsetHeight);
+
+    let isUserScrolling = false;
+    let scrollTimeout;
+    let pageScrollTimeout;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      console.log("Visibility check:", {
+        element: element.textContent.trim().substring(0, 50),
+        elementTop,
+        elementHeight,
+        containerTop,
+        containerHeight,
+        isVisible,
+      });
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        console.log("No current heading found");
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        console.log(
+          "No TOC element found for heading:",
+          currentHeading.textContent.trim().substring(0, 50)
+        );
+        return;
+      }
+
+      console.log(
+        "Current heading:",
+        currentHeading.textContent.trim().substring(0, 50)
+      );
+
+      if (isUserScrolling) {
+        console.log("User is scrolling, skipping");
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        console.log("Element not visible, scrolling...");
+
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        console.log("Scroll calculation:", {
+          currentScrollTop,
+          containerHeight,
+          elementTop,
+          elementHeight,
+          targetScrollTop,
+          maxScrollTop,
+          finalScrollTop,
+        });
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        console.log("Element already visible, no need to scroll");
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      console.log("TOC scroll event");
+      isUserScrolling = true;
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        console.log("User stopped scrolling TOC");
+        // After user stops scrolling, ensure active element is visible
+        setTimeout(scrollTocToActive, 100);
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        console.log("Page scroll detected");
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      console.log("Initial scroll check");
+      scrollTocToActive();
+    }, 1000);
+
+    // Periodic check (less frequent)
+    setInterval(() => {
+      console.log("Periodic check");
+      scrollTocToActive();
+    }, 3000);
+  });
+</script>
