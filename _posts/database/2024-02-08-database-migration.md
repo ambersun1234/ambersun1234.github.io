@@ -3,7 +3,7 @@ title: 資料庫 - 新手做 Data Migration 資料遷移
 date: 2024-02-08
 description: 隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題
 categories: [database]
-tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint]
+tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint, kafka, kafka connect, cdc, change data capture, statement replication, logical log]
 math: true
 ---
 
@@ -138,25 +138,6 @@ def downgrade() -> None:
 在上到 production 之前，可以在 dev 以及 staging 環境測試\
 我個人會推薦，在這些之前，也可以在本機進行測試
 
-## Long Migration Time
-當搬遷的資料數量過於龐大\
-花超過額外預期的時間是有可能會發生的
-
-資料庫系統的更新，因為會佔用一定的連線數量，以及一定的 I/O\
-系統的反應速度可能會變慢
-
-或者是 migration 的檔案數量過多，導致執行時間需要拉長\
-如果遭遇頻繁的資料庫遷移，這種事情是可能發生的\
-一個解決方法是使用 `checkpoint` 的機制\
-我們知道，migration 是基於目前 "資料庫的狀態" 往上疊加的\
-所以 checkpoint 的概念是，我重設資料庫的狀態，然後以往的 migration 檔案因為狀態改變就不需要執行\
-這樣就可以減少 migration 的執行時間
-
-為了系統的可用性，我們通常會希望系統的 down time 越低越好\
-盡可能的提高使用者體驗
-
-你可以選擇在半夜這種不會有太多使用者在線上的時候，執行系統升級
-
 ## Idempotent
 最後也是最重要的一點，你的自動化搬遷的執行檔案\
 它必須要滿足 `Idempotent` 的條件
@@ -182,6 +163,62 @@ INSERT INTO (xxx) VALUES(yyy) ON CONFLICT(zzz) DO UPDATE SET id = EXCLUDED.id
 
 > 有關 transaction 的討論，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction)
 
+
+## Long Migration Time
+當搬遷的資料數量過於龐大\
+花超過額外預期的時間是有可能會發生的
+
+資料庫系統的更新，因為會佔用一定的連線數量，以及一定的 I/O\
+系統的反應速度可能會變慢
+
+### Off-peak Time
+你可以選擇在半夜這種不會有太多使用者在線上的時候，執行系統升級
+
+### Migration Checkpoint
+或者是 migration 的檔案數量過多，導致執行時間需要拉長\
+如果遭遇頻繁的資料庫遷移，這種事情是可能發生的\
+一個解決方法是使用 `checkpoint` 的機制\
+我們知道，migration 是基於目前 "資料庫的狀態" 往上疊加的\
+所以 checkpoint 的概念是，我重設資料庫的狀態，然後以往的 migration 檔案因為狀態改變就不需要執行\
+這樣就可以減少 migration 的執行時間
+
+為了系統的可用性，我們通常會希望系統的 down time 越低越好\
+盡可能的提高使用者體驗
+
+<!-- ### SQL Statement Optimization -->
+<!-- TODO -->
+
+### Change Data Capture(CDC)
+除了進一步優化 SQL 的部分，你也可以使用所謂 CDC 的機制\
+簡單來說，如果資料過於龐大導致遷移時間過長，系統就沒辦法正確動作\
+所以，一個想法是這樣，我假另一台 **額外的資料庫**，他長得跟原本的資料庫一模一樣\
+那現在有兩台相同的機器了對吧 那我進行以下操作
+
++ `A db` 與 `A code` 執行 **舊版** schema 與 code，並且 **對外** 給使用者
++ `B db` 與 `B code` 執行 **新版** schema 與 code，一邊從 `A db` 同步資料(一開始是完整複製 A db)，一邊進行資料搬遷，並且 **不對外**
+
+> 基本上此時此刻只有 A 在服務，B db 執行 migration 而 B code 則在一旁待命
+
+當整個 migration 操作基本上都結束了之後(99% 之類的，對於高流量的系統來說可能無時無刻都有人在使用，所以假定 100% 是不現實的)，我們就可以將服務切換到 `B db` 與 `B code` 上\
+達成 zero downtime 的資料搬遷
+
+注意到，B 資料庫除了同步新寫入的資料以外，他還要處理原本的資料\
+原本的資料好處理，他本來就在線上，但是 "同步新寫入的資料" 這件事情就有趣了\
+也就是說你要有能力接收 source 的 `event` 並且將他推播到 target\
+這就是 Change Data Capture 的機制
+
+<hr>
+
+在 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database) 裡面，我們有提到，分散式資料庫的架構下，資料的同步是相當困難的\
+其中你可以使用 [Statement Replication](../../database/database-distributed-database#statement-based) 的機制來達成資料的同步\
+但是由於自身的機制，它無法處理 **non deterministic function** 如 `NOW()` 或是 `RAND()` 等等的\
+因此比較推薦使用 [Logical Log](../../database/database-distributed-database#logical-log) 的機制來達成資料的同步\
+而 Logical Log 本身，就可以視為是 Change Data Capture 的資料來源
+
+那這些 Event 資料屆時可以透過 [Apache Kafka](https://kafka.apache.org/) 以及 [Kafka Connect](https://kafka.apache.org/documentation/streams/developer-guide/connect.html) 來同步資料
+
+> 有關 Kafka 的介紹，可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue)
+
 # On-premise vs. SAAS Migration
 有些產品是落地的，資料並不在我們的控制之下\
 在這種情況下，資料升級無疑是相當困難的
@@ -200,3 +237,5 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 + [Hassle-Free Database Migrations with Prisma Migrate](https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b)
 + [What is data migration?](https://www.ibm.com/topics/data-migration)
 + [Migrations](https://github.com/golang-migrate/migrate/blob/v4.18.3/MIGRATIONS.md)
++ [COSCUP 2025 - Zero‑Downtime Online Schema Migration in PostgreSQL](https://docs.google.com/presentation/d/1VSET3c0F683bgUaTA9UiBigPE5xhSA08ehAwV0Bvuqo/edit?fbclid=IwY2xjawMHvUVleHRuA2FlbQIxMQABHipwC4GYref-40imaC8M3zKYwyi1XBOh08HMitTFKh0cyf_KLybiFinfmM0d_aem_RJQsGFbjWYXTf09Xi9k8ww&slide=id.g287fa921f8d_0_1382#slide=id.g287fa921f8d_0_1382)
++ [[資料工程]獲取資料庫所有異動記錄 — Change Data Capture(1)](https://wuyiru.medium.com/%E8%B3%87%E6%96%99%E5%B7%A5%E7%A8%8B-%E7%8D%B2%E5%8F%96%E8%B3%87%E6%96%99%E5%BA%AB%E6%89%80%E6%9C%89%E7%95%B0%E5%8B%95%E8%A8%98%E9%8C%84-change-data-capture-1-c61ce7ec3d27)
