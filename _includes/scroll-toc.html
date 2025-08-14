@@ -44,8 +44,10 @@
     console.log("Container offsetHeight:", scrollContainer.offsetHeight);
 
     let isUserScrolling = false;
+    let autoScrollEnabled = true;
     let scrollTimeout;
     let pageScrollTimeout;
+    let periodicCheckInterval;
 
     // Function to check if element is visible in container
     const isElementVisible = (element) => {
@@ -110,6 +112,12 @@
 
     // Function to scroll TOC to show active element
     const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        console.log("Auto-scroll disabled or user scrolling, skipping");
+        return;
+      }
+
       // Always use scroll position to find the current heading
       const currentHeading = findCurrentActiveHeading();
       if (!currentHeading) {
@@ -130,11 +138,6 @@
         "Current heading:",
         currentHeading.textContent.trim().substring(0, 50)
       );
-
-      if (isUserScrolling) {
-        console.log("User is scrolling, skipping");
-        return;
-      }
 
       // Check if active element is visible
       if (!isElementVisible(activeElement)) {
@@ -177,10 +180,44 @@
       }
     };
 
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        console.log("Enabling auto-scroll");
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        console.log("Disabling auto-scroll");
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          console.log("Periodic check");
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
     // Handle TOC scrolling
     scrollContainer.addEventListener("scroll", () => {
       console.log("TOC scroll event");
       isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
 
       if (scrollTimeout) {
         clearTimeout(scrollTimeout);
@@ -189,13 +226,15 @@
       scrollTimeout = setTimeout(() => {
         isUserScrolling = false;
         console.log("User stopped scrolling TOC");
-        // After user stops scrolling, ensure active element is visible
-        setTimeout(scrollTocToActive, 100);
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
       }, 500);
     });
 
     // Handle page scrolling
     window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
       if (pageScrollTimeout) {
         clearTimeout(pageScrollTimeout);
       }
@@ -206,16 +245,26 @@
       }, 100);
     });
 
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
     // Initial scroll to active element
     setTimeout(() => {
       console.log("Initial scroll check");
       scrollTocToActive();
     }, 1000);
 
-    // Periodic check (less frequent)
-    setInterval(() => {
-      console.log("Periodic check");
-      scrollTocToActive();
-    }, 3000);
+    // Start periodic check
+    startPeriodicCheck();
   });
 </script>
