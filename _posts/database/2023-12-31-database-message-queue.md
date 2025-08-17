@@ -3,7 +3,7 @@ title: 資料庫 - 從 Apache Kafka 認識 Message Queue
 date: 2023-12-31
 description: 本文將會藉由導讀 JMS, MQTT 以及 AMQP 的標準，理解 Apache Kafka 以及 RabbitMQ 的基本概念
 categories: [database]
-tags: [distributed, cluster, message queue, publisher, consumer, producer, subscriber, event, kafka, amqp, mqtt, jms, rabbitmq, dlq]
+tags: [distributed, cluster, message queue, publisher, consumer, producer, subscriber, event, kafka, amqp, mqtt, jms, rabbitmq, dlq, pubsub, p2p, pull protocol, push protocol]
 math: true
 ---
 
@@ -735,6 +735,12 @@ import definitions 的時候，vhost 必須要設定\
 }
 ```
 {% endraw %}
+
+## Delay Delivery
+除了支援優先級的機制，RabbitMQ 還有支援 delay delivery 的機制\
+也就是將資料暫存在 queue 中，等到時間到了才會被消費
+
+可參考 [資料庫 - Delayed Queue 的設計與考量 \| Shawn Hsu](../../database/database-delayed-queue)
 
 ## Example
 ### Installation
