@@ -3,7 +3,7 @@ title: 資料庫 - Delayed Queue 的設計與考量
 date: 2025-08-18
 categories: [database]
 description: 當你需要解耦你會想到 message queue，而當你需要在解耦的基礎下提供延遲的機制，你會怎麼做？ Delayed Queue 的設計就是為了滿足這樣的需求。本文將會帶你瞭解市面上的解決方案，點出其優缺點，並且學習早期 Netflix Dyno Queues 的設計。
-tags: [delayed queue, message queue, rabbitmq, redis, linux at, cronjob, linux atd, dynomite, cassandra, zookeeper, mnesia, erlang, ttl, dlq, dlx, quorum queue, classic queue, priority queue, polling, transaction, cluster replication, ack, nack, dead letter, dyno queue, sorted set, fifo, sharding]
+tags: [delayed queue, message queue, rabbitmq, redis, linux at, cronjob, linux atd, dynomite, cassandra, zookeeper, mnesia, erlang, ttl, dlq, dlx, quorum queue, classic queue, priority queue, polling, transaction, cluster replication, ack, nack, dead letter, dyno queue, sorted set, fifo, sharding, activemq, activemq classic, activemq artemis, java, scheduledthreadpoolexecutor, mainloop]
 math: true
 ---
 
@@ -114,6 +114,68 @@ delayed message 的實作是透過 [TTL](#ttl-time-to-live) 以及 [DLX](#dlx-de
 被 dead letter 的 message 會被轉送到指定的 routing key 上\
 如果沒有指定，就是原本的 routing key
 
+## Apache ActiveMQ
+針對兩種實作 [ActiveMQ Classic](#activemq-classic) 以及 [ActiveMQ Artemis](#activemq-artemis) 都支援 delayed message，只是實作方式不同
+
+### ActiveMQ Classic
+[ActiveMQ Classic](https://activemq.apache.org/components/classic/documentation/delay-and-schedule-message-delivery) 本身是採用 polling 的機制實現
+
+[mainloop](https://github.com/apache/activemq/blob/main/activemq-kahadb-store/src/main/java/org/apache/activemq/store/kahadb/scheduler/JobSchedulerImpl.java#L720) 是一個無窮迴圈的 while loop\
+他並非有固定的 interval 去檢查，而是會根據資料狀態動態的調整\
+[預設是 500ms](https://github.com/apache/activemq/blob/main/activemq-kahadb-store/src/main/java/org/apache/activemq/store/kahadb/scheduler/JobSchedulerImpl.java#L905), 但是他也會改成比如說，剩餘等待時間\
+既然是 polling 的機制，他有可能會 miss 掉 real time 的特性，透過動態調整 interval 可以很好的避免這個問題
+
+```java
+long waitTime = nextExecutionTime - currentTime;
+this.scheduleTime.setWaitTime(waitTime);
+```
+
+### ActiveMQ Artemis
+[ActiveMQ Artemis](https://activemq.apache.org/components/artemis/documentation/latest/scheduled-messages.html#scheduled-messages) 則是使用 Java 內建的 [ScheduledThreadPoolExecutor](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ScheduledThreadPoolExecutor.html) 實現\
+簡單來說呢，他可以排程一個 command，在
+1. 指定的時間執行一次
+2. 進行排程重複執行
+
+當收到一個 delay message 的時候，就會計算出 delay 然後 schedule 下去\
+在 [ScheduledDeliveryHandlerImpl.java#L190](https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/main/java/org/apache/activemq/artemis/core/server/impl/ScheduledDeliveryHandlerImpl.java#L190)
+```java
+private void scheduleDelivery(final long deliveryTime) {
+      final long now = System.currentTimeMillis();
+
+      final long delay = deliveryTime - now;
+
+      if (delay < 0) {
+         if (logger.isTraceEnabled()) {
+            logger.trace("calling another scheduler now as deliverTime {} < now={}", deliveryTime, now);
+         }
+         // if delay == 0 we will avoid races between adding the scheduler and finishing it
+         ScheduledDeliveryRunnable runnable = new ScheduledDeliveryRunnable(deliveryTime);
+         scheduledExecutor.schedule(runnable, 0, TimeUnit.MILLISECONDS);
+      } else if (!runnables.containsKey(deliveryTime)) {
+         ScheduledDeliveryRunnable runnable = new ScheduledDeliveryRunnable(deliveryTime);
+
+         if (logger.isTraceEnabled()) {
+            logger.trace("Setting up scheduler for {} with a delay of {} as now={}", deliveryTime, delay, now);
+         }
+
+         runnables.put(deliveryTime, runnable);
+         scheduledExecutor.schedule(runnable, delay, TimeUnit.MILLISECONDS);
+      } else {
+         if (logger.isTraceEnabled()) {
+            logger.trace("Couldn't make another scheduler as {} is already set, now is {}", deliveryTime, now);
+         }
+      }
+   }
+```
+
+這個 `scheduledExecutor` 往上追
++ [QueueImpl.java#L376](https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/main/java/org/apache/activemq/artemis/core/server/impl/QueueImpl.java#L376)
++ [QueueFactoryImpl.java#L54](https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/main/java/org/apache/activemq/artemis/core/server/impl/QueueFactoryImpl.java#L54)
++ [ActiveMQServerImpl.java#L3234](https://github.com/apache/activemq-artemis/blob/main/artemis-server/src/main/java/org/apache/activemq/artemis/core/server/impl/ActiveMQServerImpl.java#L3234)
+
+就是一個 `ScheduledThreadPoolExecutor`\
+相比於 [ActiveMQ Classic](#activemq-classic) 的 polling 機制，ActiveMQ Artemis 的實作依賴於語言本身的實作，可以避免 polling 帶來的 overhead
+
 ## Netflix Dyno Queues
 Netflix 的 Content Platform Engineering 也有使用 Delayed Queue 的需求\
 原本他們是使用 [Cassandra](https://cassandra.apache.org/_/index.html) 搭配 [Zookeeper](https://zookeeper.apache.org/) 實現的\
@@ -172,3 +234,4 @@ Dyno Queue 是將 `時間` 以及 `priority` 組合起來當作 key\
 + [Time-to-Live and Expiration](https://www.rabbitmq.com/docs/ttl)
 + [RabbitMQ Queue Types Explained](https://www.cloudamqp.com/blog/rabbitmq-queue-types.html)
 + [Dead Letter Exchanges](https://www.rabbitmq.com/docs/dlx)
++ [Differences From ActiveMQ 5](https://activemq.apache.org/components/artemis/migration-documentation/key-differences.html)
