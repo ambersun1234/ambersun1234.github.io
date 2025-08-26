@@ -16,20 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash ./scripts/link.sh
+      - run: bash ./scripts/internal-link.sh
 
-  # image_cors_check:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: ambersun1234/image-cors-checker@v1.0.2
-  #       with:
-  #         check_path: ${{ github.workspace }}/_posts
-  #         formats: "jpg,jpeg,png,gif,webp"
-  #         white_list: ${{ env.WHITE_LIST }}
+  image_link_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash ./scripts/image-link.sh
 
   autogen_og_image:
-    needs: [redirect_path_check, internal_link_check]
+    needs: [redirect_path_check, internal_link_check, image_link_check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

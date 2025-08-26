@@ -19,7 +19,7 @@ build:
 				jekyll build --trace"
 
 lint-link:
-	bash ./scripts/link.sh
+	bash ./scripts/internal-link.sh
 
 lint-redirect:
 	bash ./scripts/redirect.sh
