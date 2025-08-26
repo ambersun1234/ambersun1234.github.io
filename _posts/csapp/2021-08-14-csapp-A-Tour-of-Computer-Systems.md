@@ -33,9 +33,6 @@ int main() {
 linux> gcc -o hello hello.c
 ```
 
-<!-- ![](https://images2015.cnblogs.com/blog/993848/201702/993848-20170206141338916-1690576837.png) -->
-Figure1.3 列出一般 gcc compile 程式的方式
-
 - Pre-processor phase
   - [前置處理器](https://zh.wikipedia.org/wiki/%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8) 讀取程式原始碼，並將帶有 `#` 符號的指令展開，以這個例子就是 `#include <stdio.h>`，這行指令告訴前置處理器，在檔案系統中，找尋 `stdio.h` 並將其內容替換至 hello.c，將其輸出成 modified source program(`hello.i`)
 - Compilation phase
@@ -91,7 +88,7 @@ linux>
 執行 `./hello` 時，程式會從硬碟被載入至記憶體，當 CPU 執行 hello 時，會將 instruction 載入至 CPU register\
 從一個程式設計師的角度來看，以上操作耗費了很多移動資料的操作，而"真正"做事的部分卻相對比較少，所以我們要想一個辦法讓移動資料變快\
 根據物理法則，容量大的速度慢，容量小的速度快; CPU 與記憶體之間的速度差可以到很大，而 cache 作為暫存區域(安插於 CPU 與記憶體之間)，可以有效的減少時間差。\
-![](https://images2015.cnblogs.com/blog/993848/201702/993848-20170206153525901-1670358800.png)\
+
 cache 分為 L1, L2, L3 cache，L1 cache 速度最快容量最小，L3 cache 速度相對慢但容量大; 縱使需要到 L3 cache 取得資料，相比要經過 I/O bridge 去取得記憶體內的資料來說，cache 在速度上依舊是相對較快的。\
 ![](https://garinzhang-blog.oss-cn-beijing.aliyuncs.com/2020-08-04-CSAPP-example-of-memory-hierarchy.png)
 

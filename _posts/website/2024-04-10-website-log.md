@@ -74,8 +74,8 @@ request body 之類的可以放在 `Debug` level 裡面\
 
 `Fatal` 則是當系統崩潰無法繼續服務的時候，就是使用 `Fatal` level
 
-![](https://i.sstatic.net/z5Fim.png)
-> ref: [When to use the different log levels](https://stackoverflow.com/a/64806781)
+![](https://www.shakebugs.com/wp-content/uploads/2023/09/log-level-breakdown.png)
+> ref: [App logging levels: everything you need to know](https://www.shakebugs.com/blog/app-logging-levels/)
 
 # Structured logging
 肉眼看 log 可以說是工程師日常\

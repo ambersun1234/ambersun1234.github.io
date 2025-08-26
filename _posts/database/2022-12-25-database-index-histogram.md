@@ -219,8 +219,8 @@ B Tree 的所有操作都是基於 page 的修改\
 那，這個例子是屬於哪一種的斷裂？ 是 [External Fragmentation](#external-fragmentation)
 
 ## B+ Tree Index
-![](https://vladmihalcea.com/wp-content/uploads/2021/04/ClusteredIndexTable-2048x997.png)
-> ref: [Clustered Index](https://vladmihalcea.com/clustered-index/)
+![](https://builtin.com/sites/www.builtin.com/files/styles/ckeditor_optimize/public/inline-images/6_b-tree-indexing.jpeg)
+> ref: [How Database B-Tree Indexing Works](https://builtin.com/data-science/b-tree-index)
 
 B Tree 在 sequential scan 的情況下，必須來回 parent/child node 之間\
 而 B+ Tree 則是在園有的基礎上做了些改進
@@ -230,9 +230,6 @@ B Tree 在 sequential scan 的情況下，必須來回 parent/child node 之間\
 
 這樣的作法有助於 **提昇 locality**(資料庫多半會做 pre-load(i.e. disk read-ahead) 增進效能)\
 並且在 full table scan 下的效能海放 B Tree(因為後者必須執行 tree traversal 可能會 **cache miss**, 前者可以依靠連接的 pointer)
-
-![](https://i.sstatic.net/l6UyF.png)
-> ref: [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
 
 # Fragmentation
 ## Internal Fragmentation
