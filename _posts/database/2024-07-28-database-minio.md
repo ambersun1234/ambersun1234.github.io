@@ -3,7 +3,7 @@ title: 資料庫 - 大型物件儲存系統 MinIO 簡介
 date: 2024-07-28
 categories: [database]
 description: 物件儲存在雲端叢生的環境裡扮演著重要的角色，本篇文章將會探究 MinIO 在設計上的一些特點，像是 Erasure Coding, Quorum, Object Healing 等等
-tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook, lifecycle management, object expiration, object tiering, object transition, object versioning, object lifecycle management, mc ping, mc admin, mc event, mc alias, mc stat, mc admin config, mc admin info, provisioning]
+tags: [aws s3, minio, golang, docker, storage, kubernetes, erasure set, quorum, bit rot healing, erasure coding, webhook, lifecycle management, object expiration, object tiering, object transition, object versioning, object lifecycle management, mc ping, mc admin, mc event, mc alias, mc stat, mc admin config, mc admin info, provisioning, multipart]
 math: true
 ---
 
@@ -435,6 +435,19 @@ name: mybucket-policy
         - "s3:GetObject"
         - "s3:ListBucket"
         - "s3:HeadBucket"
+```
+
+然後你可能會需要用到 multipart 的 permission\
+我遇到的狀況是，使用 [minio/minio-js](https://github.com/minio/minio-js) 在執行上傳的時候\
+針對大檔案會出現 `Access Denied` 的錯誤
+
+後來發現到好像他會自己轉成 multipart 的方式上傳\
+所以以下 policy 是必要的(三個都要)
+
+```yaml
+- "s3:ListMultipartUploadParts"
+- "s3:AbortMultipartUpload"
+- "s3:ListBucketMultipartUploads"
 ```
 
 # MinIO on Kubernetes
