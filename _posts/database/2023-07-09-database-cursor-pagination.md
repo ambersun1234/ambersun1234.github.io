@@ -3,7 +3,7 @@ title: 資料庫 - 更好的分頁機制 Cursor Based Pagination
 date: 2023-07-09
 description: 傳統的 Limit 以及 Offset 分頁機制，在資料量大的時候常常效能不佳。本文將會檢視傳統方法的缺點，並且嘗試學習 Cursor Based Pagination 的機制
 categories: [database]
-tags: [sql, database, query, pagination]
+tags: [sql, database, query, pagination, cursor, cursor based pagination, index, previous page, next page, uuid, ulid, page limit, page offset, full table scan, benchmark, prisma]
 math: true
 ---
 
@@ -151,6 +151,38 @@ username 靠前的 id 不一定小於 7\
     ) ORDER BY created_at DESC, username; 
 ```
 ![](/assets/img/posts/cursor7.png)
+
+## Previous Page and Next Page
+前面提到的都是往後拿的，那往前的呢？
+
+以 id `650` 為中心
+![](/assets/img/posts/previous-cursor1.png)
+
+> 這裡的資料是 `username DESC, id DESC` 的結果
+
+往後拿的 cursor 應該這樣寫
+```sql
+SELECT * FROM User 
+WHERE (username < 'ZYruDDnmtB') OR (username = 'ZYruDDnmtB' AND id < 650)
+ORDER BY username DESC, id DESC
+```
+
+> 因為原本的資料是倒序的，所以是 `<`
+
+然後拿到的資料長這樣
+![](/assets/img/posts/previous-cursor3.png)
+
+往前拿的 cursor 比想像種的還要簡單，就是將所有條件反過來\
+比方說比大小就由 `<` 變成 `>`, 然後排序就變成 `ASC`
+```sql
+SELECT * FROM User 
+WHERE (username > 'ZYruDDnmtB') OR (username = 'ZYruDDnmtB' AND id > 650)
+ORDER BY username, id
+```
+![](/assets/img/posts/previous-cursor2.png)
+
+基本上你可以用同一個 cursor 使用它往前往後拿\
+其實沒有必要分成兩個 cursor，不過你應該會需要一個 previous 的 flag 來判斷方向的
 
 ## ID, UUID or ULID
 為了能夠讓 [Cursor Based Pagination](#cursor-based-pagination) 可以正常運作\
