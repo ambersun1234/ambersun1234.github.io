@@ -199,7 +199,7 @@ INSERT INTO (xxx) VALUES(yyy) ON CONFLICT(zzz) DO UPDATE SET id = EXCLUDED.id
 
 > 基本上此時此刻只有 A 在服務，B db 執行 migration 而 B code 則在一旁待命
 
-當整個 migration 操作基本上都結束了之後(99% 之類的，對於高流量的系統來說可能無時無刻都有人在使用，所以假定 100% 是不現實的)，我們就可以將服務切換到 `B db` 與 `B code` 上(也就是 **Blue Green Deployment**，可參考 [Kubernetes 從零開始 - 部署策略 101 \| Shawn Hsu](../../kubernetes/kubernetres-scale#blue-green-deployment))\
+當整個 migration 操作基本上都結束了之後(99% 之類的，對於高流量的系統來說可能無時無刻都有人在使用，所以假定 100% 是不現實的)，我們就可以將服務切換到 `B db` 與 `B code` 上(也就是 **Blue Green Deployment**，可參考 [Kubernetes 從零開始 - 部署策略 101 \| Shawn Hsu](../../kubernetes/kubernetes-scale#blue-green-deployment))\
 達成 zero downtime 的資料搬遷
 
 注意到，B 資料庫除了同步新寫入的資料以外，他還要處理原本的資料\
