@@ -65,11 +65,16 @@
 {% endif %}
 
 <script>
-  fetch(`http://127.0.0.1:8888/views?url={{ document.url }}`)
+  fetch(`https://api.ambersuncreates.com/views?url={{ document.url }}`)
     .then(async (response) => {
       if (response.ok) {
         data = await response.json();
-        document.getElementById("view-field-{{ document.url }}").innerHTML = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-{{ document.url }}").innerHTML = text;
       }
     })
 </script>
