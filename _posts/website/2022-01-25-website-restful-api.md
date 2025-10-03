@@ -3,7 +3,7 @@ title: 網頁程式設計三兩事 - RESTful API
 date: 2022-01-25
 description: RESTful API 是一種風格，我們能不能夠用更簡單的方式來設計 API 呢？
 categories: [website]
-tags: [api]
+tags: [api, restful, stateless, url length limit, version control, backward compatibility, batch endpoint, bulk operation, batch operation, http 414, http 301, redirect, session, jwt, cookie, http]
 math: true
 ---
 
@@ -71,10 +71,13 @@ GET /api/user
 
 REST guidelines 建議開發者可以多多利用 HTTP method 去對應 CRUD 的操作
 
-||||||
-|:--:|:--:|:--:|:--:|:--:|
-|GET|POST|PUT|DELETE|PATCH|
-|Read|Create|Update|Delete|Update|
+|HTTP Method|Explanation|
+|:--|--:|
+|GET|讀取資料|
+|POST|新增資料|
+|PUT|更新資料|
+|DELETE|刪除資料|
+|PATCH|更新資料|
 
 ㄟ等等\
 put, patch 都是屬於更新資料?\
@@ -102,6 +105,31 @@ client 端就勢必要儲存必要資訊(e.g. 使用者登入與否?)\
 
 > 有關 HTTP 的討論，可以參考 [重新認識網路 - HTTP1 與他的小夥伴們 \| Shawn Hsu](../../network/network-http1)
 
+## URL Length Limit of GET Request
+URL 的長度是有限制的，粗略的估算大約是 2000 的字元\
+你說這跟 RESTful API 有什麼關係?
+
+如果你有一隻 `GET` 的 API，然後參數是一個 id 陣列好了\
+因為參數實際上是帶在 URL 上的，所以如果參數太多太長就會撞到這個上限\
+撞到會怎麼樣呢？
+
+有可能會遇到 [HTTP 414 URI Too Long](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Reference/Status/414) 的錯誤\
+那網路上有很多人會跟你說，改成用 `POST` 就好了\
+確實，實務上因為 `POST` 的 request body 是沒有大小限制的\
+你可以將資料一股腦塞過去不會報錯
+
+用 `POST` 是合理的選擇，但這不符合 RESTful API 的設計\
+所以他其實算是必要之惡，不過這個惡能不能被改善？
+
+Google 採取了 Batch Endpoint 的做法\
+就是將多個 request 組成一個 batch request\
+送到 `/batch/{API_NAME}/{API_VERSION}`(e.g. `/batch/drive/v3`) 之後再拆開來處理\
+根據 request body 轉發到不同的 endpoint 上面
+
+與單純改成 `POST` 的差別在於有一個獨立的 batch endpoint 負責處理所有批次相關的\
+相比於原本的 `POST` 來說，我覺得 Google 的做法比較合理且較為彈性\
+他裡面也是遵循著 RESTful API 的設計
+
 # Version Control
 隨著系統升級改版，API 也會隨之改變\
 這時候就會有一個問題，新版的 API 跟舊版的 API 該怎麼區分?
@@ -120,6 +148,12 @@ client 端就勢必要儲存必要資訊(e.g. 使用者登入與否?)\
 注意到，`做 301 redirect 不是一個好方法`, 因為 redirect 指的只是單純 endpoint 搬家\
 但是新版 API 可能有新增欄位，導致 client 期待的回傳值不一致的行為
 
+> 可以 301 頁面，但是 301 API 就不好了
+
 # References
 + [REST Architectural Constraints](https://restfulapi.net/rest-architectural-constraints/)
 + [gRPC vs REST: Understanding gRPC, OpenAPI and REST and when to use them in API design](https://cloud.google.com/blog/products/api-management/understanding-grpc-openapi-and-rest-and-when-to-use-them)
++ [What is the maximum length of a URL in different browsers?](https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers)
++ [When do you use POST and when do you use GET?](https://stackoverflow.com/questions/46585/when-do-you-use-post-and-when-do-you-use-get)
++ [Adding batch or bulk endpoints to your REST API](https://www.codementor.io/blog/batch-endpoints-6olbjay1hd)
++ [https://developers.google.com/workspace/drive/api/guides/performance?hl=zh-tw#details](https://developers.google.com/workspace/drive/api/guides/performance?hl=zh-tw#details)
