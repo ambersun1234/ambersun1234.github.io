@@ -294,6 +294,47 @@ func max(a, b int) int {
 }
 ```
 
+# [LeetCode 3147. Taking Maximum Energy From the Mystic Dungeon](https://leetcode.com/problems/taking-maximum-energy-from-the-mystic-dungeon/description/)
+另一種變形是這題，給定一個 array 以及一個間距 k\
+你可以從任一 index 開始，每次都走 K 步直到最後，要求求出你能夠拿到的最大值
+
+你可能會想這跟 [LeetCode 53. Maximum Subarray](#leetcode-53-maximum-subarray) 很像\
+但差別在於本題是沒辦法 pick/skip 的\
+所以針對 `[-8,10,-10]` 以及 `K = 1` 這個 test case 來說答案會是 `0` 而不是 `10`\
+因為你不能略過任何一個數值\
+所以 Kadane's Algorithm 並不適用於本題
+
+但也還好對吧？ 就是稍微暴力的寫法而已\
+計算從每個 index 開始，走 K 步的最大值\
+不過效率有點低 而且會重複計算到\
+所以其實可以從最後面往前算
+
+```go
+func maximumEnergy(energy []int, k int) int {
+	n := len(energy)
+	ans := -1 << 31
+
+	for i := n - k; i < n; i++ {
+		sum := 0
+		for j := i; j >= 0; j -= k {
+			sum += energy[j]
+			ans = max(ans, sum)
+		}
+	}
+	return ans
+}
+```
+
+原本是從 0 算到 n - k\
+因為你只能移動 K 步，所以最多只有到 n - k\
+那反過來就是從 n - k 算到 n
+
+inner loop 其實滿有意思的\
+為什麼每一次計算都可以拿來更新答案？\
+他是往前算得對吧，你要 `i` 把它當成是 **終點**\
+所以每一次的計算其實都是完整的區間(起點可以任意，但終點都是沒辦法走下去的那個點，而它是由 `i` 決定的)\
+所以全部遍歷之後就可以得到最大值了
+
 # See Also
 + [LeetCode 1171. Remove Zero Sum Consecutive Nodes from Linked List](https://leetcode.com/problems/remove-zero-sum-consecutive-nodes-from-linked-list/)
 
