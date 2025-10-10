@@ -8,7 +8,7 @@ math: true
 ---
 
 # Controller Pattern
-有關 Controller Pattern 及 Controller 基本概念可以參考 [Kubernetes 從零開始 - Controller Pattern 以及其原理 \| Shawn Hsu](../../kubernetes/kubernetes-controller-concept)
+有關 Controller Pattern 及 Controller 基本概念可以參考 [Kubernetes 從零開始 - Informer 架構以及 Controller Pattern \| Shawn Hsu](../../kubernetes/kubernetes-controller-concept)
 
 # Kubernetes Operator
 既然 K8s 有內建的 controller，自己客製化 controller 的意義在哪？\

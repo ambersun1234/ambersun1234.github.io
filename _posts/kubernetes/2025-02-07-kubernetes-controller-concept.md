@@ -1,5 +1,5 @@
 ---
-title: Kubernetes 從零開始 -  Informer 架構以及 Controller Pattern
+title: Kubernetes 從零開始 - Informer 架構以及 Controller Pattern
 date: 2025-02-07
 categories: [kubernetes]
 tags: [kubernetes controller, state, wrangler, kubernetes operator, kubernetes resource, kubernetes object, reconcile, crd, control loop, controller pattern, operator pattern, informer, indexer, reflector, workqueue, lister, etcd, kubernetes api server, resync, client-go, bookmark event]

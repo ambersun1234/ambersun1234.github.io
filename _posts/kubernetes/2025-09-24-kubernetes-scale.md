@@ -587,7 +587,7 @@ selector:
 
 > 有關 CRD 可以參考 [Kubernetes 從零開始 - client-go 實操 CRD \| Shawn Hsu](../../kubernetes/kubernetes-crd)
 
-> 有關 Kubernetes Controller 可以參考 [Kubernetes 從零開始 - Controller Pattern 以及其原理 \| Shawn Hsu](../../kubernetes/kubernetes-controller-concept)
+> 有關 Kubernetes Controller 可以參考 [Kubernetes 從零開始 - Informer 架構以及 Controller Pattern \| Shawn Hsu](../../kubernetes/kubernetes-controller-concept)
 
 ### Architecture
 ![](https://argoproj.github.io/argo-rollouts/architecture-assets/argo-rollout-architecture.png)
@@ -597,7 +597,7 @@ selector:
 本質上，Controller 會監聽 `Rollout CRD` 的任何變化，並根據其內容調整相對應的資源\
 前面提到，雖然說他是包裝 Deployment，但是 Controller 並不會對原生 Deployment 有任何反應
 
-> 有關 Kubernetes Controller 可以參考 [Kubernetes 從零開始 - Controller Pattern 以及其原理 \| Shawn Hsu](../../kubernetes/kubernetes-controller-concept)
+> 有關 Kubernetes Controller 可以參考 [Kubernetes 從零開始 - Informer 架構以及 Controller Pattern \| Shawn Hsu](../../kubernetes/kubernetes-controller-concept)
 
 也跟 Deployment 一樣，底層 Argo Rollouts 會使用 ReplicaSet 來管理 Pod\
 為了能方便管理不同的版本，一些額外的 metadata 以及 labels 會被套用上去\
