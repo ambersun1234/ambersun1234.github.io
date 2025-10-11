@@ -3,7 +3,7 @@ title: Goroutine 與 Channel 的共舞
 date: 2023-03-25
 description: 在不同的 process 之間進行溝通的方式有很多種，本篇文章將會介紹一些常見的溝通方式以及 golang 推崇的 channel 機制
 categories: [random]
-tags: [golang, coroutine]
+tags: [golang, coroutine, goroutine, channel, ring buffer, shared memory, message passing, process, inter-process communication, makechan, send, receive, sudog, mutex, lock, select, producer consumer, blocking send, blocking receive, non-blocking send, non-blocking receive, counter approach, last operation approach, store only size - 1 element, mirror approach]
 redirect_from:
     - /posts/golang-channel/
 math: true
