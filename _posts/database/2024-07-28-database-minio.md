@@ -40,8 +40,8 @@ MinIO 為了應對高可用性以及高效能的場景\
 一個 cluster deployment 可以擁有多個 `server pool`\
 每個 `server pool` 可以擁有多個 `minio server`(又稱為 node) 以及 [Erasure Set](#erasure-set)(儲存用)
 
-![](https://min.io/resources/img/products/hybrid-cloud-storage/versioning/architecture-animation.gif)
-> ref: [MinIO object storage provides AWS S3 versioning compatibility](https://min.io/product/object-versioning-bucket-versioning)
+![](https://cdn.prod.website-files.com/681c8426519d8db8f867c1e8/686baaf0ba423683c2ffa177_architecture-animation.gif)
+> ref: [Object Versioning](https://www.min.io/product/aistor/object-versioning-bucket-versioning)
 
 ## Active-Active vs Active-Passive Replication
 節點之間會進行資料的同步\
@@ -71,16 +71,13 @@ MinIO 選擇了一個不同的方式，在眾多 erasure set 當中，他會選�
 原因在於他沒辦法確認資料的一致性\
 這時候 Admin 需要手動復原才可以繼續工作
 
-![](https://min.io/docs/minio/container/_images/availability-pool-failure.svg)
-> ref: [Availability and Resiliency](https://min.io/docs/minio/container/operations/concepts/availability-and-resiliency.html)
-
 ### Synchronous vs Asynchronous Replication
 MinIO 的複製機制預設是非同步的\
 兩個的差別主要在於其他節點的寫入時間
 
 > MinIO 的方法跟傳統的定義上仍有點出入，可參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#replication)
 
-非同步複製會先等當前節點寫入完成之後，再將資料放入 [replication queue](https://min.io/docs/minio/kubernetes/upstream/administration/bucket-replication.html#minio-replication-process)\
+非同步複製會先等當前節點寫入完成之後，再將資料放入 [replication queue](https://docs.min.io/enterprise/aistor-object-store/administration/replication/bucket-replication/#minio-replication-process)\
 交給其他節點複製\
 好處是他不必等待所有人寫入的確認，效能上會好一點
 
@@ -90,7 +87,7 @@ MinIO 一樣是先 `一起開寫`，但是當主節點完成之後就會 return
 
 > 注意到 MinIO 仍然會維持 write quorum
 
-所以最終的差別在於，放入 [replication queue](https://min.io/docs/minio/kubernetes/upstream/administration/bucket-replication.html#minio-replication-process) 的時間點不同
+所以最終的差別在於，放入 [replication queue](https://docs.min.io/enterprise/aistor-object-store/administration/replication/bucket-replication/#minio-replication-process) 的時間點不同
 + 非同步 :arrow_right: 我寫完才開始同步
 + 同步 :arrow_right: 一起同步
 
@@ -130,8 +127,8 @@ blobbucket/blobs/object.blob
 意思是說，即使上面的 `object.blob` 可能都是一樣的，但因為她們的 namespace 不同\
 所以他們都是獨立的
 
-![](https://min.io/docs/minio/container/_images/minio-versioning-multiple-versions1.svg)
-> ref: [Bucket Versioning](https://min.io/docs/minio/container/administration/object-management/object-versioning.html)
+![](https://docs.min.io/enterprise/aistor-object-store/administration/objects-and-versioning/images/minio-versioning-multiple-versions.svg)
+> ref: [Objects and Versioning](https://docs.min.io/enterprise/aistor-object-store/administration/objects-and-versioning/)
 
 ## Quorum
 對，MinIO 也有使用 quorum\
@@ -164,8 +161,8 @@ Erasure Coding 將一個資料分割成 `k + n` 的部分\
 > 其中 k 個資料任選，但至少一個資料部分需要為 parity
 
 ### Erasure Set
-![](https://min.io/docs/minio/container/_images/erasure-coding-erasure-set-shard-distribution.svg)
-> ref: [Erasure Coding](https://min.io/docs/minio/container/operations/concepts/erasure-coding.html#minio-ec-erasure-set)
+![](https://docs.min.io/enterprise/aistor-object-store/operations/core-concepts/images/erasure-coding-erasure-set-shard-distribution.svg)
+> ref: [Erasure Coding](https://docs.min.io/enterprise/aistor-object-store/operations/core-concepts/erasure-coding/)
 
 所以我們知道 Erasure Coding 會將資料切割成 `k + n` 個部分\
 以 MinIO 來說，他會將這些部分分配到不同的硬碟上面\
@@ -174,8 +171,8 @@ Erasure Coding 將一個資料分割成 `k + n` 的部分\
 當你的部分資料出於各種原因掛掉的時候，只要還有 `k` 個部分存在，你就可以還原原始資料\
 對於物件儲存系統來說，這是一個非常重要的機制
 
-![](https://min.io/docs/minio/container/_images/erasure-coding-shard-healing.svg)
-> ref: [Erasure Coding](https://min.io/docs/minio/container/operations/concepts/erasure-coding.html#minio-ec-erasure-set)
+![](https://docs.min.io/enterprise/aistor-object-store/operations/core-concepts/images/erasure-coding-shard-healing.svg)
+> ref: [Erasure Coding](https://docs.min.io/enterprise/aistor-object-store/operations/core-concepts/erasure-coding/)
 
 上圖的 k 等於 12\
 因為掛掉了 4 個所以只剩下 8 個\
