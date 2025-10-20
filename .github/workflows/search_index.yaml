@@ -25,4 +25,4 @@ jobs:
       - name: Create Search Index
         continue-on-error: true
         run: |
-          google-indexing-script https://ambersun1234.github.io
+          google-indexing-script https://ambersuncreates.com
