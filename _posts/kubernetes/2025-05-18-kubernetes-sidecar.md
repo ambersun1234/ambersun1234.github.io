@@ -210,6 +210,8 @@ Sidecar Container 是支援 Probe 的\
 但如果是 `Deployment`，因為他會有重啟的機制，所以 Sidecar Container 也會跟著重啟\
 你的 Sidecar Container 就會執行無數次
 
+> 有關不同 Workload 的特性可以參考 [Kubernetes 從零開始 - 高階抽象 Workload Resources \| Shawn Hsu](../../kubernetes/kubernetes-workloads)
+
 # Container Lifecycle Hook
 Lifecycle Hook 就是可以允許你額外在特定階段執行一些額外的邏輯\
 目前 Kubernetes 提供了兩種 Hook 的機制

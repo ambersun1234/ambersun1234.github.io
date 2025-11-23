@@ -12,7 +12,7 @@ Kubernetes object 並不是指 `Pod` 或者是 `Deployment` 這種 **Resource**\
 複習一下，Resource 是所有你可以透過 Kubernetes 使用的物件(操作 [kubectl](https://kubernetes.io/docs/reference/kubectl/) 或[Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/))\
 而 object 是這些 Resource 的 instance
 
-<!-- workloads -->
+> 有關 Resource 可以參考 [Kubernetes 從零開始 - 高階抽象 Workload Resources \| Shawn Hsu](../../kubernetes/kubernetes-workloads)
 
 ## Kubernetes Object State
 所謂的狀態是儲存在 Object 裡面的\
@@ -309,7 +309,7 @@ K8s 裡面，controller 其實不只有一種\
 針對不同的 Resource，K8s 會有不同的內建的 Controller\
 deployment 有自己的 `Deployment Controller`，job 也有自己的 `Job Controller` 等等的
 
-<!-- workloads -->
+> 有關 Resource 可以參考 [Kubernetes 從零開始 - 高階抽象 Workload Resources \| Shawn Hsu](../../kubernetes/kubernetes-workloads)
 
 ![](https://miro.medium.com/v2/resize:fit:720/format:webp/1*4sus97eHHeaeFy0ui81ULg.png)
 > ref: [如何编写自定义的 Kubernetes Controller](https://able8.medium.com/how-to-write-a-kubernetes-custom-controller-622841d1d3f6#:~:text=Kubernetes%20%E6%8E%A7%E5%88%B6%E5%99%A8%E6%98%AF%E4%B8%80%E4%B8%AA,%E7%8A%B6%E6%80%81%E6%9B%B4%E6%8E%A5%E8%BF%91%E6%9C%9F%E6%9C%9B%E7%8A%B6%E6%80%81%E3%80%82&Kubernetes%20%E9%80%9A%E8%BF%87%E6%8E%A7%E5%88%B6%E5%99%A8%E6%A8%A1%E5%BC%8F,%E6%88%96%E8%80%85%E8%B5%84%E6%BA%90%E7%9A%84%E7%BC%96%E6%8E%92%E6%93%8D%E4%BD%9C%E3%80%82)
