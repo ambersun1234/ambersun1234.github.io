@@ -3,7 +3,7 @@ title: 資料庫 - Transaction 與 Isolation
 date: 2022-09-28
 description: Transaction 的出現是為了保證 unit of work 的完整性，而 Isolation Level 則是為了保證資料一致性。本文著重在 Isolation Level 以及各種 Read Write Phenomena
 categories: [database]
-tags: [database, transaction, isolation level]
+tags: [database, transaction, isolation level, mvcc, read uncommitted, read committed, repeatable reads, serializable, snapshot, two-phase locking, optimistic locking, pessimistic locking, write skew, phantom read, lost update, read-modify-write, lock promotion, predicate lock, index range lock, serializable snapshot isolation, ssi, dirty read, non-repeatable read, unit of work, atomicity, consistency, isolation, durability, base, basically available, soft state, eventually consistent]
 math: true
 ---
 
@@ -330,7 +330,7 @@ SELECT * FROM user WHERE created_at > '2023-10-01' AND created_at < '2023-10-31'
 所以速度上會快於 [Predicate Lock](#predicate-lock)
 
 # Database Locking Mechanism
-## Optimistic Locking(Optimistic Concurrency Control)
+## Optimistic Locking
 與其讓 transaction 一個一個等待，Optimistic Locking 的機制採用 `先 commit 先贏` 的方法\
 這樣的好處是讓所有人都有 commit 的機會，當某個天選 transaction 成功 commit 之後\
 其他的 transaction 就必須得 rollback 重來
@@ -340,10 +340,10 @@ SELECT * FROM user WHERE created_at > '2023-10-01' AND created_at < '2023-10-31'
 Optimistic Locking 常用於不常更新的資料或是 locking overhead 很重的地方
 
 ## Pessimistic Locking
-跟 optimistic locking 不一樣的是，pessimistic locking 只允許一次 `一個 transaction 進入`\
-其他人就只好等待了
+我假設我要更新的資料會被弄髒，所以先使用 [Exclusive Lock](#exclusive-lockwrite-lock) 鎖住\
+待我完成更新，釋放 lock 之前，沒有人可以進行更新
 
-Pessimistic Locking 就相反，使用他的時候要注意 overhead
+相對的，這樣的 lock 機制會造成資源的競爭，以及 overhead 的增加
 
 # Issues with Database Lock
 lock 好用歸好用，但是過度的使用不僅會造成 overhead 還有其他問題
@@ -416,7 +416,7 @@ snapshot 就是對資料庫進行快照\
 對於正在執行中的 transaction 不予理會
 
 具體來說他是怎麼做的呢？\
-維護 **一個物件的多版本**(multi-version concurrency control, mvcc)
+維護 **一個物件的多版本**(Multi-Version Concurrency Control, MVCC)
 
 ![](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Tje55--GvuNvVLf5IM7unQ.png)
 > [The “I” in ACID — Weak Isolation Levels](https://rahulpradeep.medium.com/the-i-in-acid-weak-isolation-levels-7e2dbbadd45e)
@@ -519,3 +519,4 @@ read committed level 的隔離機制沒辦法防止 [Non-repeatable Read(Read Sk
 + [Snapshot isolation](https://en.wikipedia.org/wiki/Snapshot_isolation)
 + [what are range-locks?](https://stackoverflow.com/questions/12179130/what-are-range-locks)
 + [Do database transactions prevent race conditions?](https://stackoverflow.com/questions/6477574/do-database-transactions-prevent-race-conditions)
++ [Optimistic vs. Pessimistic locking](https://stackoverflow.com/questions/129329/optimistic-vs-pessimistic-locking)
