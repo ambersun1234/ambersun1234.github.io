@@ -221,11 +221,33 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 + `w` 個節點確認寫入成功才算數
 + `r` 個節點確認讀取成功才算數
 
-要保證每次的讀取都有最新的值，可以遵照這個公式 `w + r > n`\
+要保證每次的讀取都有 **最新** 的值，可以遵照這個公式 `w + r > n`\
 他可以確定至少有一個節點擁有最新的資料(前提是 w 跟 r 的副本有重疊到)
 
+#### Tolerance to Node Failure
+假設 11 個節點
++ `w` 有 6 個節點
++ `r` 有 7 個節點
+
+那最多你可以容忍 4 個節點掛掉\
+因為
++ `w` 的情況下需要 6 個節點是好的，總共是 11 個節點，4 個壞掉，7 個還是好的，所以是 **有餘欲的**
++ `r` 的情況下需要 7 個節點是好的，總共是 11 個節點，4 個壞掉，7 個還是好的，所以是 **剛好足夠的**
+
+#### Sloppy Quorum
+但是網路是不可靠的，網路斷線是很常發生的事情\
+也就是說容錯能力是有限的，斷個網 quorum 就失效了\
+畢竟你就是要那麼多節點幫你確認
+
+所以一個作法是，我一定需要 "那個" 節點嗎？\
+我可以有一個 hot standby 的節點，當 online 的節點掛了就將資料同步過去(i.e. `Failover`)\
+是不是也算滿足 quorum 了呢？
+
+事實上也的確如此\
+等到節點恢復的時候在將資料同步回來即可
+
 ### Raft Consensus
-我們在 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue) 裡大概知道 Raft Consensus 他是怎麼做的\
+我們在 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue#partition-and-replication) 裡大概知道 Raft Consensus 他是怎麼做的\
 那他跟 [Quorum Consensus](#quorum-consensus) 有什麼不同呢？
 
 主要差異在於 Raft 有選舉的機制\
