@@ -168,6 +168,17 @@ CREATE TEMPORARY TABLE (
 因為我們可以把 `user` 的資料塞到 temporary table 裡面\
 這樣 `user` 跟 `post` 是不是就在同一個資料庫裡面，就可以用一個 `JOIN` query 解決了？
 
+## SQL Query Optimization
+如果 [Temporary Table](#postgresql-temporary-table) 不適用你的狀況\
+其實也可以簡化成最多 2 個 query 的寫法
+
+將 post 撈出來的時候，在 application layer 將 user_id 塞到一個陣列裡面當作參數\
+然後第二個 query 使用 `IN` 語法撈出所有相關 user 的資料
+
+無論你的資料在何處，這種寫法都可以適用\
+唯一的缺點是要在 application layer 整理資料，相對來說比較麻煩\
+不過仍然可以節省 query 次數，降低資料庫的負擔，進而提昇效能
+
 # References
 + [[科普文]什么是ORM中的N+1](https://zhuanlan.zhihu.com/p/27323883)
 + [[Day 15] 效能殺手 N+1 Query](https://ithelp.ithome.com.tw/articles/10223194)
