@@ -14,7 +14,7 @@ math: true
 
 為了避免參與者無限等待 coordinator 的回應，`3PC` 被提出
 
-> 可參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue/#two-phase-commit2pc)
+> 可參考 [資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue/#two-phase-commit2pc)
 
 根據 [Documentation: 17: 66.4. Two-Phase Transactions - PostgreSQL](https://www.postgresql.org/docs/current/two-phase.html) PostgreSQL 是有提供 `2PC` 的支援\
 但這些算法並不是每個資料庫都有支援\

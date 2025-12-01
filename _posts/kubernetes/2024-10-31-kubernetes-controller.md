@@ -447,7 +447,7 @@ leaderelection 這套實作是依靠時間區間來做判斷的(`RenewDeadLine` 
 
 但如果節點的時鐘跑得比較快/慢，leaderelection 也仍然沒有辦法處理這種狀況，進而導致 **腦分裂**
 
-> 有關腦分裂可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue)
+> 有關腦分裂可以參考 [資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue)
 
 基本上你只要將 `LeaderElection` 設為 `true` 就可以了
 ```go

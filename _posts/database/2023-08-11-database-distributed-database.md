@@ -34,7 +34,7 @@ redirect_from:
 更甚至節點掛掉怎麼辦？
 
 > 有關分散式系統中，會遇到的問題\
-> 可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue)
+> 可以參考 [資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue)
 
 ## CAP Theorem
 CAP Theorem(又名 `Brewer's Theorem`)，是一個分散式系統的 trade off 規則
@@ -166,7 +166,7 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 它仍然在執行 leader 的功能，這就會造成同一時間有兩個 leader 存在的問題\
 而這稱為 `Split Brain`(腦分裂)
 
-> 有關 Split Brain 的討論，可以參考 [資料庫 - 分散式系統中的那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue#split-brain)
+> 有關 Split Brain 的討論，可以參考 [資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue#split-brain)
 
 ### Multi Leader
 ![](https://media.licdn.com/dms/image/C5112AQE4giiXdpATXQ/article-cover_image-shrink_720_1280/0/1578341089996?e=1725494400&v=beta&t=hSQJS2M8sO-Y0Iiagjx-KjWs_wUy-Hyfo7lPFhvAuwU)
