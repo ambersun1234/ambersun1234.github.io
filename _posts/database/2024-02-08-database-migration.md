@@ -3,7 +3,7 @@ title: 資料庫 - 新手做 Data Migration 資料遷移
 date: 2024-02-08
 description: 隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題
 categories: [database]
-tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint, kafka, kafka connect, cdc, change data capture, statement replication, logical log]
+tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint, kafka, kafka connect, cdc, change data capture, statement replication, logical log, kubectl wait]
 math: true
 ---
 
@@ -232,6 +232,56 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 客戶並不一定擁有足夠的知識能夠處理，甚至可以說是沒有這樣的知識\
 支援是相對薄弱的，這時候如果升級失敗將會是一場災難\
 若是遇到 [Backward Compatibility](#backward-compatibility) 的問題，無疑是雪上加霜
+
+# Data Migration In Kubernetes
+如果你的資料庫是在 Kubernetes 內部運行，你可能會遇到跟我一樣的問題\
+我們的資料庫(i.e. PostgreSQL) 是透過 Helm subchart 來管理的\
+每一次 `$ helm install` 資料庫與應用程式會一併的進行安裝
+
+> 有關 Helm Chart 可以參考 [Kubernetes 從零開始 - Deployment 管理救星 Helm Chart \| Shawn Hsu](../../kubernetes/kubernetes-helm-chart)
+
+這就導致說，資料升級的這個過程無從下手\
+什麼意思呢？ 就如同 [Database migrations in Helm charts using pre-install, pre-upgrade hook](https://stackoverflow.com/questions/79173735/database-migrations-in-helm-charts-using-pre-install-pre-upgrade-hook) 提到的\
+要執行 migration 需要資料庫先安裝，而且需要在應用程式啟動之前\
+這本質上是不可能的\
+因為 Helm Hook 本身並沒有那麼細緻的控制，它只有分安裝前後
+
+> 有關 Helm Hook 可以參考 [Kubernetes 從零開始 - Deployment 管理救星 Helm Chart \| Shawn Hsu](../../kubernetes/kubernetes-helm-chart#helm-chart-hooks)
+
+基本上你會有幾種選擇
+1. 利用 Kubernetes Job 獨立執行 migration(透過 Helm Hook 控制順序)
+2. 在 Deployment 中使用 `initContainer` 執行 migration
+3. 在應用程式內部進行 migration(啟動 web server 之前執行)
+4. 透過 CI/CD pipeline 執行 migration
+
+> 有關 Job/Deployment 可以參考 [Kubernetes 從零開始 - Pod 高級抽象 Workload Resources](../../kubernetes/kubernetes-workloads#workload-resources)\
+> 有關 CI/CD pipeline 可以參考 [DevOps - 從 GitHub Actions 初探 CI/CD](../../devops/devops-github-action)
+
+`2` 與 `3` 是一樣的，看似可以用但實際上你需要注意到 race condition 的問題\
+因為如果你需要 scaling, 多個 replica 會執行相同 migration script，沒處理好會導致資料不一致的問題\
+也同時必須考慮到升級時間過長的問題，可能會被 K8s kill 掉等問題
+
+`4` 的假設是你的服務是 SAAS 的，落地的情況下根本無法實現
+
+`1` 的情境其實是默認資料庫沒有跟 app 一起安裝，這種狀況用 `Helm Hook` 才有辦法
+
+但以我的例子來說，他們是一起安裝的，所以以上都無法使用\
+好在，我們還有一招 [kubectl wait](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait)\
+這個指令可以用於等待資源的狀態達成某種條件\
+也就是說，其實是可以使用 Kubernetes Job 負責執行 migration\
+然後 app 的 deployment 使用 `kubectl wait` 等待 migration Job 完成後再啟動
+
+一開始的時候以下同時執行
++ app deployment 安裝
++ migration job 執行
++ database 安裝
+
+然後流程會變成這樣
+1. database 先完成安裝(同時 migration job 與 app 都被 `initContainer` 的資料庫檢查 block 住)
+2. migration job 完成執行(app 被執行 [kubectl wait](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait) 的 `initContainer` block 住，等待 migration job 完成)
+3. app 完成安裝(這個時候 migration 已經成功)
+
+這樣你就能夠解決資料庫與應用程式同時安裝，無法進行資料升級的問題了
 
 # References
 + [Hassle-Free Database Migrations with Prisma Migrate](https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b)
