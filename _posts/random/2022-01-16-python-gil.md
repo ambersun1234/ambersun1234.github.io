@@ -3,13 +3,12 @@ title: 關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock)
 date: 2022-01-16
 description: 為什麼在 python 中多執行緒會比較慢？ 這是因為 GIL 的存在所導致。這篇文章將會介紹 GIL 的概念以及歷史以及在多執行緒下的一些問題
 categories: [random]
-tags: [python, gil, atomic operation, parallelism, concurrency, race condition]
+tags: [python, gil, atomic operation, parallelism, concurrency, race condition, cpython, ironpython, jython, mutex, threading, multiprocessing, subprocess, fork, yield, timeout, cooperative scheduling, specialized, pep-703, thread-safe, lock, shared memory, message passing, python virtual machine, pvm, cprofile, pep-659, cooperative scheduling, starving, disassemble]
 math: true
 ---
 
 # Preface
-
-我一開始用 python 開發多執行緒的程式的時候\
+我一開始用 Python 開發多執行緒的程式的時候\
 學長姐都告誡我說不要使用 [threading](https://docs.python.org/3/library/threading.html) 而是要使用 [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) 這個 library\
 因為後者才是 **真正的 threading**
 
@@ -17,19 +16,17 @@ math: true
 甚麼叫做 真正的 threading?
 
 # Introduction
-
-python 擁有不只一套實作，包含 [Jython](https://www.jython.org/), [IronPython](https://ironpython.net/), [Cpython](https://github.com/python/cpython) 等等的\
+Python 擁有不只一套實作，包含 [Jython](https://www.jython.org/), [IronPython](https://ironpython.net/), [Cpython](https://github.com/python/cpython) 等等的\
 就如同 C 語言有不同的實作一樣 [GCC](https://gcc.gnu.org/), [Visual c++](https://docs.microsoft.com/zh-tw/cpp/windows/latest-supported-vc-redist?view=msvc-170) 等等的
 
 GIL, Global Interpreter Lock 是一個 **_類_** [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)，用於保護在多執行緒之下的物件
-而他目前僅存在於 Cpython 的實作當中(因為 Cpython 的記憶體管理實作並非是 thread-safe 的)
+而他目前僅存在於 CPython 的實作當中(因為 CPython 的記憶體管理實作並非是 thread-safe 的)
 
 ![](https://www.w3.org/People/Frystyk/thesis/MultiStackThread.gif)
 
 > Thread 只有 stack 是各自擁有的，其餘都是共享的
 
 # Atomic Operation
-
 在多執行緒下首要目標即是確保資料的正確性，而多執行緒的程式在執行的時候，其執行順序有可能是混亂的\
 如果這時候你又在多條執行緒中共享變數 那麼就有可能造成資料在計算的過程中出現差錯
 
@@ -44,7 +41,7 @@ if __name__ == "__main__":
     dis.dis(add)
 ```
 
-考慮以上程式碼，如果我們將上述 add 程式碼進行反組譯成 python bytecode 我們可以得到以下
+考慮以上程式碼，如果我們將上述 add 程式碼進行反組譯成 Python bytecode 我們可以得到以下
 
 ```
   4           0 LOAD_FAST                0 (num)
@@ -56,45 +53,41 @@ if __name__ == "__main__":
              10 RETURN_VALUE
 ```
 
-第一列數字對應到原始程式碼行數 第二列是 python bytecode 的執行指令\
+第一列數字對應到原始程式碼行數 第二列是 Python bytecode 的執行指令\
 你可以很輕易的看到 在短短的 `num += 1` 這行裡面它實際上執行了 **_4 條指令_**\
 那有沒有可能你在執行到 `INPLACE_ADD` 的時候，中間被 thread1 被 swap out 然後換 thread2 執行，就拿到錯誤的資料了呢?\
 答案很明顯 如果沒有做適當的處理, 100% 一定會遇到這個問題(然後你的程式就出錯 你就會被老闆臭罵一頓)
 
-上述的 LOAD_FAST, LOAD_CONST 就是所謂的 atmoic operation\
+上述的 LOAD_FAST, LOAD_CONST 就是所謂的 `Atomic Operation`\
 是不可被打斷的(意即不能被 interrupt)
 
 > 有些 compiler 或 interpreter 在執行的時候會為了最佳化而移動指令順序\
 > 這種貼心的舉動有時候會造成問題\
 > 這時候就需要 [memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
 
-題外話，這些 python byte code 是透過 python virtual machine(PVM) 所執行的(跟 Java 一樣)\
-Cpython 的實作包含了一個 virtual machine 用以執行上面我們看到的 python byte code
+題外話，這些 Python bytecode 是透過 Python Virtual Machine(PVM) 所執行的(跟 Java 一樣)\
+CPython 的實作包含了一個 virtual machine 用以執行上面我們看到的 Python bytecode
 
-> 注意到 Cpython 是 interpreter，Cython 是一種語言
+> 注意到 CPython 是 interpreter，Cython 是一種語言
 
 # Concurrency vs. Parallelism
-
 單位時間內只有一個 thread 在跑的算是平行處理嗎? 那肯定是阿
 ![](https://media.licdn.com/dms/image/C4E12AQE2NS4xfB3k5A/article-inline_image-shrink_1000_1488/0/1592126129434?e=1681344000&v=beta&t=l8zZRSZE3HAMI4XxK6uMt9f-pwqlRAaFnoRCphRiwQQ)
 
 ## Concurrency
-
 ![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*HCZSJX-XJxrOvQlKcabvmQ.png)
 concurrency 是將 `一個切成不同的子部份`，將這些 `子部份` 給不同 worker, 每個 worker 各司其職, 負責完成 ***不同部分***
 
 > ref: [Concurrency與Parallelism的不同之處](https://medium.com/mr-efacani-teatime/concurrency%E8%88%87parallelism%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E8%99%95-1b212a020e30)
 
 ## Parallelism
-
 ![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*_CVfYVLNSrpzZhwwB4D1pg.png)
 parallelism 是將 n 個 task 分割給多個 worker, 每個 worker 都執行 **_完整的 task_** 內容
 
 > ref: [Concurrency與Parallelism的不同之處](https://medium.com/mr-efacani-teatime/concurrency%E8%88%87parallelism%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E8%99%95-1b212a020e30)
 
 # Why Multicore Slower than Single Core
-
-接下來我們就做點實驗來驗證以及探詢為甚麼 python 多執行緒下反而會比較慢的情況\
+接下來我們就做點實驗來驗證以及探詢為甚麼 Python 多執行緒下反而會比較慢的情況\
 在這之前我們要準備點工具以及程式碼來幫助我們驗證
 
 測試環境
@@ -224,8 +217,7 @@ ProfiledThread(target=mysum, args=(int(start), int(end), ))
 我們可以很清楚的看到是 **_acquire lock_** 以及 **_wait_** 佔用了最多的時間
 
 ## What does Thread Waiting for?
-
-讓我們來仔細看看 Cpython 實作程式碼是怎麼做的
+讓我們來仔細看看 CPython 實作程式碼是怎麼做的
 
 [Lib/threading.py#34](https://github.com/python/cpython/blob/3.8/Lib/threading.py#L34)
 
@@ -308,7 +300,6 @@ event object 的 condition lock 實際上是 low-level 的 threading lock [\_thr
 > only one thread at a time can acquire a lock — that’s their reason for existence
 
 # CPU-bound vs. I/O-bound
-
 在計算機系統裡面 任務大多分為兩大類
 
 - CPU-bound
@@ -317,14 +308,13 @@ event object 的 condition lock 實際上是 low-level 的 threading lock [\_thr
   - 任務多以吃重 i/o 為主, e.g. 在電腦中尋找特定檔案，資料庫讀寫，網路資料傳輸
 
 # GIL - Global Interpreter Lock
-
-既然 Cpython 的實作並不保證 thread-safe，那麼最簡單的作法是甚麼呢? 加上一道鎖(鑰匙) `lock`
+既然 CPython 的實作並不保證 thread-safe，那麼最簡單的作法是甚麼呢? 加上一道鎖(鑰匙) `lock`
 
 ㄟ等等 全域的 lock ?
 
 沒錯，interpreter 為了確保資料的正確性，設計出了一種 **_類_** [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) lock\
 由當前執行的 thread 持有\
-只有擁有 mutex lock 的 thread 可以操作 python object\
+只有擁有 mutex lock 的 thread 可以操作 Python object\
 也就是上面實驗得出的結果(單位時間內只有一條 thread 可以操作)
 
 > /\* A pthread mutex isn't sufficient to model the Python lock type\
@@ -351,45 +341,42 @@ typedef struct {
 > The Python interpreter is not fully thread-safe. In order to support multi-threaded Python programs, there’s a global lock, called the global interpreter lock or GIL - [Thread State and the Global Interpreter Lock](https://docs.python.org/3/c-api/init.html#thread-state-and-the-global-interpreter-lock)
 
 ## When will GIL be Released
-
 最直覺的想法，當當前 thread 執行結束之後就會 release GIL\
 但如果你的計算要持續一段時間呢？
 
 所以一般來說 GIL 會有兩種時機會自動釋放 GIL, `I/O` 與 `timeout`
 
 ### I/O
-當你在做 I/O 的時候，你就不會動到 python object 了，所以就可以 release GIL
+當你在做 I/O 的時候，你就不會動到 Python object 了，所以就可以 release GIL
 
 ### timeout
-為了鼓勵 thread 可以自動 release GIL, python 內部有所謂的 timeout 機制\
+為了鼓勵 thread 可以自動 release GIL, Python 內部有所謂的 timeout 機制\
 預設的 timeout 時間是 **_0.005 second_**(你可以用 `sys.{get,set}switchinterval()` 來查詢以及設定 timeout 時間)\
 當 timeout 到了的時候，它也不一定會理你(你可以用 `FORCE_SWITCHING` 來強制 scheduler 進行排程)\
 那為什麼 timeout 到了不一定有用？
 
 根據 [GIL implementation note](https://github.com/python/cpython/blob/f4c03484da59049eb62a9bf7777b963e2267d187/Python/ceval_gil.h#L33), `opcodes can take an arbitrary time to execute`\
-因為 python bytecode 並不能很好的反應到每一台機器的 machine code, 也因為 bytecode 可能包含 I/O 所以每個指令執行起來的時間都不盡相同\
-上面我們有稍微提到，python 是執行在 PVM(Python Virtual Machine) 之上的，而這個 VM 他是採用 **cooperative scheduling** 的方式\
-所以這就是為什麼當 timeout 的時候，thread 是有可能不理你的，cooperative scheduling 講究的是主動放棄 lock(以 python 來說是透過 `yield`)
+因為 Python bytecode 並不能很好的反應到每一台機器的 machine code, 也因為 bytecode 可能包含 I/O 所以每個指令執行起來的時間都不盡相同\
+上面我們有稍微提到，Python 是執行在 PVM(Python Virtual Machine) 之上的，而這個 VM 他是採用 **cooperative scheduling** 的方式\
+所以這就是為什麼當 timeout 的時候，thread 是有可能不理你的，cooperative scheduling 講究的是主動放棄 lock(以 Python 來說是透過 `yield`)
 
 另外就是如今 I/O 都有 buffering 的機制，即使 timeout 被 swap out，有了 buffer 的機制讓 I/O 的時間 **_短到可以再重新 acquire lock_**，造成其他 thread 等待 GIL 的時間越來越長(starving)
 
 # Why do we Need threading.Lock if we have GIL
-
 我在做實驗的時候，發現了一個很神奇的現象\
 就是如果我不把 result 這個變數用 `threading.Lock` 鎖起來 好像...也不會錯阿？
 
-稍微想了一下既然 GIL 的目的是確保同一個時間只有一條 thread 在使用 python interpreter(或者說 同一時間只有一條 thread 可以存取 python object)\
+稍微想了一下既然 [GIL](#gil-global-interpreter-lock) 的目的是確保同一個時間只有一條 thread 在使用 Python interpreter(或者說 同一時間只有一條 thread 可以存取 Python object)\
 那 "同一時間" 不就保證它一次只會有一個人存取了......嗎 :question:
 
 如果有仔細看上面的 [Atomic Operation](#atomic-operation) 你就會意識到事情才沒有那麼簡單\
-因為如果說 python bytecode 執行到一半被 interrupt，GIL 交給另外一條 thread 那你的計算結果就會出錯了
+因為如果說 Python bytecode 執行到一半被 interrupt，GIL 交給另外一條 thread 那你的計算結果就會出錯了
 
 另一個直觀的方法是開多一點 thread 下去跑答案就會錯了(我是開 100 條 thread)
 
 > GIL 單位時間內只有一條 thread 可以擁有，但不代表它不會中途被搶走
 
 # How about Real Threading
-
 既然 [threading](https://docs.python.org/3/library/threading.html) 是 concurrency 的一種，如果你要真正的 threading 你就必須要使用 [multiprocessing](https://docs.python.org/3/library/multiprocessing.html)\
 multiprocessing 實際上使用了一個巧妙的技巧去避開 GIL 的限制，既然 mutex lock 只有一把，那我 fork 出一個 subprocess 我不就也有一把鑰匙了嗎?\
 而事實上也的確如此，透過 fork 一個 child process 出來就能夠實現 **_真正的多工了_**
@@ -432,15 +419,14 @@ if __name__ == "__main__":
 - `message passing`: 建立溝通渠道(pipe)以進行溝通
 
 # Eliminate GIL
-
 如果要完全避開討人厭的 GIL\
-現今除了 Cpython 的實作之外，也是有其他實作像是 Jython, IronPython 等等的可以使用
+現今除了 CPython 的實作之外，也是有其他實作像是 Jython, IronPython 等等的可以使用
 
 不過也是有人提出了可以完全去除 GIL 的實作，就列出來當作參考\
 [colesbury/nogil](https://github.com/colesbury/nogil)
 
 ## PEP-703
-在 2023 年初，python 內部提出了 [PEP-703](https://peps.python.org/pep-0703)\
+在 2023 年初，Python 內部提出了 [PEP-703](https://peps.python.org/pep-0703)\
 旨在消滅 GIL, 而這項 proposal 已經被正式被接受了
 
 消滅 GIL 是好事嗎？\
@@ -484,7 +470,7 @@ if __name__ == "__main__":
 > At runtime, Python will try to look for common patterns and type stability in the executing code. \
 > Python will then replace the current operation with a more specialized one.
 
-基本上因為 python 是動態語言，而 cpython 內部實作有針對那些常見的 pattern 做了處理，將它替換成 **specialized** 的實作\
+基本上因為 Python 是動態語言，而 CPython 內部實作有針對那些常見的 pattern 做了處理，將它替換成 **specialized** 的實作\
 想當然是為了優化的那類東西
 
 而因為多執行緒的解放\
@@ -493,7 +479,6 @@ if __name__ == "__main__":
 所以官方的 benchmark 結果，多執行緒下更慢
 
 # Reference
-
 - [The Python GIL (Global Interpreter Lock)](https://python.land/python-concurrency/the-python-gil)
 - [Thread State and the Global Interpreter Lock](https://docs.python.org/3/c-api/init.html#thread-state-and-the-global-interpreter-lock)
 - [Understanding the Python GIL](https://speakerdeck.com/dabeaz/understanding-the-python-gil)
