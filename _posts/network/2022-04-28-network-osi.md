@@ -128,8 +128,8 @@ layer 3 switch 以及 IP 分享器 都是網路層的設備
 其中 link-layer header 的資料就跟 MAC 子層的內容是一樣的
 
 資料連結層由兩個子層所構成 - LLC 以及 MAC
-### 邏輯鏈路控制 Logical Link Control - LLC
-LLC 子層在做的事情就是提供一個 interface, 讓上層可以不用管底層網路連接類型\
+### Logical Link Control - LLC
+LLC(i.e. 邏輯鏈路控制) 子層在做的事情就是提供一個 interface, 讓上層可以不用管底層網路連接類型\
 而它還有一個更重要的功能是 multiplex(嘿對就是邏輯設計課堂教的 [multiplexer 多工器](https://zh.wikipedia.org/zh-tw/%E6%95%B0%E6%8D%AE%E9%80%89%E6%8B%A9%E5%99%A8))
 
 你說為什麼這裡需要用到多工器\
@@ -140,7 +140,7 @@ LLC 子層在做的事情就是提供一個 interface, 讓上層可以不用管�
 
 ![](http://www.tsnien.idv.tw/Network_WebBook/%E6%8F%92%E5%9C%96/chap7/7-8.png)
 
-### 媒介存取控制 Media Access Control - MAC
+### Media Access Control - MAC
 logical link 的排程處理已經交由 LLC 子層處理了，那萬一我想要連線的對象不一樣呢？\
 假設你的電腦目前透過有線的方式連接了遠端伺服器 server1，以及透過無線的方式連接了你的另一台 server2\
 它會長的像下面這樣子(示意圖)\
@@ -173,9 +173,10 @@ layer2 交換器(記憶 MAC address 進行資料交換)是跑在資料連接層�
 <hr>
 
 看了基本的 OSI 七層模型，想必你對網路基本架構原理有認識了\
-這裡有幾張圖能夠幫助你更了解每層 layer 之間的關係\
-![](https://i.stack.imgur.com/oMOGd.png)
-![](https://i.stack.imgur.com/Zknbj.png)
+這裡還有幾張圖能夠幫助你更了解每層 layer 之間的關係\
+
+![](https://miro.medium.com/v2/resize:fit:720/format:webp/1*ZlE3JKRb98-aihydKJb7LQ.png)
+> ref: [Understanding the “OSI Model ” In Networking— All 7 Layers Explained.](https://makarand-khiste.medium.com/understanding-the-osi-model-all-7-layers-explained-with-architecture-afd42c7b7483)
 
 ## Common Functionality in OSI Model
 基本上撇除最高的 3 層(application, presentation and session layer)\
