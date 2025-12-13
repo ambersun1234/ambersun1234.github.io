@@ -52,7 +52,7 @@ $ yarn global add hardhat-shorthand
 $ hardhat-completion install
 ```
 
-![](https://hardhat.org/_next/image?url=%2Fhh.gif&w=1920&q=100)
+![](https://v2.hardhat.org/_next/image?url=%2Fhh.gif&w=1920&q=100)
 > ref: [Command-line completion](https://hardhat.org/hardhat-runner/docs/guides/command-line-completion#command-line-completion)
 
 # Hardhat Config
