@@ -72,7 +72,6 @@ CPython 的實作包含了一個 virtual machine 用以執行上面我們看到�
 
 # Concurrency vs. Parallelism
 單位時間內只有一個 thread 在跑的算是平行處理嗎? 那肯定是阿
-![](https://media.licdn.com/dms/image/C4E12AQE2NS4xfB3k5A/article-inline_image-shrink_1000_1488/0/1592126129434?e=1681344000&v=beta&t=l8zZRSZE3HAMI4XxK6uMt9f-pwqlRAaFnoRCphRiwQQ)
 
 ## Concurrency
 ![](https://miro.medium.com/v2/resize:fit:828/format:webp/1*HCZSJX-XJxrOvQlKcabvmQ.png)
