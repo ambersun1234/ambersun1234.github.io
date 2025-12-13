@@ -25,8 +25,11 @@ OCI 最主要制定了兩個規範
 - [Runtime spec](https://github.com/opencontainers/runtime-spec/blob/master/spec.md): 關於作業系統如何 run container(包含執行環境、configuration 以及 lifecycle)
 - [Image spec](https://github.com/opencontainers/image-spec/blob/main/spec.md): 關於如何建立、準備 container image(包含像是 參數、指令以及環境變數等等)
 
-而後 Docker 將其實作拆分出 containerd(high level runtime) 以及 runC(low level runtime)\
-![](https://i.stack.imgur.com/hFsHT.png)\
+而後 Docker 將其實作拆分出 containerd(high level runtime) 以及 runC(low level runtime)
+
+![](https://miro.medium.com/1*xvSX9Hk1gmsKV7tDMuO5hw.jpeg)
+> ref: [Docker, Containerd & Standalone Runtimes — Here’s What You Should Know](https://faun.pub/docker-containerd-standalone-runtimes-heres-what-you-should-know-b834ef155426)
+
 至此，Docker 的 image 以及 runtime 都符合了 OCI 規範\
 除了 Docker 本身的 runc, 還有以下 runtime
 
