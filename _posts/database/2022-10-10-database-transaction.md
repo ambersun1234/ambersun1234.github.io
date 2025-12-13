@@ -212,7 +212,7 @@ Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然
 注意到它跟 lost update 是不同的狀況，write skew 是對 **不同** 資料進行更新(而 lost update 是對相同資料做更新)
 
 所以何謂 write skew?\
-![](https://media.licdn.com/dms/image/v2/D4D12AQEepyM75pyl8Q/article-inline_image-shrink_1000_1488/article-inline_image-shrink_1000_1488/0/1715429633178?e=1747872000&v=beta&t=MZEvYAmFR0vjbcWMPwJ_Gy1BfbmiTonNflzpNiulb7g)
+![](https://media.licdn.com/dms/image/v2/D4D12AQEepyM75pyl8Q/article-inline_image-shrink_1000_1488/article-inline_image-shrink_1000_1488/0/1715429633178?e=1767225600&v=beta&t=862aj0rQ1bDNZOkw18QiHCIQiwcoB5AepKDCYPoOJRg)
 > ref: [Write Skew and Phantoms and Serializability : Transaction Series Part 4](https://www.linkedin.com/pulse/write-skew-phantoms-serializability-transaction-series-suyash-gogte-alqrf/)
 
 醫生 on call 班表，其中 Alice, Bob 皆為醫師\
