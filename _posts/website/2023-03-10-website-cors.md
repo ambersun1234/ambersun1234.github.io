@@ -52,8 +52,8 @@ CORS **不是一種安全機制**，相反的，他是一種能夠突破 [Same O
 ## Define Origin
 那我要怎麼確定我的來源是誰\
 網站會使用 `第一個 request` 來確認你的來源
-![](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/cors_principle.png)
-> ref: [跨來源資源共用（CORS）](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/CORS)
+![](https://mdn.github.io/shared-assets/images/diagrams/http/cors/preflight-correct.svg)
+> ref: [Cross-Origin Resource Sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)
 
 # How does CORS Work
 前面有提到，普遍瀏覽器為了安全問題，都有實作 [Same Origin Policy](#same-origin-policy)\
