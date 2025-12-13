@@ -209,8 +209,8 @@ CORS 的問題基本上不會出現(因為它不在瀏覽器裡面跑)
 假設你 **後端** 正確的設定了 CORS header 了，但是你還是遇到問題\
 八成是瀏覽器在搞事，舉例來說 Google Chrome
 
-![](https://global.discourse-cdn.com/business4/uploads/athom/optimized/3X/2/a/2a72131a869b1a4bf1a22e4a56f28b356a29b0f5_2_1366x1000.png)
-> ref: [How to restrict LAN addresses in a browser?](https://security.stackexchange.com/questions/243357/how-to-restrict-lan-addresses-in-a-browser)
+![](https://user-images.githubusercontent.com/41153370/142817397-3ffa4072-78cb-48aa-b7bc-96944b8a3321.png)
+> ref: [WebView2 Whether to allow private network request Settings？](https://github.com/MicrosoftEdge/WebView2Feedback/issues/1950)
 
 Chrome 的選項 `Block insecure private network requests` 記得要把它關閉\
 然後你的網站就可以正常運作了
