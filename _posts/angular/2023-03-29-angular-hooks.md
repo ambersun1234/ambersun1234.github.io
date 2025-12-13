@@ -213,7 +213,7 @@ view 可以被動態的調整，比如說 user 點了按鈕會出現其他畫面
 
 <!-- > Content 跟 View 有獨立另一篇出來詳細的探討，可參考 []() -->
 
-# Init vs. Checked Hooks
+<!-- # Init vs. Checked Hooks
 ![](https://www.tektutorialshub.com/wp-content/uploads/2020/10/AfterContentChecked-and-AfterViewChecked.gif)
 > ref: [AfterViewInit, AfterViewChecked, AfterContentInit & AfterContentChecked In Angular](https://www.tektutorialshub.com/angular/afterviewinit-afterviewchecked-aftercontentinit-aftercontentchecked-in-angular/#init-vs-checked)
 
@@ -222,7 +222,7 @@ init hooks 只會在第一次初始化的時候被呼叫
 
 ## Checked Hooks
 當目標 DOM 有任何 change 發生，checked hook 都會執行\
-亦即，checked hook 的 overhead 會很大，即使是單純的 click 事件都會 trigger
+亦即，checked hook 的 overhead 會很大，即使是單純的 click 事件都會 trigger -->
 
 # References
 + [Lifecycle hooks](https://angular.io/guide/lifecycle-hooks)
