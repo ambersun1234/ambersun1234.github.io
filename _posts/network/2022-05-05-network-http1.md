@@ -108,8 +108,10 @@ HTTP/1.0 還定義了常用的 methods
 那麼要如何解析它呢？
 
 HTTP character sets 是一種使用一個或多個 mapping table **將一連串八進位的資料解析成字串** 的方法\
-而 mapping table 就是(e.g. [ASCII](https://zh.wikipedia.org/wiki/ASCII))\
-![](https://www.sciencebuddies.org/cdn/references/ascii-table.png)
+而 mapping table 就是(e.g. [ASCII](https://zh.wikipedia.org/wiki/ASCII))
+![](https://www.w3resource.com/w3r_images/python-basic-image-exercise-86.png)
+> ref: [Python: ASCII value of letter in Python](https://www.w3resource.com/python-exercises/python-basic-exercise-86.php)
+
 > 這裡以 ASCII 為例，0x0A 是 `LF`, 0x0D 是 `CR`
 
 所以你發現了嗎？ HTTP 是 **plain text** 傳輸\
@@ -224,7 +226,8 @@ HTTP/1.1 新增了不少的 method
 + DELETE 同理，刪都刪掉了，再多執行一次也不會刪更多東西
 
 ## Cache
-![](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Caching/type-of-cache.png)
+![](https://mdn.github.io/shared-assets/images/diagrams/http/cache/type-of-cache.svg)
+> ref: [HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching)
 
 cache 的目的就是為了要提高 performance, 有了 cache 的機制，我們可以
 + 減少 network round-trips
