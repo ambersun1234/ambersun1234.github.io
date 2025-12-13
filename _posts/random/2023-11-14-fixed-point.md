@@ -109,8 +109,8 @@ fraction(mantissa) 的部份則是儲存 **正規化後** `小數點之後` 的�
 
 ||Integer to Binary|Fraction to Binary|
 |:--|:--:|:--:|
-|Image|![](https://media.geeksforgeeks.org/wp-content/uploads/20230731110443/Java-Program-for-Decimal-to-Binary-Conversion-300.png)|![](https://www.sarthaks.com/?qa=blob&qa_blobid=15486708300488642469)|
-|reference|[Java Program for Decimal to Binary Conversion](https://www.geeksforgeeks.org/java-program-for-decimal-to-binary-conversion/)|[Convert (0.2)10 to the binary form](https://www.sarthaks.com/132268/convert-0-2-10-to-the-binary-form)|
+|Image|![](https://media.geeksforgeeks.org/wp-content/uploads/20230731110443/Java-Program-for-Decimal-to-Binary-Conversion-300.png)|![](/assets/img/posts/floatingpoint-calculation.png)|
+|reference|[Java Program for Decimal to Binary Conversion](https://www.geeksforgeeks.org/java-program-for-decimal-to-binary-conversion/)||
 
 <hr>
 
@@ -201,8 +201,7 @@ IEEE 754 的 exponent 的部份為什麼不是直接塞\
 為什麼 `0.1 + 0.2 != 0.3` 但 `0.2 + 0.3 = 0.5`?
 
 還記得小數的部份是怎麼計算的嗎?\
-![](https://www.sarthaks.com/?qa=blob&qa_blobid=15486708300488642469)
-> ref: [Convert (0.2)10 to the binary form](https://www.sarthaks.com/132268/convert-0-2-10-to-the-binary-form)
+![](/assets/img/posts/floatingpoint-calculation.png)
 
 與整數取餘數不同，小數的部份則是以 $\times 2$ 的部份做計算，取他的 **整數** 部份，直到整體數值為 0 才結束\
 以 0.3 來看，他的二進位表示法長這樣
