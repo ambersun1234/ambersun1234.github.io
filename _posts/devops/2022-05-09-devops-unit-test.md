@@ -321,7 +321,8 @@ unit test 的宗旨我們開頭有提過，是測試 function 的 `logic`\
 因此你該做的事情是，額外寫個 unit test 確保 PI 是 3.14
 
 # Test-Driven Development - TDD
-![](https://www.thinktocode.com/wp-content/uploads/2018/02/red-green-refactor.png)
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*FGH_G1cQgpgilniCKY8NUQ.png)
+> ref: [TDD (Test-Driven Development) 測試驅動開發（入門篇）](https://medium.com/%E6%88%91%E6%83%B3%E8%A6%81%E8%AE%8A%E5%BC%B7/tdd-test-driven-development-%E6%B8%AC%E8%A9%A6%E9%A9%85%E5%8B%95%E9%96%8B%E7%99%BC-%E5%85%A5%E9%96%80%E7%AF%87-e3f6f15c6651)
 
 在敏捷開發的方法論裡，有這麼一個模式稱為 `測試驅動開發 Test-Driven Development`\
 他的概念是說，在開發功能之前，先寫測試\
