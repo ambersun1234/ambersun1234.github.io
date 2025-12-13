@@ -205,8 +205,8 @@ blockchain 顧名思義是由一堆 block 所構成的 chain\
 ![](https://ethereum.org/_next/image?url=%2Fcontent%2Fdevelopers%2Fdocs%2Fblocks%2Ftx-block.png&w=828&q=75)
 > ref: [BLOCKS](https://ethereum.org/en/developers/docs/blocks/)
 
-![](https://i.stack.imgur.com/ukuq0.png)
-> ref: [Ethereum block architecture](https://ethereum.stackexchange.com/questions/268/ethereum-block-architecture)
+![](https://www.code-brew.com/wp-content/uploads/2017/12/blockchain_4.png)
+> ref: [Blockchain](https://www.code-brew.com/blockchain/)
 
 [Validator](#validators) 準確的來說，是要驗證 block, 也因為 Transaction 包含在其中，所以交易也會被驗證, by default\
 被選為要生成下一個 block 的 validator 會打包近期的 Transaction 並加上一些 header 如 [Merkle Root](#merkle-root) 透過 gossip protocol 傳遞到其他的節點進行驗證\
