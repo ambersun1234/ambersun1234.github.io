@@ -300,7 +300,7 @@ Merkle Tree 是一個樹狀的資料結構\
 |from|Transaction 的發起者的錢包地址，只能是外部錢包地址，智能合約無法發送交易請求|
 |recipient|1. 外部錢包地址 :arrow_right: 轉移數值(可能是 ETH 或是 Token)<br>2. 合約地址 :arrow_right: 執行合約程式碼|
 |signature|sender 的簽章，用以證明 Transaction 的發起者(通常以私鑰簽名)|
-|nonce|簡單的計數器，用以紀錄 Transaction 數字(number used only once)<br><img src="https://support.metamask.io/hc/article_attachments/13074298930843" style="width:300px; height:auto"><br>> ref: [How to customize a transaction nonce](https://support.metamask.io/hc/en-us/articles/7417499333531-How-to-customize-a-transaction-nonce)|
+|nonce|簡單的計數器，用以紀錄 Transaction 數字(number used only once)<br><img src="https://csct-assets.infura-ipfs.io/ipfs/QmPJ28Vsa1v4WXDcvdBFGKYNMb9STeP96QvHSK2o85nt6R" style="width:300px; height:auto"><br>> ref: [How to customize a transaction nonce](https://support.metamask.io/configure/transactions/how-to-customize-a-transaction-nonce)|
 |value|轉移的數值，單位為 Wei<br>詳細可參考 [Wei GWei ETH](#wei-gwei-eth)|
 |data|任意資料|
 |gasLimit|可參考 [Gas](#gas)|
@@ -531,16 +531,12 @@ nonce 作為 Transaction 的唯一識別數字，可以使用它\
 再來你需要手動指定交易手續費\
 做完以上就可以了
 
-如果你是使用 [Metamask](https://metamask.io/) 可以這樣做
+如果你是使用 [Metamask](https://metamask.io/) 現在可以只按下 speed up 的按鈕就完成
 
-|1|2|3|
-|:--:|:--:|:--:|
-|開啟進階設定|指定哪一筆 Transaction|手動設定手續費|
-|![](https://support.metamask.io/hc/article_attachments/14929539257883)|![](https://support.metamask.io/hc/article_attachments/14731609986843)|![](https://support.metamask.io/hc/article_attachments/14731706474011)|
+> 早期 Metamask 還是必須用手動提高 gas fee 的作法，不過現在就是一鍵搞定
 
-就完成啦
-
-> ref: [How to speed up or cancel a pending transaction](https://support.metamask.io/hc/en-us/articles/360015489251-How-to-speed-up-or-cancel-a-pending-transaction)
+![](https://csct-assets.infura-ipfs.io/ipfs/QmeaGQUkwivzCg5Bp127hybGWJzh2bQvSCcLzyaoegpfrE)
+> ref: [How to speed up or cancel a pending transaction](https://support.metamask.io/manage-crypto/transactions/how-to-speed-up-or-cancel-a-pending-transaction)
 
 # Wei GWei ETH
 1 ETH = $10^9$ GWei\
