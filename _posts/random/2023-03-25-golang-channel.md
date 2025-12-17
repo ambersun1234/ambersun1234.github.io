@@ -487,7 +487,7 @@ channel 在設計上，就根本的解決了 data race 的問題\
 > 注意到雖然 channel 可以避免 explicit locking\
 > 但未必 locking 是一個不好的選項，在實作時，應當就狀況考慮相關 trade-off
 
-# Select
+# Select on Channel
 select 用於在多個 channel 之間，選擇其中一個並 process\
 他的工作流程如下
 1. 對於所有 channel 進行洗牌(確保公平)
@@ -507,6 +507,20 @@ select 用於在多個 channel 之間，選擇其中一個並 process\
     走訪每個 channel，把 sudog dequeue 出來的同時，紀錄下被選中的幸運 channel\
     等到都處理完了之後，就可以針對該幸運 channel 做 send/receive \
     並且回傳 select 選中的 channel index
+
+## Nil Value from Channel
+從 channel 拉資料的時候你需要同步檢查 channel 是否已經被關閉\
+也就是
+
+```go
+value, ok := <- a.ch
+
+if !ok {
+    panic("channel is closed")
+}
+```
+
+避免你直接存取 value 的時候，因為他是 nil 而導致 panic
 
 # Producer Consumer Example
 ```go
@@ -586,7 +600,7 @@ main 函數裡面的 `select{}` 是用以阻塞 main goroutine\
 ```go
 for {
     select {
-    case job := <- jobChannel:
+    case job, ok := <- jobChannel:
         // do something
 
     default:
