@@ -3,7 +3,7 @@ title: 資料庫 - Index 與 Histogram 篇
 date: 2022-12-25
 description: 本文會介紹 Index 如何對你的效能產生重大的影響。我們會一一檢視各種 index 的實作方式，並且探討它們的優缺點
 categories: [database]
-tags: [index, histogram]
+tags: [index, histogram, partial index, secondary index, clustered index, non-clustered index, hash index, b-tree index, b+ tree index, index seek, index scan, table scan, full table scan, low cardinality, high cardinality, cardinality, composite index, bitmap index, dense index, sparse index, reverse index, inverted index, full table scan, sstable, lsm tree, avl tree, red-black tree, linear probing, double hashing, fragmentation, external fragmentation, internal fragmentation, locality, predicates, access predicates, filter predicates, index only scan, explain, execution plan, histogram]
 math: true
 ---
 
@@ -66,6 +66,8 @@ WHERE b>=12 AND c=15
 遵循著一個原則，**low cardinality 在前，high cardinality 在後**\
 這樣的設計有助於再次提高效能
 
+> cardinality 是一個數值，用以表示資料的重複性，`數字越大，重複性越小`
+
 總的來說，共通點都是\
 他們的 ***查詢順序要符合定義的順序***\
 這樣才吃的到 index
@@ -73,6 +75,40 @@ WHERE b>=12 AND c=15
 > 注意到如果你使用 composite index 的時候沒有依照建構順序\
 > 在你嘗試使用 explain 去看 execution plan 也不見得會顯現出來差別\
 > 但實務上他的執行速度還是有差別的
+
+## Partial Index
+既然 index 的使用，跟他的數值有極大的關係(i.e. `cardinality`)\
+太多重複的資料會導致資料庫甚至選擇不使用該 index 查詢\
+所以其實這種限制是不太方便的，因為很多時候你的查詢條件就長那樣，index 也用不到，是很可惜的\
+`Partial Index` 旨在解決這個問題
+
+> 注意到 Partial Index 並非 SQL Standard 的一部分
+
+原始問題是，index 內部儲存 "整張表" 的 column data\
+如果我可以調整儲存的資料內容，只保留部份資料，使得 `cardinality` 提高，是不是就可以讓 index 活過來，繼續被使用？\
+除此之外，因為我只 index 部份資料，所以佔用空間更小\
+並且資料更新時，也可以加速，因為只有部份需要更新
+
+部份資料的作法，就是根據 query condition 來決定 index 的儲存內容\
+假設，我有 `user` 以及 `post` 兩個 table\
+我有一個 query 是這樣的
+
+```sql
+select * from post 
+where user_id = uid and visible = true
+```
+
+其實你可以針對 `visible` 建立一個 partial index
+```sql
+CREATE INDEX idx_post_visible ON post (visible) WHERE visible = true;
+```
+
+`visible` 欄位是 boolean, 所以重複的數值會很多(因為就兩種)\
+如果 true 的數量是相對於 false 小很多，這時候 partial index 的效益就會非常明顯
+
+使用 partial index 你也可以直接過濾掉 "不感興趣" 的資料\
+如果只有單純使用 uid 的 index，`visible = false` 的資料也會被查詢到\
+index 撈出來的資料數量越來越小(或者說越接近你要的最終結果)，越可以加速查詢速度
 
 <hr>
 
@@ -393,7 +429,7 @@ wildcard 在中間的情況也不會是 full table scan\
 + 當你用 `WHERE` 篩出來的 row(e.g. `WHERE indexed_col = 1`)包含了 **很大部份的 table 資料(e.g. 90%)**
     + 那麼與其用 where clause 慢慢篩出來不如直接 Full Table Scan 然後再挑出你要的資料
 + 當你的 index 屬於 [low cardinality](https://en.wikipedia.org/wiki/Cardinality_%28SQL_statements%29) 的時候
-    + cardinality 是一個數值，用以表示資料的重複性，數字越小，重複性越小
+    + cardinality 是一個數值，用以表示資料的重複性，`數字越大，重複性越小`
     + low cardinality 代表你的 index 內包含很多重複性資料，也就是你的 index 並不能指定到唯一的資料
     + 那麼它還要經過更多次的 key lookup 可能才能找到你要的資料，那乾脆就直接 Full Table Scan
 
@@ -424,3 +460,4 @@ wildcard 在中間的情況也不會是 full table scan\
 + [Index Seek和Index Scan的区别以及适用情况](https://blog.csdn.net/u013230234/article/details/78345333)
 + [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
 + [Difference between Internal and External fragmentation](https://www.geeksforgeeks.org/difference-between-internal-and-external-fragmentation/)
++ [Partial Indexes](https://www.postgresql.org/docs/current/indexes-partial.html)
