@@ -636,7 +636,10 @@ printNumbers:         1           2   3   4   5
 因為我們無法確定在 t = 200 的時候 goroutine 的執行順序
 
 # Memory Usage of Goroutine
-> to be continued
+![](https://github.com/ambersun1234/blog-labs/blob/master/golang-gc/golang-memory.png?raw=true)
+
+可參考 [多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響 \| Shawn Hsu](../../random/golang-gc)\
+程式碼 benchmark 的部份也可以參考 [ambersun1234/blog-labs/golang-gc](https://github.com/ambersun1234/blog-labs/tree/master/golang-gc)
 
 # References
 + [Difference between Thread Context Switch and Process Context Switch](https://www.geeksforgeeks.org/difference-between-thread-context-switch-and-process-context-switch/)
