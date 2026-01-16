@@ -3,11 +3,11 @@ title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
 description: 本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情
 categories: [database]
-tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock]
+tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock, bloom filter, cache avalanche, cache hotspot invalid, cache penetration]
 math: true
 ---
 
-# Cache
+# Introduction to Cache
 Cache 快取是在計算機當中最重要的概念\
 作為當今最有效加速的手段之一，其重要程度在作業系統、網頁伺服器以及資料庫當中都可以看到他的身影
 
@@ -16,7 +16,7 @@ Cache 的概念其實很簡單\
 
 那麼問題來了，哪些是常用的東西？
 
-# Cache vs. Buffer
+## Cache vs. Buffer
 兩個很相似的概念\
 Cache 如同先前所述，是為了要更快的拿到，所以將資料放在 Cache 裡面\
 而 Buffer 是為了應對不同裝置速度而做出的機制，當所需的資料還沒準備好供 process 的時候，這時候你可以將資料先寫到 buffer 裡面，當資料 ready 好的時候，就能夠一次拿走\
@@ -27,7 +27,7 @@ Buffer 不限於軟體，硬體層也有類似的東西
 |Description|為了能夠快速的回應常存取的資料|儲存資料直到被使用|
 |Storage|原始資料的備份|原始資料|
 
-# Memory Hierarchy
+## Memory Hierarchy
 ![](https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/ComputerMemoryHierarchy.svg/1280px-ComputerMemoryHierarchy.svg.png)
 > [Memory hierarchy](https://en.wikipedia.org/wiki/Memory_hierarchy)
 
@@ -59,7 +59,7 @@ CPU 的 memory 不能讓程式設計師直接存取是很合理的事情\
 試想如果你能夠手動操作，那這將會是個災難(搞亂 cache data 有可能會導致一直 cache miss, 造成效能低下)\
 不過不要誤會，即使我們不能直接操作，作業系統也替我們做了許多的 cache 在 cpu cache 了
 
-# Cache Warming
+## Cache Warming
 cache 的容量通常不大，因此所儲存的資料是有限的\
 這就會遇到一些問題，當我需要的資料不在 cache 裡面的時候，是不是要去 database 撈資料出來放著\
 這個情況被稱之為 **cache miss**，反之則為 **cache hit**
@@ -97,6 +97,39 @@ cache miss 的情況下，很明顯的會比 cache hit 的 `反應時間還要�
 兩邊同時作業(i.e. [producer consumer problem](https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem))，可以更快完成
 
 > 有關 message queue 的討論，可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue)
+
+# Cache Issues
+## Cache Avalanche
+cache 裡的資料通常會設定 expire time, 當時間到了之後，資料會被刪除\
+可是如果一堆資料 `同時都過期`，會導致所有 request 直接打到資料庫，然後直接被打爆
+
+如果你有多台 cache server，那麼資料設定的 expire time 不太可能會一樣\
+這樣是不是就可以降低 `同時都過期` 的機率\
+套用到更廣泛的場景，也就是說在 expire time 的設定上面加一點隨機值(**Jitter**)，不要讓它都同時 expire 就可以了
+
+## Cache Hotspot Invalid
+而如果 expire 的是熱門的資料，那麼擊穿的效果會更加嚴重\
+那不要讓它 expire 是不是一種選項
+
+像我之前做的有一個也是用這種作法\
+資料是不會過期的，相反的我會定期去 overwrite 該筆資料\
+使其永遠都是最新的，而且你永遠在 cache 裡面可以找到
+
+## Cache Penetration
+那如果，client 要求的資料本質上就不存在呢？\
+也就是說你在 cache 跟 database 都找不到該筆資料
+
+cache 找不到，理論上就是去 database 找對吧\
+所以所有 request 都會打到 database，然後又會直接被打爆
+
+這題如果你沒有聽過 **Bloom Filter** 是答不出來的\
+**Bloom Filter** 是一種機率性的資料結構，可以快速判斷資料是否存在\
+當資料不存在時，可以快速返回結果，避免無謂的查詢
+
+所以如果你用 Bloom Filter 發現資料不存在，那就不用往後確認了
+
+> 注意到 Bloom Filter 會有 false positive 的機率\
+> 也就是說，資料存在於 Bloom Filter 中，但實際上不存在
 
 # Cache Strategies
 ## Cache Aside(Read Aside)
@@ -399,3 +432,4 @@ user2: {
 + [Cache warming: Agility for a stateful service](https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642)
 + [比較 Redis OSS 與 Memcached](https://aws.amazon.com/tw/elasticache/redis-vs-memcached/)
 + [Distributed Locks with Redis](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)
++ [redis - 快取雪崩、擊穿、穿透](https://totoroliu.medium.com/redis-%E5%BF%AB%E5%8F%96%E9%9B%AA%E5%B4%A9-%E6%93%8A%E7%A9%BF-%E7%A9%BF%E9%80%8F-8bc02f09fe8f)
