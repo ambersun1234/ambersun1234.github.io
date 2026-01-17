@@ -11,7 +11,7 @@ for file in $(find ${root} -name "*.md"); do
     oldIfs=$IFS
     IFS=$'\n'
     
-    echo "Processing: ${file}"
+    ok=0
     # find the (../../xxxx) in the file and store into variable
     matches=$(grep -o '](\.[^)]*)' "${file}")
     for match in ${matches}; do
@@ -32,8 +32,15 @@ for file in $(find ${root} -name "*.md"); do
         if ! ls ${testPath} 1> /dev/null 2>&1; then
             echo -e "\tFile not found: ${fullpath}"
             shouldExit=1
+            ok=1
         fi
     done
+
+    if [ ${ok} -eq 0 ]; then
+        echo "✅ Processing: ${file}"
+    else
+        echo "❌ Processing: ${file}"
+    fi
 
     IFS=$oldIfs
 done
