@@ -2,7 +2,7 @@
 title: Kubernetes 從零開始 - Self Healing 是如何運作的
 date: 2025-01-17
 categories: [kubernetes]
-tags: [probe, liveness probe, readiness probe, startup probe, gRPC, TCP, EXEC, health check, healthz, controller, operator, self healing, self-healing, kubelet]
+tags: [probe, liveness probe, readiness probe, startup probe, gRPC, TCP, EXEC, health check, healthz, controller, operator, self healing, self-healing, kubelet, k8s requests, k8s limits]
 description: 自動修復是 Kubernetes 的一大功能，但你可曾思考過他是如何運作的嗎？ 本文將會介紹 Kubernetes 中的探測棒(Probe)以及自動修復的機制
 math: true
 ---
@@ -158,15 +158,7 @@ livenessProbe:
 執行 exec probe 需要特別注意的是，他的每次執行都是 fork process 來執行的\
 如果定期執行的間隔過短會額外增加系統負擔
 
-## Should you Define a Probe?
-原則上還是會建議讓 Kubernetes 處理自動修復的部份\
-盡量減少人為地介入可以避免一些不必要的問題
-
-那這就會引到一個問題，如果我沒有定義 Probe 會怎樣？\
-其實也不會怎麼樣，Kubernetes 並不會因此就瘋狂重啟你的 pod\
-他的預設就都會是 success
-
-## How to Write and Define a Probe
+# How to Write and Define a Probe
 前面我們說過，你可以簡單定義一個 `/healthz` endpoint 來作為探測棒\
 但你有沒有想過，Kubernetes 是如何判斷這個 endpoint 是成功還是失敗的？
 
@@ -203,21 +195,44 @@ livenessProbe:
 是可以的，因為硬體故障通常會導致應用程式無法正常運作\
 即使是網路故障導致節點沒有回應，Kubernetes 依然會自動修復，將 application schedule 到可以正常運作的節點上
 
-# Who does the Self Healing?
-## Kubelet
-撇除 replica 這種需要 controller 介入的情況，Kubernetes 本身是依靠 `Kubelet` 來做到自動修復的\
-kubelet 可以把他想像成節點的管理者，負責管理比如說，節點的狀態，pod 的狀態等等的
+## Should you Define a Probe?
+原則上還是會建議讓 Kubernetes 處理自動修復的部份\
+盡量減少人為地介入可以避免一些不必要的問題
 
+那這就會引到一個問題，如果我沒有定義 Probe 會怎樣？\
+其實也不會怎麼樣，Kubernetes 並不會因此就瘋狂重啟你的 pod\
+他的預設就都會是 success
+
+# What will Happen if Probe Failed?
+
+|Probe Type|Action|
+|:--|:--|
+|[Liveness Probe](#liveness-probe-failed)|根據 RestartPolicy 決定是否重新啟動 container|
+|[Readiness Probe](#readiness-probe-failed)|把流量導到其他 pod|
+|[Startup Probe](#startup-probe-failed)|根據 RestartPolicy 決定是否重新啟動 container|
+
+## Liveness Probe Failed
 當一個 container 已經不健康的時候(使用 [Liveness Probe](#liveness-probe) 來判斷)\
 kubelet 就會 **根據 RestartPolicy**, 重新啟動這個 container(or not)
 
+## Readiness Probe Failed
 那如果 [Readiness Probe](#readiness-probe) 失敗呢？\
 Readiness 表示是否準備好了對吧，對於 Kubernetes 來說如果還沒準備好它就不能被 route 到上面對吧\
 也就是說，Load Balancer 並不會將流量導到這個 pod
 
 但假設你需要把 pod 關掉，停掉所有的 incoming traffic\
 你不見得會需要 readiness probe，因為當它被停止的時候狀態會是 `unready`\
+注意到這時候 pod 還是在運行的狀態，只是不會被 route 到上面(將 pod ip 從 service 的 endpoint 中移除)\
 pod 會等到 container 內部完全停止之後才會被刪除
+
+## Startup Probe Failed
+會根據 RestartPolicy 決定是否重新啟動 container\
+[Startup Probe](#startup-probe) 在成功之前，[Liveness Probe](#liveness-probe) 以及 [Readiness Probe](#readiness-probe) 都不會開始執行
+
+# Who does the Self Healing?
+## Kubelet
+撇除 replica 這種需要 [Kubernetes Controller](#kubernetes-controller) 介入的情況，Kubernetes 本身是依靠 `Kubelet` 來做到自動修復的\
+kubelet 可以把他想像成節點的管理者，負責管理比如說，節點的狀態，pod 的狀態等等的
 
 ## Kubernetes Controller
 有了 Probe 其實還不夠，因為它只是通知你說 pod 掛掉之類的\
@@ -228,9 +243,46 @@ pod 會等到 container 內部完全停止之後才會被刪除
 
 > 有關 Controller 可以參考 [Kubernetes 從零開始 - 從自幹 Controller 到理解狀態管理 \| Shawn Hsu](../../kubernetes/kubernetes-controller/)
 
+# Requests and Limits
+另一種跟 self healing 稍微有關的機制是 Requests and Limits\
+Requests and Limits 是 Kubernetes 用來管理資源分配的機制\
+你可以設定一個 Pod 能 **最少應該要使用多少** 的 CPU, Memory 等等的資源\
+這部份會定義在 Pod 的 `spec.containers[].resources.requests` 中
+
+kube-scheduler 會根據 requests 來決定要分配到哪一個 node 上\
+當然它也可以用超過 requests 的資源，但是這樣可能會導致其他 pod 沒有足夠的資源可以運作\
+所以 `spec.containers[].resources.limits` 就是用來限制一個 Pod 最多可以使用的資源
+
+那問題來了，如果 pod 的資源使用量超過 limits 會怎樣？
++ 超過 CPU limit: 會被降速(Throttling)
++ 超過 Memory limit: **有可能會被 terminate**
+
+兩個的機制是不同的，對於 CPU 來說是 hard limit，對於 Memory 來說是 soft limit\
+如果你記憶體用量超出 limits 的設定，不一定會被馬上 kill 掉，除非 kernel 遇到 memory pressure
+
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+spec:
+  containers:
+  - name: app
+    image: images.my-company.example/app:v4
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+```
+
 # References
 + [ReplicationController](https://kubernetes.io/docs/concepts/workloads/controllers/replicationcontroller/)
 + [Liveness, Readiness, and Startup Probes](https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/)
 + [Configure Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/)
 + [Liveness/Readiness Probes should treat any 2XX status as healthy](https://github.com/kubernetes/kubernetes/issues/54082)
 + [Container probes](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes)
++ [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
