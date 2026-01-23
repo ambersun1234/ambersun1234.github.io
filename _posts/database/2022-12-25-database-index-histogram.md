@@ -237,7 +237,9 @@ SSTable 會先在記憶體中維護一個資料結構(e.g. [AVL Tree](https://en
 因為可能你有很多個 segment file\
 所以當你要查詢的時候，有可能會 miss 掉(i.e. 該 key 不存在於該 segment file 當中)\
 因此必須要往前一份資料找\
-你可以配合一些其他的工具避免此類的狀況(e.g. [Bloom Filter](https://en.wikipedia.org/wiki/Bloom_filter))
+你可以配合一些其他的工具避免此類的狀況(e.g. [Bloom Filter](../../database/database-filter#bloom-filter))
+
+> Bloom Filter 相關的介紹可以參考 [資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用 \| Shawn Hsu](../../database/database-filter)
 
 ## B Tree Index
 ![](https://builtin.com/sites/www.builtin.com/files/styles/ckeditor_optimize/public/inline-images/1_b-tree-indexing.jpg)

@@ -2,7 +2,7 @@
 title: 資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
 date: 2026-01-19
 categories: [database]
-tags: [redis, redis-stack, bloom filter, cuckoo filter, hash function, false positive, scalable bloom filter, cuckoo hashing, probabilistic data structure, data structure, cache, cache penetration, cache avalanche, cache hotspot invalid]
+tags: [redis, redis-stack, bloom filter, cuckoo filter, hash function, false positive, scalable bloom filter, cuckoo hashing, probabilistic data structure, data structure, cache, cache penetration, cache avalanche, cache hotspot invalid, xor filter, binary fuse filter, peeling]
 description: 我們常用空間換時間，但很多時候這樣還是不夠的。透過機率型資料結構，犧牲些微準確性，獲取極大的性能提昇在某些場景下是非常必要的，本文會介紹機率型資料結構的基本概念，以及在 Redis 中的實作方式
 math: true
 redirect_from:
@@ -54,11 +54,15 @@ redirect_from:
 
 # Different Types of Probabilistic Data Structure
 
-|Probabilistic Data Structure|Goal|Insertion|Query|Allow Deletion|Space Utilization|
+|Probabilistic Data Structure|Insertion|Query|Deletion|Modification|Space Utilization|
 |:--|:--|:--|:--|:--|:--|
-|[Bloom Filter](#bloom-filter)|快速判斷資料是否存在|$O(K)$|$O(K)$|:x:|Low|
-|[Scalable Bloom Filter](#scalable-bloom-filter)|快速判斷資料是否存在|$O(K)$|$O(K * L)$|:x:|Low|
-|[Cuckoo Filter](#cuckoo-filter)|快速判斷資料是否存在|$O(1)$|$O(1)$|:heavy_check_mark:|High|
+|[Bloom Filter](#bloom-filter)|$O(K)$|$O(K)$|:x:|:heavy_check_mark:|Very Low|
+|[Scalable Bloom Filter](#scalable-bloom-filter)|$O(K)$|$O(K * L)$|:x:|:heavy_check_mark:|Low|
+|[Cuckoo Filter](#cuckoo-filter)|$O(1)$|$O(1)$|:heavy_check_mark:|:heavy_check_mark:|Medium|
+|[XOR Filter](#xor-filter)|$O(1)$|$O(1)$|:x:|:x:|High|
+|[Binary Fuse Filter](#binary-fuse-filter)|$O(1)$|$O(1)$|:x:|:x:|Very High|
+
+> 每筆資料所需空間: [Bloom Filter](#bloom-filter) > [Scalable Bloom Filter](#scalable-bloom-filter) > [Cuckoo Filter](#cuckoo-filter) > [XOR Filter](#xor-filter) > [Binary Fuse Filter](#binary-fuse-filter)
 
 ## Bloom Filter
 [Bloom Filter](https://en.wikipedia.org/wiki/Bloom_filter) 是一種機率型資料結構，可以快速判斷資料是否存在\
@@ -111,8 +115,7 @@ redirect_from:
 > 而且先查再寫會大幅度的增加 overhead(因為查詢是 $O(K \times L)$)
 
 ## Cuckoo Filter
-`Cuckoo Filter` 也是一種機率型資料結構，常用的 use case 也是快速判斷一個資料是否存在\
-不同於 [Bloom Filter](#bloom-filter)，它採用 **雙 hash** 的作法，計算出資料的 fingerprint\
+`Cuckoo Filter` 不同於 [Bloom Filter](#bloom-filter)，它採用 **雙 hash** 的作法，計算出資料的 fingerprint\
 然後在相對應的位置上標記\
 而這種作法，也會出現 false positive 的問題(i.e. 相同 fingerprint)
 
@@ -144,6 +147,89 @@ cuckoo hashing 的作法會是將舊的資料踢掉，因為你可以算另一�
 
 ![](https://i0.wp.com/codecapsule.com/wp-content/uploads/2013/07/cuckoo_preview.jpg?w=720&ssl=1)
 > ref: [Cuckoo Hashing](https://codecapsule.com/2013/07/20/cuckoo-hashing/)
+
+## XOR Filter
+`XOR Filter` 的作法則是將儲存的資料變成是 "片段的 fingerprint" 資料\
+並且只有固定三個片段，然後將這三個片段進行 XOR 運算\
+得出來的結果，再與 fingerprint 進行比對\
+如果兩個長的一樣，那這筆資料應該存在
+
+$$
+h_1(p_1) \oplus h_2(p_2) \oplus h_3(p_3) = \text{fingerprint(input)}
+$$
+
+本質也還是算 hash，所以片段的 fingerprint 也會有碰撞的問題\
+所以 [XOR Filter](#xor-filter) 也會有 false positive 的問題
+
+> 都是算 fingerprint，why not [Cuckoo Filter](#cuckoo-filter)?\
+> 就還是回到 [Why not Hash Table only?](#why-not-hash-table-only) 的問題\
+> 還是空間最大化利用以及準確率換時間的 trade offs
+
+他的出現旨在取代 Bloom Filter，因為以下各種原因
+1. [XOR Filter](#xor-filter) 比 [Bloom Filter](#bloom-filter) 更快
+    + 3 + 1 次 hash 比 n 次 hash 快
+2. [XOR Filter](#xor-filter) 所需空間比 [Bloom Filter](#bloom-filter) 更小
+    + Bloom Filter 塞太滿，誤判機率會上升
+
+不過他有一個大缺點\
+要先知道所有儲存資料，你才能開始構件 XOR Filter\
+因為它本質上是在解方程式，上述的數學式你也看到了\
+它需要找到 3 個不同的 hash function，使得所有數值填入之後計算出來的等式是成立的\
+換句話說，[XOR Filter](#xor-filter) 沒辦法 **動態新增資料**
+
+本質上就是先找到 Degree 1 slot 然後一層一層解析\
+一個 slot 如果有兩個資料映射到同一個位置，那就不能拆\
+就是要找到所謂的突破口
+
+很抽象？
+
+$$
+x + y = 10 \\
+y + z = 15 \\
+x + z = 11
+$$
+
+單純看 $x + y = 10$ 你可以很簡單的說出答案，可是這個答案他是與其他等式有相依性的\
+部份解不一定等於全局解\
+況且它本質上還是 hash function 你更難猜
+
+> 上述作法稱為 `peeling`
+
+所以它就沒用了嗎？\
+其實有些系統是 read heavy 的，將 [XOR Filter](#xor-filter) 應用在此種狀況可以獲得很好的效果
+
+### Binary Fuse Filter
+你會發現 [XOR Filter](#xor-filter) 的 peeling 過程其實挺容易失敗的\
+找到共同解沒有這麼簡單，尤其資料量大的時候，萬一失敗它就要重新設定 hash
+
+那既然問題是資料量大的時候，容易失敗\
+那麼把資料分組不就解決了，所以現在是 *分組 也 分片段*
++ 分組: 將整個 array 切成多個大小相同的小 array 且互不重疊，稱為 ***segment***
++ 分片段: 將輸入資料切成 3 個片段(3 次 hash)
+
+而目的是
+
++ 分組: 為了解決 peeling 失敗
++ 分片段: 犧牲部份準確率換取時間
+
+> 如果你不分組，那基本等於 [XOR Filter](#xor-filter)
+
+為了要讓 [Binary Fuse Filter](#binary-fuse-filter) 跑得又快又好\
+其中一個特殊要求是，3 組 hash function 的結果，***必須座落於相鄰的 segment 中***\
+也就是說
+
+1. 當你算出第一個 hash 結果，找到它應該放在哪個 segment 之後，假設位置 `i`
+2. 第二個 hash 結果必須放在 `i + 1` 的 segment 中
+3. 第三個 hash 結果必須放在 `i + 2` 的 segment 中
+
+> 如果都放在同一個 segment，那就是小號的 [XOR Filter](#xor-filter)
+
+這樣的好處是
++ 解決了資料量大可能會出現的 peeling 失敗問題
++ 查詢時間更快速，因為 3 次 hash 結果在記憶體中是相鄰的，可以提高 cache hit rate
++ peeling 建構過程更順利，只要找到 degree 1 slot 就能夠大幅度提昇找到全局解的機率(因為相鄰，所以找到一個，就可以往後繼續找(燒)，所以才叫 `fuse`)
+
+> 有關 cache 可以參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
 
 # Redis Example
 那就來試一下
@@ -185,3 +271,6 @@ $ docker exec -it redis sh
 + [Cuckoo filter](https://redis.io/docs/latest/develop/data-types/probabilistic/cuckoo-filter/)
 + [Bloom Filter Datatype for Redis](https://redis.io/blog/bloom-filter/)
 + [資料結構大便當：Bloom Filter](https://medium.com/@Kadai/%E8%B3%87%E6%96%99%E7%B5%90%E6%A7%8B%E5%A4%A7%E4%BE%BF%E7%95%B6-bloom-filter-58b0320a346d)
++ [Binary Fuse Filters: Fast and Smaller Than Xor Filters](https://arxiv.org/pdf/2201.01174)
++ [What is a binary fuse filter?](https://stackoverflow.com/questions/73410580/what-is-a-binary-fuse-filter)
++ [What is an XOR filter?](https://stackoverflow.com/questions/73410580/what-is-a-binary-fuse-filter)
