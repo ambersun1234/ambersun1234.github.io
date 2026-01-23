@@ -126,7 +126,7 @@ cache 找不到，理論上就是去 database 找對吧\
 **Bloom Filter** 是一種機率性的資料結構，可以快速判斷資料是否存在\
 當資料不存在時，可以快速返回結果，避免無謂的查詢
 
-> 可參考 [資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用 \| Shawn Hsu](../../database/database-cache-bloom-filter)
+> 可參考 [資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用 \| Shawn Hsu](../../database/database-filter)
 
 所以如果你用 Bloom Filter 發現資料不存在，那就不用往後確認了
 
