@@ -5,6 +5,8 @@ categories: [database]
 tags: [redis, redis-stack, bloom filter, cuckoo filter, hash function, false positive, scalable bloom filter, cuckoo hashing, probabilistic data structure, data structure, cache, cache penetration, cache avalanche, cache hotspot invalid]
 description: 我們常用空間換時間，但很多時候這樣還是不夠的。透過機率型資料結構，犧牲些微準確性，獲取極大的性能提昇在某些場景下是非常必要的，本文會介紹機率型資料結構的基本概念，以及在 Redis 中的實作方式
 math: true
+redirect_from:
+    - /database/database-cache-bloom-filter/
 ---
 
 # Cache Issues
