@@ -239,7 +239,8 @@ $ echo -n I | od -to2 | head -n1 | cut -f2 -d" " | cut -c6
     + 因為少了它也不會對結果造成太大影響
 
 直接上圖比較好懂\
-![](https://pic.pimg.tw/ytliu0/1545280500-398832370_wn.jpg)
+![](https://substackcdn.com/image/fetch/$s_!qhMJ!,w_1456,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fd802eb71-eede-453a-9029-a7bb8f0c1d27_611x201.png)
+> ref: [Binary Arithmetic and Bitwise Operations for Systems Programming](https://blog.codingconfessions.com/p/binary-arithmetic-and-bitwise-operations)
 
 ## Will Endian Effect MSB?
 既然 MSB 代表的是第 n - 1 位的數字，那 endian 會不會影響 MSB 的數值?\

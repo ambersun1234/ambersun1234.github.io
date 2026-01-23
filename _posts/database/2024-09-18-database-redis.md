@@ -515,7 +515,7 @@ $ docker exec -it cluster-node4-1 sh
 172.20.0.6:7000>
 ```
 
-![](https://redis.io/learn/_next/image?url=https%3A%2F%2Fcdn.builder.io%2Fapi%2Fv1%2Fimage%2Fassets%252Fbf70e6aa643f4e8db14c5b0c8dbba962%252Fe83ec58a5eb7437d93093da09c028fda&w=1920&q=75)
+![](https://redis.io/_next/image/?url=https%3A%2F%2Fcdn.sanity.io%2Fimages%2Fsy1jschh%2Fproduction%2Fc5f655603c68d5881bddc8265f42e12991f69f8a-1021x345.jpg&w=1200&q=75&dpl=dpl_HCR3JFJcvQExhY6PXP2xU2Dy1Gv7)
 > ref: [4.3 Redis Cluster and Client Libraries](https://redis.io/learn/operate/redis-at-scale/scalability/redis-cluster-and-client-libraries)
 
 基本上這個 hash slot 與節點之間的對應，client 會儲存一個備份在本地\
