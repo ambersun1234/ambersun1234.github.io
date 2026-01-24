@@ -1,0 +1,13 @@
+name: Validate Image
+
+on: workflow_dispatch
+
+jobs:
+  validate_image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ambersun1234/iAnalyzer@v1.0.0
+        with:
+          domain: "ambersuncreates.com"
+          ignore-prefix: "https://ambersuncreates.com/tags,https://ambersuncreates.com/categories"
