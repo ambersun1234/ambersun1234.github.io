@@ -174,35 +174,27 @@ blockchain 要怎麼做呢？
 
 > 有關七層模型的介紹，可參考 [重新認識網路 - OSI 七層模型 \| Shawn Hsu](../../network/network-osi)
 
-![](https://www.rayskyinvest.com/wp-content/uploads/2022/01/%E6%88%AA%E5%9C%96-2022-01-27-%E4%B8%8B%E5%8D%889.26.24-2-1140x778.png)
-> ref: [區塊鏈的 Layer 是什麼？L1-4 差異與應用範例介紹](https://www.rayskyinvest.com/57558/layer-intro)
+![](https://media2.dev.to/dynamic/image/width=800%2Cheight=%2Cfit=scale-down%2Cgravity=auto%2Cformat=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fadiy29gdb3i09wdww8as.png)
+> ref: [Blockchain layers — What are they?](https://dev.to/1solation/blockchain-layers-what-are-they-bkp)
 
-總共有 6 層架構，分別為
+總共有 5 層架構，分別為
 
-1. `Data Layer`
+1. `Physical Layer`
+    + 就是基礎建設如硬體、網路以及虛擬機等等的
+2. `Data Layer`
     + 儲存數據的地方，並且由所有節點共同維護
-2. `Network Layer`
+3. `Network Layer`
     + 所有節點構成分散式系統
-3. `Consensus Layer`
-    + 區塊鏈的基礎之一，共識機制
-4. `Actuator Layer`
-    + 獎勵機制，所有節點可以從維護區塊鏈網路中獲得獎勵(i.e. Token)
-5. `Contract Layer`
-    + 智能合約是跑在這一層架構之上的，無人能干涉
-6. `Application Layer`
-    + 最上層就是一些應用的部份了，包含像是 Metamask 這種服務都算是應用層之上的服務
+4. `Consensus Layer`
+    + 區塊鏈的基礎之一，共識機制，並且所有節點可以從維護區塊鏈網路中獲得獎勵(i.e. Token)
+5. `Application Layer`
+    + 最上層就是一些應用的部份了，包含像是 智能合約以及 Metamask 這種服務都算是應用層之上的服務
 
-<hr>
-
-![](https://www.rayskyinvest.com/wp-content/uploads/2022/01/%E6%88%AA%E5%9C%96-2022-01-27-%E4%B8%8B%E5%8D%889.26.35-1-1140x820.png)
-> ref: [區塊鏈的 Layer 是什麼？L1-4 差異與應用範例介紹](https://www.rayskyinvest.com/57558/layer-intro)
-
-不過上述僅為架構，實際上我們在說的 layer 只有包含 3 層(3, 4, 5 層都有人講)\
-他的對應如上圖所示
+不過上述僅為架構，實際上我們在說的 layer 只有包含 3 層(3, 4, 5 層都有人講)
 
 > 說目前 "只有" 3 層的原因很簡單，因為實際上區塊鏈仍在高度發展當中，搞不好以後會發展更多層也不一定
 
-![](https://www.rayskyinvest.com/wp-content/uploads/2022/01/%E6%88%AA%E5%9C%96-2022-01-17-%E4%B8%8A%E5%8D%8812.25.12-1140x646.png)
+![](https://ospreyfunds.io/wp-content/uploads/Opsrey-Funds-Layers-of-the-Crypto-Universe-1536x864.jpg)
 > ref: [Layers of the Crypto Universe](https://ospreyfunds.io/newsletter/layersofcryptoverse/)
 
 ## Layer 0
