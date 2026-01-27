@@ -3,7 +3,7 @@ title: 資料庫 - 新手做 Data Migration 資料遷移
 date: 2024-02-08
 description: 隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題
 categories: [database]
-tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint, kafka, kafka connect, cdc, change data capture, statement replication, logical log, kubectl wait]
+tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint, kafka, kafka connect, cdc, change data capture, statement replication, logical log, kubectl wait, argocd]
 math: true
 ---
 
@@ -248,6 +248,7 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 
 > 有關 Helm Hook 可以參考 [Kubernetes 從零開始 - Deployment 管理救星 Helm Chart \| Shawn Hsu](../../kubernetes/kubernetes-helm-chart#helm-chart-hooks)
 
+## Kubectl Wait
 基本上你會有幾種選擇
 1. 利用 Kubernetes Job 獨立執行 migration(透過 Helm Hook 控制順序)
 2. 在 Deployment 中使用 `initContainer` 執行 migration
@@ -281,6 +282,46 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 2. migration job 完成執行(app 被執行 [kubectl wait](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait) 的 `initContainer` block 住，等待 migration job 完成)
 3. app 完成安裝(這個時候 migration 已經成功)
 
+## K8s Job Lifecycle and ArgoCD Synchronization
+雖然使用 [Kubectl Wait](#kubectl-wait) 可以解決資料庫與應用程式同時安裝，無法進行資料升級的問題\
+但是這種作法會需要非常小心
+
+如果你的 Job 有設定 `ttlSecondsAfterFinished`，Job 本身會在這個時間之後被刪除(不是底下的 Pod 而是 Job 本身)\
+這樣 Kubectl Wait 的判斷就會失效，導致你的主程式起不來(注意到並不是 deploy 才會用到判斷，如果你的 deployment 意外重啟而 Job 已經被刪除，同樣也適用)\
+搭配上 ArgoCD 這種作法只會更糟，因為 K8s 不允許同名的 Job，所以會無法同步\
+你唯一想的到的就是加上 ttl 讓 Job 自動被刪除，Argo 才能再次同步\
+不過問題又回到前面講的
+
+K8s Job 預設是不會清除的
+```text
+NAME                   READY   STATUS      RESTARTS   AGE
+pod/sleep-test-vvk98   0/1     Completed   0          4h55m
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.43.0.1    <none       443/TCP   4h55m
+
+NAME                   STATUS     COMPLETIONS   DURATION   AGE
+job.batch/sleep-test   Complete   1/1           57s        4h55m
+```
+
+所以怎麼辦呢？\
+你可以在 [Kubectl Wait](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait) 中指定使用 label 判斷\
+至於 Job 的名稱可以用 generate name 來生成\
+這樣就完美繞過以上的所有問題
+
+```shell
+$ kubectl wait --timeout=60s --for=condition=complete --timeout=60s \
+    $(\
+        kubectl get jobs -l component=sync \
+        --sort-by=.metadata.creationTimestamp -o name | tail -n1 \
+    )
+```
+
+> 挑選 label 為 `component=sync` 的 Job，並且按照 creation timestamp 排序，選擇最後一個
+
+唯一的 drawback 是你會有很大量的 Job instance 存在\
+透過簡單的 cronjob 去清除是不錯的選擇
+
 這樣你就能夠解決資料庫與應用程式同時安裝，無法進行資料升級的問題了
 
 # References
@@ -289,3 +330,4 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 + [Migrations](https://github.com/golang-migrate/migrate/blob/v4.18.3/MIGRATIONS.md)
 + [COSCUP 2025 - Zero‑Downtime Online Schema Migration in PostgreSQL](https://docs.google.com/presentation/d/1VSET3c0F683bgUaTA9UiBigPE5xhSA08ehAwV0Bvuqo/edit?fbclid=IwY2xjawMHvUVleHRuA2FlbQIxMQABHipwC4GYref-40imaC8M3zKYwyi1XBOh08HMitTFKh0cyf_KLybiFinfmM0d_aem_RJQsGFbjWYXTf09Xi9k8ww&slide=id.g287fa921f8d_0_1382#slide=id.g287fa921f8d_0_1382)
 + [[資料工程]獲取資料庫所有異動記錄 — Change Data Capture(1)](https://wuyiru.medium.com/%E8%B3%87%E6%96%99%E5%B7%A5%E7%A8%8B-%E7%8D%B2%E5%8F%96%E8%B3%87%E6%96%99%E5%BA%AB%E6%89%80%E6%9C%89%E7%95%B0%E5%8B%95%E8%A8%98%E9%8C%84-change-data-capture-1-c61ce7ec3d27)
++ [Lab 4.2 - A Simple DAG Workflow: apply workflow with generate name](https://forum.linuxfoundation.org/discussion/865639/lab-4-2-a-simple-dag-workflow-apply-workflow-with-generate-name)
