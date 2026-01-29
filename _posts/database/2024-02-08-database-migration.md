@@ -244,7 +244,10 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 什麼意思呢？ 就如同 [Database migrations in Helm charts using pre-install, pre-upgrade hook](https://stackoverflow.com/questions/79173735/database-migrations-in-helm-charts-using-pre-install-pre-upgrade-hook) 提到的\
 要執行 migration 需要資料庫先安裝，而且需要在應用程式啟動之前\
 這本質上是不可能的\
-因為 Helm Hook 本身並沒有那麼細緻的控制，它只有分安裝前後
+因為 Helm Hook 本身並沒有那麼細緻的控制
+
+`pre-install` 是完全不可行的，因為只有在 hook 完成之後 app 才會開始安裝\
+而 `post-install` 有可能 app 已經啟動完畢，但是 data migration 還沒完成，然後造成資料損毀
 
 > 有關 Helm Hook 可以參考 [Kubernetes 從零開始 - Deployment 管理救星 Helm Chart \| Shawn Hsu](../../kubernetes/kubernetes-helm-chart#helm-chart-hooks)
 
