@@ -251,6 +251,16 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 
 > 有關 Helm Hook 可以參考 [Kubernetes 從零開始 - Deployment 管理救星 Helm Chart \| Shawn Hsu](../../kubernetes/kubernetes-helm-chart#helm-chart-hooks)
 
+再來是，Helm Hook 本身的設計也不是要拿來讓你跑長時間的任務\
+即使你說，沒有啊目前就大概 3 分鐘會跑完也是不適合的，就... 他不是設計給你這樣用的\
+根據 [Question: Long Running Hooks - Yes or No?](https://github.com/helm/helm/issues/10582) 你也可以看到
+
+> Most of the time, a long running hook (for hours or days) isn't a good idea.
+
+其實官方是不推薦的，更甚至因為透過 Helm Hook 建立的 K8s Resource 本身是脫離 release 的\
+也就是說他的生命週期並不是跟著 `helm upgrade`, `helm delete` 一起的，你需要手動管理\
+在 on-permise 的環境這種做法是更糟糕的(可參考 [On-premise vs. SAAS Migration](#on-premise-vs-saas-migration)
+
 ## Kubectl Wait
 基本上你會有幾種選擇
 1. 利用 Kubernetes Job 獨立執行 migration(透過 Helm Hook 控制順序)
