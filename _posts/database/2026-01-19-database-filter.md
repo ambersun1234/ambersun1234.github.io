@@ -97,6 +97,31 @@ redirect_from:
 強制把它清 0 會讓其他原本準確的資料也一起被清掉\
 所以 [Bloom Filter](#bloom-filter) ***不支援刪除***
 
+### Better Bloom Filter
+不過，多次 hash 實務上也是有缺點的，就是慢\
+所以 [Building a Better Bloom Filter](https://www.eecs.harvard.edu/~michaelm/postscripts/tr-02-05.pdf) 這篇論文提出了一些改進的方式\
+簡單講就是透過計算兩次的 hash 結果之後，利用以上結果把剩下的全部推論出來
+
+```python
+bit_vector[hash1] = 1
+bit_vector[hash2] = 1
+
+for i in range(0, k-1):
+    bit_vector[hash1 + i * hash2] = 1
+```
+
+而這牽扯到一個數學問題，如果你的 bit_vector 的長度與 hash2 的結果有公因數\
+那你可能會很快的將 Bloom Filter 全部塞滿
+
+就是說，假設陣列大小是 `10`\
+hash2 的結果是 `2`\
+那你之後步進的結果就是 `2, 4, 6, 8, 0, 2, 4, 6, 8, ...`\
+等於說你有很大的機率會重複，這樣誤判率上升，對吧
+
+與其去限制 hash2 不如控制陣列的大小\
+既然重點是 **互質**，將陣列大小設定為質數不就好了？\
+這也是為什麼工程上通常會設定 `100003` 而不是 `100000`
+
 ### Scalable(Stackable) Bloom Filter
 [Bloom Filter](#bloom-filter) 是沒辦法做刪除的，而且也沒有辦法擴展\
 也就是說，在一開始的時候 bit array 的大小就要事先決定好\
@@ -274,3 +299,4 @@ $ docker exec -it redis sh
 + [Binary Fuse Filters: Fast and Smaller Than Xor Filters](https://arxiv.org/pdf/2201.01174)
 + [What is a binary fuse filter?](https://stackoverflow.com/questions/73410580/what-is-a-binary-fuse-filter)
 + [What is an XOR filter?](https://stackoverflow.com/questions/73410580/what-is-a-binary-fuse-filter)
++ [Bloom Filters with the Kirsch Mitzenmacher optimization](https://stackoverflow.com/questions/70963247/bloom-filters-with-the-kirsch-mitzenmacher-optimization)
