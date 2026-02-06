@@ -38,7 +38,9 @@ thread 又稱為 LightWeight Process(LWP), 是 process 的組成最小單位\
 
 |One to One|Many to One|Many to Many|
 |:--|:--|:--|
-|![](https://www.studytonight.com/operating-system/images/one-to-one-model.png)|![](https://www.studytonight.com/operating-system/images/many-to-one-model.png)|![](https://www.studytonight.com/operating-system/images/many-to-many-model.png)|
+|![](https://media.geeksforgeeks.org/wp-content/uploads/20251025102048596171/frame_3188.webp)|![](https://media.geeksforgeeks.org/wp-content/uploads/20251024185948790476/frame_3187.webp)|![](https://media.geeksforgeeks.org/wp-content/uploads/20251024185922747683/frame_3186.webp)|
+
+> ref: [Multi Threading Models in Process Management](https://www.geeksforgeeks.org/operating-systems/multi-threading-models-in-process-management/)
 
 ### User-level Thread
 user-level thread 顧名思義是跑在 user space 上的 thread, 它可能是由 library 本身提供的\
