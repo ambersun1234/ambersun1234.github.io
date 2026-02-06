@@ -1,0 +1,1680 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>浮點數 - 如何解決精度問題以及其原理 | Shawn Hsu</title>
+<meta name="description" content="為什麼 0.1 + 0.2 不等於 0.3? 本文將會複習一遍浮點數的概念以及其原理，並透過實際的例子觀察其特性。以及如何使用定點數來解決精度問題">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="浮點數 - 如何解決精度問題以及其原理">
+<meta property="og:url" content="https://ambersuncreates.com/random/fixed-point/">
+
+
+  <meta property="og:description" content="為什麼 0.1 + 0.2 不等於 0.3? 本文將會複習一遍浮點數的概念以及其原理，並透過實際的例子觀察其特性。以及如何使用定點數來解決精度問題">
+
+
+<meta property="og:image" content="/assets/img/og/fixed-point.png">
+
+
+
+
+  <meta property="article:published_time" content="2023-11-14T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2025-12-13T22:32:34+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/random/fixed-point/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#random" itemprop="item"><span itemprop="name">Random</span></a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">浮點數 - 如何解決精度問題以及其原理</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com" />
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="浮點數 - 如何解決精度問題以及其原理">
+    <meta itemprop="description" content="Preface  ref: Damn you floating point binary addition, you’ve caused me tons of bugs over the years">
+    <meta itemprop="datePublished" content="2023-11-14T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2025-12-13T22:32:34+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/random/fixed-point/" class="u-url" itemprop="url">浮點數 - 如何解決精度問題以及其原理
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2023-11-14">2023-11-14</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-12-13">
+            2025-12-13
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/fixed-point/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/fixed-point/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/fixed-point/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#preface">Preface</a></li><li><a href="#binary-representation">Binary Representation</a><ul><li><a href="#ones-complement">One’s Complement</a><ul><li><a href="#calculation">Calculation</a></li></ul></li><li><a href="#twos-complement">Two’s Complement</a><ul><li><a href="#calculation-1">Calculation</a></li></ul></li></ul></li><li><a href="#introduction-to-floating-point">Introduction to Floating Point</a><ul><li><a href="#ieee-754">IEEE 754</a><ul><li><a href="#normalization">Normalization</a></li><li><a href="#why-do-we-need-normalization">Why do we Need Normalization</a></li><li><a href="#why-not-store-twos-complement-in-exponent">Why not Store Two’s Complement in Exponent</a></li></ul></li></ul></li><li><a href="#overflow-vs-underflow">Overflow vs. Underflow</a></li><li><a href="#precision-loss">Precision Loss</a></li><li><a href="#how-to-prevent-precision-loss">How to Prevent Precision Loss</a><ul><li><a href="#big-number-arithmetic">Big Number Arithmetic</a></li></ul></li><li><a href="#introduction-to-fixed-point">Introduction to Fixed Point</a><ul><li><a href="#q-format-notation">Q Format Notation</a></li><li><a href="#fixed-point-builtin-implementation">Fixed Point Builtin Implementation</a></li></ul></li><li><a href="#summary">Summary</a></li><li><a href="#is-floating-point-useless">Is Floating Point Useless?</a></li><li><a href="#references">References</a></li></ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="preface">Preface</h1>
+<p><img src="https://preview.redd.it/neebkdjnwfs71.jpg?width=960&amp;crop=smart&amp;auto=webp&amp;s=cbaa67e24f2f6ec1a7ffbfa07dce705aeba48b51" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://www.reddit.com/r/ProgrammerHumor/comments/q4n3m6/damn_you_floating_point_binary_addition_youve/">Damn you floating point binary addition, you’ve caused me tons of bugs over the years</a></p>
+</blockquote>
+
+<p>要如何判斷是機器還是人類，用簡單的 <code class="language-plaintext highlighter-rouge">0.1 + 0.2</code> 就可以判斷了<br />
+不過到底為什麼它不會等於 <code class="language-plaintext highlighter-rouge">0.3</code>?<br />
+學過計算機的你一定能給出一個標準答案，是因為浮點數的精度問題所造成的<br />
+這時候問題來了，那 <code class="language-plaintext highlighter-rouge">0.2 + 0.3</code> 會是多少？</p>
+
+<p><img src="/assets/img/posts/floatingpoint.png" alt="" /></p>
+
+<p>為什麼精度問題又不見了？<br />
+更重要的問題是為什麼它會有精度問題？ 以及我們該怎麼避免此類狀況發生？<br />
+本文會複習一遍這些概念以及其原理，一起看看吧</p>
+
+<h1 id="binary-representation">Binary Representation</h1>
+<p>讓我們先從基本開始<br />
+電腦儲存資料的方式一直都是以二進位的方式做<br />
+數字也是如此<br />
+回憶一下一個數字要怎麼以二進位的方式表示<br />
+以 <code class="language-plaintext highlighter-rouge">5(10)</code> 來說它可以表示成 <code class="language-plaintext highlighter-rouge">101(2)</code><br />
+其含意為 $1 * 2^2 + 0 * 2^1 + 1 * 2^0$</p>
+
+<blockquote>
+  <p>因為電腦物理上只存在 <code class="language-plaintext highlighter-rouge">有電</code> 以及 <code class="language-plaintext highlighter-rouge">沒電</code> 的狀態，所以特別適合使用二進位配合處理</p>
+</blockquote>
+
+<h2 id="ones-complement">One’s Complement</h2>
+<p>一補數的存在，多數是用於計算二補數用的<br />
+由於使用一補數會出現 <strong>-0</strong> 這種奇妙的東西<br />
+因此單獨使用的機會較少</p>
+
+<h3 id="calculation">Calculation</h3>
+<p>將每個位元反轉即可<br />
+白話一點就是 <code class="language-plaintext highlighter-rouge">0 變 1, 1 變 0</code></p>
+
+<h2 id="twos-complement">Two’s Complement</h2>
+<p>二進位要表示負數<br />
+我們需要使用 1 個 bit 紀錄其正負值<br />
+所以一個 <code class="language-plaintext highlighter-rouge">32 bit</code> 大小的儲存空間，它最大可以表示 $2^{31} - 1$ 到 $-2^{31}$</p>
+
+<blockquote>
+  <p>32 bit 大小是從 $2^{31}$ 到 $2^0$</p>
+</blockquote>
+
+<p>值得注意的是，不是僅僅單純的加上正負號即可<br />
+對於二進位的數字，它必須要用特別的方式處理<br />
+即 <code class="language-plaintext highlighter-rouge">2's complement</code> 二補數</p>
+
+<p>為什麼需要二補數而不是單純的儲存原本的數字呢？<br />
+根據 <a href="https://zh.wikipedia.org/zh-tw/%E4%BA%8C%E8%A3%9C%E6%95%B8">二補數</a></p>
+
+<blockquote>
+  <p>二補數系統的最大優點是可以在加法或減法處理中，<br />
+不需因為數字的正負而使用不同的計算方式。<br />
+只要一種加法電路就可以處理各種有號數加法，<br />
+而且減法可以用一個數加上另一個數的二補數來表示，<br />
+因此只要有加法電路及二補數電路即可完成各種有號數加法及減法，<br />
+在電路設計上相當方便。</p>
+</blockquote>
+
+<h3 id="calculation-1">Calculation</h3>
+<p>基本上計算只有兩個步驟要進行</p>
+<ol>
+  <li>計算 <a href="#ones-complement">一補數</a></li>
+  <li>再加 1</li>
+</ol>
+
+<p>我們假設一個 4 bit 的儲存空間<br />
+數字 <code class="language-plaintext highlighter-rouge">5(10)</code> 的二補數是這樣計算的</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td><td class="rouge-code"><pre>5(10) = 0101(2)
+
+1010(2) -&gt; 一補數
+1011(2) -&gt; 加 1
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>所以 4 bit 的空間下，數字 <code class="language-plaintext highlighter-rouge">5</code> 的二補數為 <code class="language-plaintext highlighter-rouge">1011(2)</code></p>
+
+<h1 id="introduction-to-floating-point">Introduction to Floating Point</h1>
+<p>從上述我們可以得知，數字是使用 <a href="#binary-representation">Binary Representation</a> 來表示<br />
+那麼對於小數 我們該怎麼處理？<br />
+其核心概念也是相同的<br />
+一樣將數字拆成二進位表示法<br />
+只不過是分成 <strong>兩個部份</strong></p>
+<ol>
+  <li>整數部份的二進位</li>
+  <li>小數部份的二進位</li>
+</ol>
+
+<h2 id="ieee-754">IEEE 754</h2>
+<p><img src="https://miro.medium.com/v2/resize:fit:786/format:webp/1*Av9PTaY6p8dnJrk6uzYQLQ.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/starbugs/see-why-floating-point-error-can-not-be-avoided-from-ieee-754-809720b32175">從 IEEE 754 標準來看為什麼浮點誤差是無法避免的</a></p>
+</blockquote>
+
+<p>正負號的部份如同整數一樣，需要一個 bit 做紀錄</p>
+
+<p>整數的部份儲存在 <code class="language-plaintext highlighter-rouge">exponent</code> 的區塊(需要正規化，可參考 <a href="#normalization">Normalization</a>)<br />
+我們知道，任何限定範圍內的 <strong>整數(i.e. integer)</strong> 都可以用二進位的方式完美的表示出來<br />
+在單精度浮點數的定義下，exponent 佔據了 8 個 bit</p>
+
+<p>fraction(mantissa) 的部份則是儲存 <strong>正規化後</strong> <code class="language-plaintext highlighter-rouge">小數點之後</code> 的數值(可參考 <a href="#normalization">Normalization</a>)</p>
+
+<h3 id="normalization">Normalization</h3>
+<p>光是算出整數以及小數的二進位表示並 <strong>不能直接塞</strong><br />
+我們必須要對整數部份進行正規化</p>
+
+<p>數字 <code class="language-plaintext highlighter-rouge">8.5(10)</code> 的二進位表示法是 <code class="language-plaintext highlighter-rouge">1000.1(2)</code></p>
+
+<blockquote>
+  <p>如何轉成二進位，請參閱下表</p>
+</blockquote>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center">Integer to Binary</th>
+      <th style="text-align: center">Fraction to Binary</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Image</td>
+      <td style="text-align: center"><img src="https://media.geeksforgeeks.org/wp-content/uploads/20230731110443/Java-Program-for-Decimal-to-Binary-Conversion-300.png" alt="" /></td>
+      <td style="text-align: center"><img src="/assets/img/posts/floatingpoint-calculation.png" alt="" /></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">reference</td>
+      <td style="text-align: center"><a href="https://www.geeksforgeeks.org/java-program-for-decimal-to-binary-conversion/">Java Program for Decimal to Binary Conversion</a></td>
+      <td style="text-align: center"> </td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<p>要讓它成為 IEEE 754 compatible，格式必須為 $\pm 1.xxxxx \times 2^n$</p>
+<blockquote>
+  <p>那個 leading bit 1 阿，我們不會 explicit 的存它，所以它通常被稱為 hidden bit</p>
+</blockquote>
+
+<p>很顯然的 <code class="language-plaintext highlighter-rouge">1000.1</code> 並不符合 IEEE 754 的格式<br />
+要將小數點往左移，就是要乘上 base value<br />
+所以答案會是 <code class="language-plaintext highlighter-rouge">$1.0001 \times 2^3$</code></p>
+
+<blockquote>
+  <p>10 進位的情況下，小數點往左移就是乘以 $10^n$, 同理 2 進位的往左移就是 $2^n$</p>
+</blockquote>
+
+<p>所以填進去會變成
+<img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*JqRzcCeJp3FnbixVwSi1UQ.png" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/starbugs/see-why-floating-point-error-can-not-be-avoided-from-ieee-754-809720b32175">從 IEEE 754 標準來看為什麼浮點誤差是無法避免的</a></p>
+</blockquote>
+
+<p>為什麼是 exponent 的部份是 130 而不是 3, 為什麼要加 127？<br />
+我們留到下兩節 <a href="#why-not-use-twos-complement">Why not use Two’s Complement</a> 解釋</p>
+
+<h3 id="why-do-we-need-normalization">Why do we Need Normalization</h3>
+<p>我一開始很不能理解為什麼要做正規化 白話點就是為什麼不能直接塞<br />
+不過在此之前，讓我們看看做正規化有什麼好處</p>
+
+<ol>
+  <li>一致的表示規則</li>
+  <li>減少複雜度</li>
+  <li>可以比較簡單的實作處理四則運算</li>
+</ol>
+
+<p>假設你有兩個數字要做乘法<br />
+分別為 $0.01101 \times 2^2$ 以及 $100.01101 \times 2^3$<br />
+他們相乘必須要寫成
+$0.01101 \times 100.01101 \times 2^{2+3}$</p>
+
+<p>很明顯的看到整體算式變得相對複雜<br />
+所以擁有一致的表示法，可以減少複雜度，並且你可以用現成的硬體完成這件事</p>
+
+<h3 id="why-not-store-twos-complement-in-exponent">Why not Store Two’s Complement in Exponent</h3>
+<p>IEEE 754 的 exponent 的部份為什麼不是直接塞<br />
+而是要讓 exponent 加上一定的偏移量(i.e. bias)呢？</p>
+
+<p>單精度的情況下，根據定義你可以知道 exponent 有 8 個 bit<br />
+換句話說它能夠表示 256($2^8$) 種數字對吧<br />
+而且他的偏移量是 127($2^7 - 1$), 這肯定不是巧合<br />
+看到這裡你八成猜的出來它想做什麼<br />
+就是在 exponent 這裡也引入負數的情況</p>
+
+<blockquote>
+  <p>注意到這裡的負數跟 sign-bit 是不同的<br />
+這裡是 exponent 的正負號</p>
+</blockquote>
+
+<p>所以 exponent 可以表示的範圍是 <code class="language-plaintext highlighter-rouge">-126 到 127</code> 也就是 $-2^7 + 2$ 到 $2^7 - 1$<br />
+你說為什麼不是 -127 到 128?<br />
+因為有一些特例要處理(e.g. <code class="language-plaintext highlighter-rouge">INF</code>, <code class="language-plaintext highlighter-rouge">$\infty$</code>)<br />
+<a href="https://zh.wikipedia.org/wiki/IEEE_754">IEEE 754</a> 上面有列出各種情況，放在這供參考
+<img src="https://i.imgur.com/FXJiR2r.png" alt="" /></p>
+
+<hr />
+
+<p>所以回到本節的問題<br />
+為什麼它不直接存 2’s complement 進去就好了？<br />
+換個方式，用 2’s complement 存會有什麼缺點</p>
+<ol>
+  <li>正負號處理難度增加</li>
+  <li>硬體成本難度增加</li>
+</ol>
+
+<p>所以，理論上做的到，但就是 trade-off<br />
+使用 bias 的方式顯然比 2’s complement 的問題更小</p>
+
+<blockquote>
+  <p>注意到不論使用 <a href="#twos-complement">Two’s Complement</a> 或者是 bias 的方法<br />
+他們 exponent range 都不會有所改變</p>
+</blockquote>
+
+<h1 id="overflow-vs-underflow">Overflow vs. Underflow</h1>
+<p>其實不只是浮點數，所有資料型態都要注意到他的上限與下限<br />
+避免 overflow 與 underflow 的問題出現</p>
+
+<ul>
+  <li>overflow: 超過我能表示的最大數值</li>
+  <li>underflow: 低於我能表示的最小數值</li>
+</ul>
+
+<p>比如說單精度浮點數<br />
+它能表示的最小值為 $2^{-23} \times 2^{-126}$(fraction 最小值乘上 exponent 最小值)</p>
+
+<blockquote>
+  <p>fraction bit 數等於 32 bit - 1 bit(sign) - 8 bit(exponent) = 23 bit</p>
+</blockquote>
+
+<h1 id="precision-loss">Precision Loss</h1>
+<p>俗話說的好，<code class="language-plaintext highlighter-rouge">算術用浮點 遲早被人扁</code><br />
+這麼說肯定是有他的道理的<br />
+浮點數由於其精度問題，在需要精密計算的時候，時常造成誤差<br />
+也就有這麼一句經典 警惕後人</p>
+
+<p>但回到最初我們破題的那個疑問<br />
+為什麼 <code class="language-plaintext highlighter-rouge">0.1 + 0.2 != 0.3</code> 但 <code class="language-plaintext highlighter-rouge">0.2 + 0.3 = 0.5</code>?</p>
+
+<p>還記得小數的部份是怎麼計算的嗎?<br />
+<img src="/assets/img/posts/floatingpoint-calculation.png" alt="" /></p>
+
+<p>與整數取餘數不同，小數的部份則是以 $\times 2$ 的部份做計算，取他的 <strong>整數</strong> 部份，直到整體數值為 0 才結束<br />
+以 0.3 來看，他的二進位表示法長這樣</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre>數值      運算後  整數部份
+0.3 * 2 = 0.6      0
+0.6 * 2 = 1.2      1
+0.2 * 2 = 0.4      0
+0.4 * 2 = 0.8      0
+0.8 * 2 = 1.6      1
+0.6 * 2 = 1.2      1
+0.2 * 2 = 0.4      0
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>你有沒有發現，數值已經重複了<br />
+代表他是沒辦法算到 <code class="language-plaintext highlighter-rouge">0</code> 的<br />
+它循環了</p>
+
+<p>所以這就是為什麼，<code class="language-plaintext highlighter-rouge">0.3</code> 用 IEEE 754 沒辦法表示完整的真實原因<br />
+我們只能 <strong>近似</strong> 該小數(你可以理解成整數之間有無數個小數，數不完)<br />
+所以 <code class="language-plaintext highlighter-rouge">0.3(10)</code> 的二進位是 <code class="language-plaintext highlighter-rouge">0.0100110(2)</code>, IEEE 754 則是 <code class="language-plaintext highlighter-rouge">$1.00110 \times 2^{-2}$</code><br />
+你可以搭配 <a href="https://www.h-schmidt.net/FloatConverter/IEEE754.html">IEEE 754 Floating Point Converter</a> 一起玩</p>
+
+<hr />
+
+<p><code class="language-plaintext highlighter-rouge">0.5</code> 的部份就也依樣畫葫蘆</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre>數值      運算後  整數部份
+0.5 * 2 = 1.0      1
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>所以 <code class="language-plaintext highlighter-rouge">0.5(10)</code> 的二進位是 <code class="language-plaintext highlighter-rouge">0.1(2)</code>, IEEE 754 則是 <code class="language-plaintext highlighter-rouge">$1 \times 2^{-1}$</code><br />
+因為二進位可以完美的表示 0.5 這個數字，所以它不會有精度問題！</p>
+
+<h1 id="how-to-prevent-precision-loss">How to Prevent Precision Loss</h1>
+<p>我們成功的解析出，浮點數的精度問題了<br />
+也很了解其中的設計了</p>
+
+<p>但精度問題仍然是個不小的問題對吧<br />
+只有特定的數字不會有精度問題，顯然不夠好<br />
+有沒有辦法可以讓小數，在計算機中，不存在有精度問題呢？</p>
+
+<h2 id="big-number-arithmetic">Big Number Arithmetic</h2>
+<p>回顧一下大數加法，當初學到它要解決的問題就是 大數<br />
+大數之所以是個問題是因為現有的資料型態基本上都有一個固定的大小<br />
+也因此儲存的數值是有一個範圍的，超過或小於都會造成問題<br />
+就是上面有稍微提到的 <a href="#overflow-vs-underflow">Overflow vs. Underflow</a> 的問題</p>
+
+<p>我們能不能借鑒這個想法<br />
+把它存到一個 array 的空間中，然後套用大數運算的原理去處理<br />
+顯然理論上是沒問題的</p>
+
+<p>對，理論上<br />
+實務上會有什麼問題？</p>
+<ol>
+  <li>要怎麼處理小數點？ 它會有對齊的問題</li>
+  <li>運算速度問題會不會太慢</li>
+</ol>
+
+<h1 id="introduction-to-fixed-point">Introduction to Fixed Point</h1>
+<p>相較於浮點數，存在精度問題<br />
+<strong>定點數</strong> 可以完美的解決以上問題</p>
+
+<p>定點，亦即某個點是固定不動的<br />
+既然我們談到小數了，那就是小數點囉<br />
+小數點不動是啥意思呢</p>
+
+<p><code class="language-plaintext highlighter-rouge">我能不能用 Integer 表示小數?</code><br />
+可是我不是才說小數理論上有無限多個嗎？ 我要怎麼用整數表示小數？<br />
+先慢慢來，如果我只想表示 <strong>有限多個呢</strong><br />
+假設我想要的資料精度，到小數點第二位<br />
+我能不能將整數位的 <code class="language-plaintext highlighter-rouge">第 0 位</code> 以及 <code class="language-plaintext highlighter-rouge">第 1 位</code> 保留起來當作小數的部份<br />
+其餘部份就是整數部份囉</p>
+
+<p>我不一定要將小數點給存起來，我可以假裝它存在<br />
+假設我要存 <code class="language-plaintext highlighter-rouge">11.32</code> 這個小數好了，要怎麼把它塞進 int 裡面？<br />
+存 <code class="language-plaintext highlighter-rouge">1132</code> 行不行？<br />
+要顯示的時候我在除回去給你就好，但我儲存的時候，我假裝我有存小數點的概念進去(實際上沒有)</p>
+
+<p>在程式裡面紀錄所謂的 <strong>縮放大小</strong>(scaling factor)，以本例來說就是 <code class="language-plaintext highlighter-rouge">100</code> 倍<br />
+而定點數的概念就是這麼的簡單</p>
+
+<h2 id="q-format-notation">Q Format Notation</h2>
+<p>基本上就是上面講的 scaling factor<br />
+不過 Q Format Notation 比較多是在描述二進位的情況</p>
+
+<p>他的表示是這樣子寫的 <code class="language-plaintext highlighter-rouge">Qm.n</code><br />
+意思是說，有 <code class="language-plaintext highlighter-rouge">m</code> 個 bits 用來表示整數部份，<code class="language-plaintext highlighter-rouge">n</code> 個 bits 用來表示小數部份<br />
+所以 <code class="language-plaintext highlighter-rouge">Q19.12</code> 就是說，有 19 bits 用來表示整數部份，12 bits 用來表示小數部份<br />
+要把它還原，就是將整個 integer 除以 $2^{12}$(因為是二進位)</p>
+
+<blockquote>
+  <p>19 + 12 = 31 bits，因為有 sign bit 要算進去</p>
+</blockquote>
+
+<h2 id="fixed-point-builtin-implementation">Fixed Point Builtin Implementation</h2>
+<p>我一開始想要試定點數的時候，發現竟無從下手<br />
+要玩浮點數，我可以直接用 C 開 float, double 下去看<br />
+但是對於定點數我卻不知怎麼開始</p>
+
+<p>原因在於多數程式語言的實作都有支援 IEEE 754<br />
+但是對於定點數的支援還比較少<br />
+就比如說 C<br />
+不過網路上還是有一些 Open Source 的 Library 可以使用</p>
+
+<h1 id="summary">Summary</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center">Floating Point</th>
+      <th style="text-align: center">Fixed Point</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Data Range</td>
+      <td style="text-align: center">Big</td>
+      <td style="text-align: center">Small</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Speed</td>
+      <td style="text-align: center">Slow</td>
+      <td style="text-align: center">Fast</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Native Support</td>
+      <td style="text-align: center">Yes</td>
+      <td style="text-align: center">No</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Precision Loss</td>
+      <td style="text-align: center">Yes</td>
+      <td style="text-align: center">No</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="is-floating-point-useless">Is Floating Point Useless?</h1>
+<p>看到這裡我想你已經有答案了<br />
+對於快速運算，並且可以犧牲一定精準度的場合下，使用浮點數並無不妥<br />
+若是對於精度有極高要求，如金融相關，那麼定點數可能更適合你</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://hackmd.io/@czPKboGUQZi6-txq9HcDqw/BkzftBYAv">IEEE-754 與浮點數運算</a></li>
+  <li><a href="https://medium.com/starbugs/see-why-floating-point-error-can-not-be-avoided-from-ieee-754-809720b32175">從 IEEE 754 標準來看為什麼浮點誤差是無法避免的</a></li>
+  <li><a href="https://zh.wikipedia.org/zh-tw/%E4%B8%80%E8%A3%9C%E6%95%B8">一補數</a></li>
+  <li><a href="https://stackoverflow.com/questions/28800565/how-to-normalize-a-mantissa">How to normalize a mantissa</a></li>
+  <li><a href="https://stackoverflow.com/questions/32193791/single-precision-floating-point-format-range">Single-precision floating-point format Range</a></li>
+  <li><a href="https://zh.wikipedia.org/zh-tw/%E7%AE%97%E8%A1%93%E6%BA%A2%E5%87%BA">算術溢位</a></li>
+  <li><a href="https://zh.wikipedia.org/zh-tw/%E7%AE%97%E6%9C%AF%E4%B8%8B%E6%BA%A2">算術下溢</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Q_(number_format)">Q (number format)</a></li>
+  <li>COSCUP 2024 - 從零開始建構 C 語言最佳化編譯器</li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#binary" class="page__taxonomy-item p-category" rel="tag">binary</a><span class="sep">, </span>
+    
+      <a href="/tags/#fixed-point" class="page__taxonomy-item p-category" rel="tag">fixed point</a><span class="sep">, </span>
+    
+      <a href="/tags/#floating-point" class="page__taxonomy-item p-category" rel="tag">floating point</a><span class="sep">, </span>
+    
+      <a href="/tags/#ieee754" class="page__taxonomy-item p-category" rel="tag">ieee754</a><span class="sep">, </span>
+    
+      <a href="/tags/#overflow" class="page__taxonomy-item p-category" rel="tag">overflow</a><span class="sep">, </span>
+    
+      <a href="/tags/#underflow" class="page__taxonomy-item p-category" rel="tag">underflow</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#random" class="page__taxonomy-item p-category" rel="tag">random</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E6%B5%AE%E9%BB%9E%E6%95%B8+-+%E5%A6%82%E4%BD%95%E8%A7%A3%E6%B1%BA%E7%B2%BE%E5%BA%A6%E5%95%8F%E9%A1%8C%E4%BB%A5%E5%8F%8A%E5%85%B6%E5%8E%9F%E7%90%86%20https%3A%2F%2Fambersuncreates.com%2Frandom%2Ffixed-point%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Frandom%2Ffixed-point%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fambersuncreates.com%2Frandom%2Ffixed-point%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/algorithm/algorithm-backtracking/" class="pagination--pager" title="神奇的演算法 - Backtracking 與 Divide and Conquer
+">Previous</a>
+    
+    
+      <a href="/database/database-message-queue/" class="pagination--pager" title="資料庫 - 從 Apache Kafka 認識 Message Queue
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-12-13">
+            2025-12-13
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-12-13">
+            2025-12-13
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-12-13">
+            2025-12-13
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-12-13">
+            2025-12-13
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/random/fixed-point/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/random/fixed-point"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

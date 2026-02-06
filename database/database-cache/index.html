@@ -1,0 +1,1928 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu</title>
+<meta name="description" content="本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="資料庫 - Cache Strategies 與常見的 Solutions">
+<meta property="og:url" content="https://ambersuncreates.com/database/database-cache/">
+
+
+  <meta property="og:description" content="本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情">
+
+
+<meta property="og:image" content="/assets/img/og/database-cache.png">
+
+
+
+
+  <meta property="article:published_time" content="2022-09-28T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-01-23T20:48:21+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/database/database-cache/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#database" itemprop="item"><span itemprop="name">Database</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">資料庫 - Cache Strategies 與常見的 Solutions</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="資料庫 - Cache Strategies 與常見的 Solutions">
+    <meta itemprop="description" content="Introduction to CacheCache 快取是在計算機當中最重要的概念作為當今最有效加速的手段之一，其重要程度在作業系統、網頁伺服器以及資料庫當中都可以看到他的身影">
+    <meta itemprop="datePublished" content="2022-09-28T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-01-23T20:48:21+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/database/database-cache/" class="u-url" itemprop="url">資料庫 - Cache Strategies 與常見的 Solutions
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2022-09-28">2022-09-28</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-cache/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-cache/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-cache/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li>
+<a href="#introduction-to-cache">Introduction to Cache</a><ul>
+<li><a href="#cache-vs-buffer">Cache vs. Buffer</a></li>
+<li><a href="#memory-hierarchy">Memory Hierarchy</a></li>
+<li><a href="#cache-warming">Cache Warming</a></li>
+</ul>
+</li>
+<li>
+<a href="#cache-issues">Cache Issues</a><ul>
+<li><a href="#cache-avalanche">Cache Avalanche</a></li>
+<li><a href="#cache-hotspot-invalid">Cache Hotspot Invalid</a></li>
+<li><a href="#cache-penetration">Cache Penetration</a></li>
+</ul>
+</li>
+<li>
+<a href="#cache-strategies">Cache Strategies</a><ul>
+<li><a href="#cache-asideread-aside">Cache Aside(Read Aside)</a></li>
+<li><a href="#read-through">Read Through</a></li>
+<li><a href="#write-through">Write Through</a></li>
+<li><a href="#write-backwrite-behind">Write Back(Write Behind)</a></li>
+<li><a href="#write-around">Write Around</a></li>
+</ul>
+</li>
+<li>
+<a href="#redis">Redis</a><ul>
+<li>
+<a href="#redis-data-structures">Redis Data Structures</a><ul>
+<li><a href="#distributed-lock">Distributed Lock</a></li>
+<li><a href="#sorted-sets-vs-lists">Sorted Sets vs. Lists</a></li>
+</ul>
+</li>
+<li><a href="#redis-transactions">Redis Transactions</a></li>
+<li>
+<a href="#redis-persistence">Redis Persistence</a><ul>
+<li><a href="#rdb---redis-database">RDB - Redis Database</a></li>
+<li><a href="#aof---append-only-file">AOF - Append Only File</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#redis-vs-memcached">Redis vs. Memcached</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="introduction-to-cache">Introduction to Cache</h1>
+<p>Cache 快取是在計算機當中最重要的概念<br>
+作為當今最有效加速的手段之一，其重要程度在作業系統、網頁伺服器以及資料庫當中都可以看到他的身影</p>
+
+<p>Cache 的概念其實很簡單<br>
+也就是 <strong>常用的東西 要能夠越快拿到</strong></p>
+
+<p>那麼問題來了，哪些是常用的東西？</p>
+
+<h2 id="cache-vs-buffer">Cache vs. Buffer</h2>
+<p>兩個很相似的概念<br>
+Cache 如同先前所述，是為了要更快的拿到，所以將資料放在 Cache 裡面<br>
+而 Buffer 是為了應對不同裝置速度而做出的機制，當所需的資料還沒準備好供 process 的時候，這時候你可以將資料先寫到 buffer 裡面，當資料 ready 好的時候，就能夠一次拿走<br>
+Buffer 不限於軟體，硬體層也有類似的東西</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: left">Cache</th>
+      <th style="text-align: left">Buffer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Description</td>
+      <td style="text-align: left">為了能夠快速的回應常存取的資料</td>
+      <td style="text-align: left">儲存資料直到被使用</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Storage</td>
+      <td style="text-align: left">原始資料的備份</td>
+      <td style="text-align: left">原始資料</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="memory-hierarchy">Memory Hierarchy</h2>
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/ComputerMemoryHierarchy.svg/1280px-ComputerMemoryHierarchy.svg.png" alt=""></p>
+<blockquote>
+  <p><a href="https://en.wikipedia.org/wiki/Memory_hierarchy">Memory hierarchy</a></p>
+</blockquote>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">device</th>
+      <th style="text-align: left">description</th>
+      <th style="text-align: left">volatile</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">register 暫存器</td>
+      <td style="text-align: left">位於 CPU 內部</td>
+      <td style="text-align: left"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">CPU cache</td>
+      <td style="text-align: left">位於 CPU 內部(分為 L1, L2, L3 cache)</td>
+      <td style="text-align: left"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RAM 記憶體</td>
+      <td style="text-align: left">我們常說的 8G, 16G 就是這個</td>
+      <td style="text-align: left"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">flash</td>
+      <td style="text-align: left">USB 隨身碟</td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">HDD</td>
+      <td style="text-align: left">傳統硬碟</td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">磁帶</td>
+      <td style="text-align: left">冷儲存用，現已少見於個人 PC</td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>volatile 指的是易揮發，亦即斷電後資料就不見了</p>
+</blockquote>
+
+<blockquote>
+  <p>L1 cache 是不共享的，亦即一個 core 一個 L1 cache<br>
+L4 cache 的設計並不常見</p>
+</blockquote>
+
+<p>上圖是電腦的 memory hierarchy<br>
+越上層速度越快，空間越小；越下層速度越慢，空間越大</p>
+
+<p>我們所熟知的記憶體，硬碟分別對應到第三跟第五層<br>
+那麼既然要做 cache, 把資料放在 flash 以下顯然就不合適(因為速度慢)<br>
+那麼 register, cpu cache, ram 哪一個適合放資料呢？</p>
+
+<p>register 主要用於 CPU 運算期間的暫存空間之用途，且空間極度狹小，雖然速度最快，但很不適合也沒辦法直接使用<br>
+cpu cache 的空間，以最新發布家用旗艦處理器 <a href="https://www.amd.com/zh-hant/products/cpu/amd-ryzen-9-7950x">AMD Ryzen 9 7950x</a> 來說，他的 L3 cache 大小為 64MB。大小是可以了，但你還是不能直接用</p>
+
+<p>CPU 的 memory 不能讓程式設計師直接存取是很合理的事情<br>
+試想如果你能夠手動操作，那這將會是個災難(搞亂 cache data 有可能會導致一直 cache miss, 造成效能低下)<br>
+不過不要誤會，即使我們不能直接操作，作業系統也替我們做了許多的 cache 在 cpu cache 了</p>
+
+<h2 id="cache-warming">Cache Warming</h2>
+<p>cache 的容量通常不大，因此所儲存的資料是有限的<br>
+這就會遇到一些問題，當我需要的資料不在 cache 裡面的時候，是不是要去 database 撈資料出來放著<br>
+這個情況被稱之為 <strong>cache miss</strong>，反之則為 <strong>cache hit</strong></p>
+
+<blockquote>
+  <p>c.f. array 操作這種，也跟 cache hit/miss 有關哦(CPU L1 cache)</p>
+</blockquote>
+
+<p>cache miss 的情況下，很明顯的會比 cache hit 的 <code class="language-plaintext highlighter-rouge">反應時間還要久</code><br>
+所以我們需要 cache warming</p>
+
+<p>為了最大可能，避免 cache miss 的情況發生<br>
+你可以怎麼做？<br>
+手動的將需要的資料放到 cache 裡面，這樣對於 end-user 來說，沒有 cache miss, 載入速度更快，使用者體驗會更好<br>
+問題是 我要怎麼知道要放哪些資料到 cache 裡面？<br>
+<strong>crawler(爬蟲)</strong> 或許是個手段，爬完一次，所有 miss 的資料現在都會在 cache 裡面了<br>
+但是這樣會有一點問題</p>
+<ol>
+  <li>現今系統都不是 single server 這麼簡單，幾千、幾萬台的 cache server 要更新到哪時候？</li>
+  <li>為了防止 <a href="https://en.wikipedia.org/wiki/Denial-of-service_attack">DDOS</a>, 太頻繁的發 request 也會被擋</li>
+</ol>
+
+<p>根據現有的手段，我們可以做的更好嗎？<br>
+試想，每一台 cache server 他們的資料是不是一樣的？<br>
+如果是一樣的，那為什麼需要用爬蟲重新爬一次？ 直接從現有的 cache server 複製一份不就好了？<br>
+而這正是 Netflix 的 Cache Warming 的機制</p>
+
+<hr>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:828/format:webp/1*FffR7-sUe6alYL6-XvInfg.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642">Cache warming: Agility for a stateful service</a></p>
+</blockquote>
+
+<p>從現有的正在運行的 cache node 完整的複製一份資料出來(i.e. <code class="language-plaintext highlighter-rouge">dumper</code>)<br>
+透過 <code class="language-plaintext highlighter-rouge">populator</code> 寫到新的 node 上面<br>
+不就好了嗎？</p>
+
+<p>為了進一步縮減 warm up 的時間，我們不必等待 “全部資料複製出來” 再操作<br>
+可以把它切成一小塊一小塊，中間擺一個 message queue, 資料塞進去<br>
+兩邊同時作業(i.e. <a href="https://en.wikipedia.org/wiki/Producer%E2%80%93consumer_problem">producer consumer problem</a>)，可以更快完成</p>
+
+<blockquote>
+  <p>有關 message queue 的討論，可以參考 <a href="../../database/database-message-queue">資料庫 - 從 Apache Kafka 認識 Message Queue | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="cache-issues">Cache Issues</h1>
+<h2 id="cache-avalanche">Cache Avalanche</h2>
+<p>cache 裡的資料通常會設定 expire time, 當時間到了之後，資料會被刪除<br>
+可是如果一堆資料 <code class="language-plaintext highlighter-rouge">同時都過期</code>，會導致所有 request 直接打到資料庫，然後直接被打爆</p>
+
+<p>如果你有多台 cache server，那麼資料設定的 expire time 不太可能會一樣<br>
+這樣是不是就可以降低 <code class="language-plaintext highlighter-rouge">同時都過期</code> 的機率<br>
+套用到更廣泛的場景，也就是說在 expire time 的設定上面加一點隨機值(<strong>Jitter</strong>)，不要讓它都同時 expire 就可以了</p>
+
+<h2 id="cache-hotspot-invalid">Cache Hotspot Invalid</h2>
+<p>而如果 expire 的是熱門的資料，那麼擊穿的效果會更加嚴重<br>
+那不要讓它 expire 是不是一種選項</p>
+
+<p>像我之前做的有一個也是用這種作法<br>
+資料是不會過期的，相反的我會定期去 overwrite 該筆資料<br>
+使其永遠都是最新的，而且你永遠在 cache 裡面可以找到</p>
+
+<h2 id="cache-penetration">Cache Penetration</h2>
+<p>那如果，client 要求的資料本質上就不存在呢？<br>
+也就是說你在 cache 跟 database 都找不到該筆資料</p>
+
+<p>cache 找不到，理論上就是去 database 找對吧<br>
+所以所有 request 都會打到 database，然後又會直接被打爆</p>
+
+<p>這題如果你沒有聽過 <strong>Bloom Filter</strong> 是答不出來的<br>
+<strong>Bloom Filter</strong> 是一種機率性的資料結構，可以快速判斷資料是否存在<br>
+當資料不存在時，可以快速返回結果，避免無謂的查詢</p>
+
+<blockquote>
+  <p>可參考 <a href="../../database/database-filter">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用 | Shawn Hsu</a></p>
+</blockquote>
+
+<p>所以如果你用 Bloom Filter 發現資料不存在，那就不用往後確認了</p>
+
+<blockquote>
+  <p>注意到 Bloom Filter 會有 false positive 的機率<br>
+也就是說，資料存在於 Bloom Filter 中，但實際上不存在</p>
+</blockquote>
+
+<h1 id="cache-strategies">Cache Strategies</h1>
+<h2 id="cache-asideread-aside">Cache Aside(Read Aside)</h2>
+<p><img src="https://www.prisma.io/dataguide/static/ef9dda8c508f666cdb64e3e67b12f27c/d880f/cache-aside.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.prisma.io/dataguide/managing-databases/introduction-database-caching">Introduction to database caching</a></p>
+</blockquote>
+
+<p>這大概是最常見的 cache 策略之一了<br>
+概念很簡單，因為資料庫的讀寫通常很慢，如果每一次都需要 access 資料庫，那麼響應時間會太久<br>
+假如在旁邊放一個 cache 呢？</p>
+
+<p>cache 有資料(i.e. <code class="language-plaintext highlighter-rouge">cache hit</code>), 就不用 query 資料庫，效率也會變高<br>
+如果找不到資料(i.e. <code class="language-plaintext highlighter-rouge">cache miss</code>), 查詢資料庫撈資料，順便寫回 cache(讓下次存取不會 cache miss)</p>
+
+<p>Cache Aside 在大多數情況下都是很好的解決辦法<br>
+尤其是在 <strong>read heavy</strong> 的情況，因為常用的資料會在 cache 裡面，而 cache 讀取效率高所以再多的讀取 request 都可以 handle<br>
+倘若 cache 意外下線了，也沒關係，因為資料都可以透過資料庫 restore</p>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:828/format:webp/1*dPnVCTxrsXgsJdOtXUN3IA.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/starbugs/consistency-between-cache-and-database-part-1-f64f4a76720">Consistency between Cache and Database, Part 1</a></p>
+</blockquote>
+
+<p>唯一算是缺點的，兩邊的資料可能會 <strong>不一致</strong>(可參考上圖)<br>
+為什麼？<br>
+我們的好朋友 <a href="../../random/python-gil#atomic-operation">Atomic Operation</a> 解釋了一切<br>
+重新審視 cache aside 的實作，你會發現<br>
+當 cache miss 的時候，你會 query 資料庫，然後再寫入 cache<br>
+問題出在這裡，多執行緒的狀況下，你沒辦法保證他是 unit of work<br>
+所以會出現 inconsistency 的狀況</p>
+
+<blockquote>
+  <p>可參考 <a href="../../random/python-gil">關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="read-through">Read Through</h2>
+<p><img src="https://www.prisma.io/dataguide/static/ea53bdb85f36e30cdeee2f4faca908a6/d880f/read-through.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.prisma.io/dataguide/managing-databases/introduction-database-caching">Introduction to database caching</a></p>
+</blockquote>
+
+<p>長的跟 <a href="#cache-asideread-aside">Cache Aside</a> 很像<br>
+不同的是，Read Through 是將 cache 放在中間<br>
+所有的讀取都跟 cache 讀取，然後 write 全部直接跟 database 溝通</p>
+
+<p>一樣？ 我覺的是一模一樣阿<br>
+這麼說吧, 因為讀取全部都找 cache, 所以在某種程度上，application 是不會知道有 database 的存在的(所以架構上較簡單)</p>
+
+<blockquote>
+  <p>可是 cache miss 的時候不是要去 database 找？</p>
+</blockquote>
+
+<p>對！<br>
+但這步驟是透過 library 或者是第三方的套件完成的<br>
+而 <a href="##cache-asideread-aside">Cache Aside</a> 是自己 <strong>手動</strong> 寫回 cache 的<br>
+所以這是他們的不同</p>
+
+<p>缺點呢，也一樣會有資料 <strong>不一致</strong> 的問題</p>
+
+<h2 id="write-through">Write Through</h2>
+<p><img src="https://www.prisma.io/dataguide/static/ca5ab292ecc451ab99f380bc101ea126/d880f/write-through.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.prisma.io/dataguide/managing-databases/introduction-database-caching">Introduction to database caching</a></p>
+</blockquote>
+
+<p>解決 <strong>不一致</strong> 最簡單的解法就是<br>
+每一次的更新，都寫進去 cache 裡面，永遠保持 cache 的資料是最新的</p>
+
+<p>Write Through 的概念就是，每一次的更新，都一起更新 cache 跟 database<br>
+這樣就不會 cache miss<br>
+當然這個作法也是有缺點的，同時更新 cache 與 database，會增加延遲</p>
+
+<blockquote>
+  <p>double write 不會遇到前面 <a href="#cache-asideread-aside">Cache Aside</a> 的問題嗎？<br>
+答案是不會，因為 <a href="#cache-asideread-aside">Cache Aside</a> 是 reader 更新，而 <a href="#write-through">Write Through</a> 是 writer 更新</p>
+</blockquote>
+
+<p>通常使用 <a href="#write-through">Write Through</a> 會搭配使用 <a href="#read-through">Read Through</a><br>
+因為 cache 的資料永遠都是 up-to-date 且與資料庫的資料始終同步<br>
+因此配合 <a href="#read-through">Read Through</a> 可以解決資料不一致的問題</p>
+
+<h2 id="write-backwrite-behind">Write Back(Write Behind)</h2>
+<p><img src="https://www.prisma.io/dataguide/static/f950c899e6be1b733a8fff259cb4dd82/d880f/write-back.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.prisma.io/dataguide/managing-databases/introduction-database-caching">Introduction to database caching</a></p>
+</blockquote>
+
+<p><a href="#write-through">Write Through</a> 每一次都要寫回去，overhead 會太重<br>
+所以，<a href="#write-backwrite-behind">Write Back</a> 的策略是，<strong>每隔一段時間再寫回去</strong><br>
+這樣，你可以增加 write performance<br>
+缺點也很明顯，如果你是用 <a href="#redis">Redis</a> 這種 in-memory cache<br>
+當它掛的時候，會有 data loss</p>
+
+<p><a href="#write-backwrite-behind">Write Back</a> 可以搭配 <a href="#read-through">Read Through</a> 組合<br>
+合併兩者的優勢，組合成 最佳讀寫策略</p>
+
+<h2 id="write-around">Write Around</h2>
+<p><img src="https://www.prisma.io/dataguide/static/476bcd7061339deb7071e25444cb662f/d880f/write-around.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.prisma.io/dataguide/managing-databases/introduction-database-caching">Introduction to database caching</a></p>
+</blockquote>
+
+<p>仔細看可以發現他是 <a href="#cache-asideread-aside">Cache Aside</a> 與 <a href="#read-through">Read Through</a> 的結合體<br>
+write 永遠寫入 database, read 永遠讀 cache<br>
+因此，兩者的缺點仍然存在，也就是資料會 <strong>不一致</strong></p>
+
+<hr>
+
+<p>稍微總結一下<br>
+只要是 reader 更新 cache 就有可能會導致資料不一致的情況<br>
+如果是 writer 更新 cache 就有可能會拖慢執行速度</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Strategy</th>
+      <th style="text-align: left">Pros</th>
+      <th style="text-align: left">Cons</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><a href="##cache-asideread-aside">Cache Aside</a></td>
+      <td style="text-align: left">容易實作，增加 read 效率</td>
+      <td style="text-align: left">資料可能不一致</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#read-through">Read Through</a></td>
+      <td style="text-align: left">架構簡單，可增加 read 效率</td>
+      <td style="text-align: left">資料可能不一致</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#write-through">Write Through</a></td>
+      <td style="text-align: left">解決資料不一致的問題</td>
+      <td style="text-align: left">速度偏慢</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#write-backwrite-behind">Write Back</a></td>
+      <td style="text-align: left">可增加 write 效率</td>
+      <td style="text-align: left">資料可能會遺失</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#write-around">Write Around</a></td>
+      <td style="text-align: left">read 效率可以最佳化</td>
+      <td style="text-align: left">資料可能不一致</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="redis">Redis</h1>
+<p>REmote DIctionary Server - Redis 是一款 in-memory 的 key-value 系統<br>
+Redis 可以拿來當作 cache、正規的 database 使用、streaming engine 或 message broker<br>
+由於其資料都是 in-memory 的特性，因此操作速度極快</p>
+
+<p>除了上述特性，Redis 也提供 replication 以及 clustering 的功能</p>
+
+<blockquote>
+  <p>有關 clustering 可以參考 <a href="../../database/database-redis">資料庫 - 如何正確設定高可用的 Redis</a></p>
+</blockquote>
+
+<h2 id="redis-data-structures">Redis Data Structures</h2>
+<p>Redis 提供了一套完整且常見的資料結構，常見的有以下</p>
+<ul>
+  <li>strings</li>
+  <li>lists</li>
+  <li>sets</li>
+  <li>sorted sets</li>
+  <li>hashes</li>
+</ul>
+
+<p>使用方法你可以參考官方的 <a href="https://redis.io/commands/">documentation</a>, 操作直覺容易理解，我就不在這裡贅述了</p>
+
+<h3 id="distributed-lock">Distributed Lock</h3>
+<p>你也可以利用 Redis 實作所謂的 distributed lock<br>
+使用單純的 key-value 來實作配合 NX 參數來達到 distributed lock 的效果</p>
+
+<p>由於 Redis 本身是單線程的，所以並不會有競爭的問題存在<br>
+SetNX 如果沒有成功就表示已經有人拿到 lock 了，這樣就可以達到 distributed lock 的效果</p>
+
+<p>另外你也可以設定一個 TTL，這樣即使你的程式掛掉，也不會造成 deadlock</p>
+
+<h3 id="sorted-sets-vs-lists">Sorted Sets vs. Lists</h3>
+<p>我想把這個單獨拉出來做一個比較<br>
+因為我看到了一個討論(<a href="https://stackoverflow.com/questions/48630763/why-use-sorted-set-instead-of-list-redis">Why use Sorted Set instead of List Redis</a>)說 sorted sets 跟 lists 在某些情況下效能會有差別</p>
+
+<blockquote>
+  <ol>
+    <li>LIST can have duplicates.</li>
+    <li>Checking in an element exists is very efficient in ZSET, but very expansive in a LIST (especially if the element is not there).</li>
+    <li>Fetching non-edges elements from a LIST can be slow (depends on the size of the LIST and on the distance of the object from one of the edges).</li>
+    <li>LIST is most efficient when working with the edges (L/R PUSH/POP).</li>
+    <li>ZSET has the added functionality of unions and intersects, and you can sort by any other score/weight.</li>
+    <li>In ZSET, the score can be updated later on, and the order will change.</li>
+  </ol>
+</blockquote>
+
+<p>大致上都挺好理解的，唯獨第三以及第四點<br>
+另外我也想要 benchmark 一下 lists 跟 sorted sets 的速度差異<br>
+接下來我就會設計個簡單的實驗來驗證上述內容真偽</p>
+
+<hr>
+
+<p>我會分別對 lists 以及 sorted sets 取值(在頭尾各取不定數量的資料)<br>
+透過時間分析不同 data structure 會如何影響取值效率<br>
+你可以在 <a href="https://github.com/ambersun1234/blog-labs/tree/master/redis-lists-sorted-sets-benchmark">ambersun1234/Redis Benchmark - Lists vs. Sorted Sets</a> 這裡找到實驗程式碼</p>
+
+<p>首先，先看看一次取 100 筆資料的結果<br>
+<img src="https://github.com/ambersun1234/blog-labs/blob/master/redis-lists-sorted-sets-benchmark/benchmark-100.png?raw=true" alt=""><br>
+從上圖你可以很明顯的看到，lists 在頭尾的部份表現與 sorted sets 差距比中間來的小，換言之就是 lists 在頭尾的操作效率會比中間高</p>
+
+<p>再來是取 1000 筆 以及 10000 資料<br>
+<img src="https://github.com/ambersun1234/blog-labs/blob/master/redis-lists-sorted-sets-benchmark/benchmark-1000.png?raw=true" alt=""><br>
+<img src="https://github.com/ambersun1234/blog-labs/blob/master/redis-lists-sorted-sets-benchmark/benchmark-10000.png?raw=true" alt=""><br>
+不難看出即使一次取一大段的資料，在多數情況下 lists 的效率仍然比 sorted sets 還要來的差(約 $0.5 * 10^6$ nanoseconds)</p>
+
+<h2 id="redis-transactions">Redis Transactions</h2>
+<p>在讀寫資料的時候，不同執行緒同時對同一個變數讀寫有可能會造成資料不正確<br>
+而在 Redis 裡面也會遇到同樣的事情，有可能同一個 key 被塞了兩次的資料，這當然不會是我們所樂見的</p>
+
+<p>但是 Redis 本身其實並不會有 data race 的問題<br>
+因為 Redis 本身其實是 single thread 的，亦即它不會有所謂的 atomic operation 的考量(因為一次只能做一個 operation)<br>
+參考 <a href="https://redis.io/docs/reference/optimization/benchmarks/#pitfalls-and-misconceptions">Redis benchmark - Pitfalls and misconceptions</a> 中提到</p>
+<blockquote>
+  <p>Redis is, mostly, a single-threaded server from the POV of commands execution<br>
+(actually modern versions of Redis use threads for different things).<br>
+It is not designed to benefit from multiple CPU cores.<br>
+People are supposed to launch several Redis instances to scale out on several cores if needed.<br>
+It is not really fair to compare one single Redis instance to a multi-threaded data store.</p>
+</blockquote>
+
+<p>那為什麼我在上面說它還是會造成資料不正確？<br>
+Redis 不單純只提供 strings 的資料結構，還有 lists, sets 等等的資料結構<br>
+如果不同人先後對 Redis 的 lists 進行寫入操作，同樣的資料，它最終還是會被寫兩次資料進去<br>
+<strong>因為他的 atomic operation 是 command level 的，並不是針對 key</strong></p>
+
+<p>所以最終你需要的是<br>
+確保我在真正寫入之前，我的 key 不會有任何改動(被其他人改動)<br>
+這需要 transaction</p>
+
+<hr>
+
+<p>Redis 的 transaction 操作其實很簡單</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td>
+<td class="rouge-code"><pre>&gt; MULTI
+OK
+&gt; INCR foo
+QUEUED
+&gt; INCR bar
+QUEUED
+&gt; EXEC
+1) (integer) 1
+2) (integer) 1
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+<p>透過 <code class="language-plaintext highlighter-rouge">MULTI</code> 關鍵字宣告一個 transaction block<br>
+在這個 block 裡面的所有操作都會被 queue 起來直到執行或丟棄<br>
+<code class="language-plaintext highlighter-rouge">EXEC</code> 會將 block 裡面的 command <strong>逐一執行</strong>(因為他是 single thread)<br>
+<code class="language-plaintext highlighter-rouge">DISCARD</code> 會將 block 裡面的 command 丟棄</p>
+
+<p>但光是這樣仍然避免不了上述同時寫入的問題<br>
+<code class="language-plaintext highlighter-rouge">WATCH</code> 關鍵字可以起到 check-and-set 的作用，亦即如果某個 key 改變了，那麼 transaction 就會 failed(亦即所有 transaction block 內的 command 都不會執行)<br>
+而當 transaction 成功執行、失敗或者是 connection 斷線都會把全部的 key 給 <code class="language-plaintext highlighter-rouge">UNWATCH</code></p>
+
+<p>如此一來，透過 <code class="language-plaintext highlighter-rouge">MULTI</code> 以及 <code class="language-plaintext highlighter-rouge">WATCH</code> 的搭配，就可以避免 data race 了</p>
+
+<blockquote>
+  <p>有關 transaction 更詳細的介紹，可以參考 <a href="../../database/database-transaction">資料庫 - Transaction 與 Isolation | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="redis-persistence">Redis Persistence</h2>
+<p>在上面我們討論到了，Redis 本身是 in-memory 的設計，而 memory 是屬於易揮發的(i.e. 只要斷電資料就會消失)<br>
+對於多數系統，可能沒什麼差別，只是會多個幾秒鐘的等待將資料重新寫入，沒有太嚴重</p>
+
+<p>只不過我們還是會希望，系統的 downtime 能夠越低越好<br>
+而 Redis 也提供了一些備份的機制，盡量降低 downtime 時間</p>
+
+<h3 id="rdb---redis-database">RDB - Redis Database</h3>
+<p>RDB 的設計是會自動的對你的資料進行備份(可能是每個小時備份一次)<br>
+他的備份方法是由 parent process <a href="https://linux.die.net/man/2/fork">fork</a> 出一個 child process<br>
+然後由 child process 進行資料備份(操作 disk io)，而 parent process 就繼續服務 server<br>
+<img src="https://sumeetjainengineer.files.wordpress.com/2015/09/child_parent1.png" alt=""></p>
+
+<p>聽起來沒啥問題，但是它可能會導致部份的 data loss<br>
+由於 <a href="https://linux.die.net/man/2/fork">fork</a> 並不會真正的拷貝記憶體，直到某個人要改寫記憶體的時候，它才會做複製的動作(也就是 <a href="https://zh.wikipedia.org/zh-tw/%E5%AF%AB%E5%85%A5%E6%99%82%E8%A4%87%E8%A3%BD">copy on write</a>)
+<img src="https://media.geeksforgeeks.org/wp-content/uploads/20200512181458/12127.png" alt=""><br>
+又因為 Redis 是 in-memory 的設計，所以當他正在備份的時候，萬一這時候 parent 用了一個 <code class="language-plaintext highlighter-rouge">SET xxx yyy</code> 更改資料，那麼 child 並不會拉到新的資料(因為 copy on write)<br>
+如果 Redis 的資料東西很多，備份很久，那麼以上的情況很可能會出現很多次，造成 data loss</p>
+
+<h3 id="aof---append-only-file">AOF - Append Only File</h3>
+<p>AOF 很直覺，就是紀錄下你所有的操作 command(這樣就可以最完整的重建你的 Redis 資料庫)<br>
+當然啦 當你的檔案太大，它就會寫一個新檔案(用最短的指令重建你的資料，一模一樣的)，與此同時，它還是會繼續紀錄 log 在之前的檔案，當重建完成之後，它就會換到新的上面<br>
+整個 rewrite 的過程一樣由另一條 thread 執行，對主要服務不會有影響</p>
+
+<hr>
+
+<p>預設情況下，Redis 是有啟用 RDB 的，每隔一段時間就會將資料快照寫入 persistence storage<br>
+AOF 需要手動啟用</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre>appendonly yes
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<h1 id="redis-vs-memcached">Redis vs. Memcached</h1>
+<p>除了 Redis, 另一個在 memory cache 領域很有名的就是 <a href="https://memcached.org/">Memcached</a><br>
+同樣身為 in-memory cache，該如何正確的選擇？</p>
+
+<p>我最近剛好要開發一個功能是需要使用到 object storage 的<br>
+但他又不需要到類似 MinIO 這種功能，只是單純的 cache<br>
+所以我就在思考說，到底哪種方案會比較適合</p>
+
+<blockquote>
+  <p>有關 MinIO 的介紹，可以參考 <a href="../../database/database-minio">資料庫 - 大型物件儲存系統 MinIO 簡介 | Shawn Hsu</a></p>
+</blockquote>
+
+<p>事情是這樣的<br>
+我需要儲存的資料結構是一個 key to object 的結構<br>
+其中 object 裡面可以包含若干個欄位<br>
+舉例來說，他會長這樣</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td>
+<td class="rouge-code"><pre>user1: {
+    name: "Alice",
+    age: 20
+}
+user2: {
+    name: "Bob",
+    age: 21
+}
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>而這些資料是可以容許一定程度的 data loss 的<br>
+並且我們要儲存的數量目前不太確定<br>
+這麼看下來 <code class="language-plaintext highlighter-rouge">in-memory</code> 就可以先被排除了<br>
+因為把他直接做在 application 的 memory 裡面，我們會需要自己管控他的生命週期狀態等等的，重點是它的容量是有限的</p>
+
+<p>針對資料結構的部分，其實 Redis 是比較適合的<br>
+因為 Redis 提供了一套完整的資料結構，而 Memcached 只有 key-value 的結構<br>
+以我的例子來說，僅僅使用 hash 就可以完美的解決這個功能</p>
+
+<p>另外就是稍早提到 Redis 具有 transaction 的功能<br>
+而 Memcached 則沒有<br>
+同一個操作，我會需要使用 transaction 來確保資料的一致性</p>
+
+<p>性能方面，Redis 是單執行緒的，對比 Memcached 多執行緒可能略輸<br>
+但是 Redis 可以透過 clustering 來提升效能</p>
+
+<p>至於備份機制，雖然 Redis 提供了 <a href="#rdb---redis-database">RDB</a> 以及 <a href="#aof---append-only-file">AOF</a>，Memcached 則沒有<br>
+但是以這個例子來說，他沒有那麼重要，因為我們可以容許一定程度的 data loss</p>
+
+<p>所以最後選擇了 Redis 作為我們的 cache server</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://redis.io/docs/manual/persistence/#append-only-file">Redis persistence</a></li>
+  <li><a href="https://www.geeksforgeeks.org/difference-between-buffering-and-caching-in-os/">Difference between Buffering and Caching in OS</a></li>
+  <li><a href="https://medium.com/@mmoshikoo/cache-strategies-996e91c80303">Cache Strategies</a></li>
+  <li><a href="https://www.prisma.io/dataguide/managing-databases/introduction-database-caching">Introduction to database caching</a></li>
+  <li><a href="https://medium.com/starbugs/consistency-between-cache-and-database-part-1-f64f4a76720">Consistency between Cache and Database, Part 1</a></li>
+  <li><a href="https://homuchen.com/posts/databse-chache-strategies/">淺談各種資料庫cache策略: cache aside、read through、write through、write back</a></li>
+  <li><a href="https://www.section.io/blog/what-is-cache-warming/">What is Cache Warming?</a></li>
+  <li><a href="https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642">Cache warming: Agility for a stateful service</a></li>
+  <li><a href="https://www.payoda.com/cache-warming/">Cache Warming: Know it’s Importance to Improve Website Performance</a></li>
+  <li><a href="https://netflixtechblog.com/cache-warming-agility-for-a-stateful-service-2d3b1da82642">Cache warming: Agility for a stateful service</a></li>
+  <li><a href="https://aws.amazon.com/tw/elasticache/redis-vs-memcached/">比較 Redis OSS 與 Memcached</a></li>
+  <li><a href="https://redis.io/docs/latest/develop/use/patterns/distributed-locks/">Distributed Locks with Redis</a></li>
+  <li><a href="https://totoroliu.medium.com/redis-%E5%BF%AB%E5%8F%96%E9%9B%AA%E5%B4%A9-%E6%93%8A%E7%A9%BF-%E7%A9%BF%E9%80%8F-8bc02f09fe8f">redis - 快取雪崩、擊穿、穿透</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#aof" class="page__taxonomy-item p-category" rel="tag">aof</a><span class="sep">, </span>
+    
+      <a href="/tags/#bloom-filter" class="page__taxonomy-item p-category" rel="tag">bloom filter</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache" class="page__taxonomy-item p-category" rel="tag">cache</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-aside" class="page__taxonomy-item p-category" rel="tag">cache aside</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-avalanche" class="page__taxonomy-item p-category" rel="tag">cache avalanche</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-hotspot-invalid" class="page__taxonomy-item p-category" rel="tag">cache hotspot invalid</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-penetration" class="page__taxonomy-item p-category" rel="tag">cache penetration</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-warming" class="page__taxonomy-item p-category" rel="tag">cache warming</a><span class="sep">, </span>
+    
+      <a href="/tags/#distributed-lock" class="page__taxonomy-item p-category" rel="tag">distributed lock</a><span class="sep">, </span>
+    
+      <a href="/tags/#memcached" class="page__taxonomy-item p-category" rel="tag">memcached</a><span class="sep">, </span>
+    
+      <a href="/tags/#memory-hierarchy" class="page__taxonomy-item p-category" rel="tag">memory hierarchy</a><span class="sep">, </span>
+    
+      <a href="/tags/#rdp" class="page__taxonomy-item p-category" rel="tag">rdp</a><span class="sep">, </span>
+    
+      <a href="/tags/#read-through" class="page__taxonomy-item p-category" rel="tag">read through</a><span class="sep">, </span>
+    
+      <a href="/tags/#redis" class="page__taxonomy-item p-category" rel="tag">redis</a><span class="sep">, </span>
+    
+      <a href="/tags/#redis-cluster" class="page__taxonomy-item p-category" rel="tag">redis cluster</a><span class="sep">, </span>
+    
+      <a href="/tags/#transaction" class="page__taxonomy-item p-category" rel="tag">transaction</a><span class="sep">, </span>
+    
+      <a href="/tags/#write-around" class="page__taxonomy-item p-category" rel="tag">write around</a><span class="sep">, </span>
+    
+      <a href="/tags/#write-back" class="page__taxonomy-item p-category" rel="tag">write back</a><span class="sep">, </span>
+    
+      <a href="/tags/#write-through" class="page__taxonomy-item p-category" rel="tag">write through</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#database" class="page__taxonomy-item p-category" rel="tag">database</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E8%B3%87%E6%96%99%E5%BA%AB+-+Cache+Strategies+%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84+Solutions%20https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-cache%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-cache%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-cache%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/git/git-add/" class="pagination--pager" title="Git 進階使用 - Git Add
+">Previous</a>
+    
+    
+      <a href="/database/database-transaction/" class="pagination--pager" title="資料庫 - Transaction 與 Isolation
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/database/database-cache/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/database/database-cache"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,1797 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>資料庫 - 初探分散式資料庫 | Shawn Hsu</title>
+<meta name="description" content="除了 Index, Cache 之外，我們能不能夠從硬體層面來提升效能呢？這篇文章將會介紹一些分散式系統下的最佳化設計">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="資料庫 - 初探分散式資料庫">
+<meta property="og:url" content="https://ambersuncreates.com/database/database-distributed-database/">
+
+
+  <meta property="og:description" content="除了 Index, Cache 之外，我們能不能夠從硬體層面來提升效能呢？這篇文章將會介紹一些分散式系統下的最佳化設計">
+
+
+<meta property="og:image" content="/assets/img/og/database-distributed-database.png">
+
+
+
+
+  <meta property="article:published_time" content="2023-08-11T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-01-23T20:46:49+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/database/database-distributed-database/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#database" itemprop="item"><span itemprop="name">Database</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">資料庫 - 初探分散式資料庫</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="資料庫 - 初探分散式資料庫">
+    <meta itemprop="description" content="Distributed SystemScale Out(Horizontal Scale) 的概念是利用多台電腦組成一個龐大的網路，進行運算提供服務這個網路，稱為 cluster">
+    <meta itemprop="datePublished" content="2023-08-11T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-01-23T20:46:49+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/database/database-distributed-database/" class="u-url" itemprop="url">資料庫 - 初探分散式資料庫
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2023-08-11">2023-08-11</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-distributed-database/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-distributed-database/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-distributed-database/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li>
+<a href="#distributed-system">Distributed System</a><ul>
+<li><a href="#brief-introduction-of-issues-with-distributed-system">Brief Introduction of Issues with Distributed System</a></li>
+<li>
+<a href="#cap-theorem">CAP Theorem</a><ul>
+<li><a href="#consistencyc">Consistency(C)</a></li>
+<li><a href="#availabilitya">Availability(A)</a></li>
+<li><a href="#partition-tolerancep">Partition Tolerance(P)</a></li>
+</ul>
+</li>
+<li>
+<a href="#replication">Replication</a><ul>
+<li><a href="#statement-based">Statement Based</a></li>
+<li><a href="#write-ahead-log">Write-ahead Log</a></li>
+<li><a href="#logical-log">Logical Log</a></li>
+<li><a href="#store-procedure-based">Store Procedure Based</a></li>
+</ul>
+</li>
+<li>
+<a href="#architecture">Architecture</a><ul>
+<li><a href="#single-leadermaster-slave">Single Leader(Master Slave)</a></li>
+<li><a href="#multi-leader">Multi Leader</a></li>
+<li><a href="#leaderless">Leaderless</a></li>
+</ul>
+</li>
+<li>
+<a href="#consensus">Consensus</a><ul>
+<li>
+<a href="#quorum-consensus">Quorum Consensus</a><ul>
+<li><a href="#tolerance-to-node-failure">Tolerance to Node Failure</a></li>
+<li><a href="#sloppy-quorum">Sloppy Quorum</a></li>
+</ul>
+</li>
+<li><a href="#raft-consensus">Raft Consensus</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#different-approaches-of-increasing-demands-on-computer-system">Different Approaches of Increasing Demands on Computer System</a><ul>
+<li>
+<a href="#scale-upvertical-scale">Scale Up(Vertical Scale)</a><ul><li><a href="#random-io-vs-sequential-io">Random I/O vs. Sequential I/O</a></li></ul>
+</li>
+<li><a href="#scale-outhorizontal-scale">Scale Out(Horizontal Scale)</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+</li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="distributed-system">Distributed System</h1>
+<p><a href="#scale-outhorizontal-scale">Scale Out(Horizontal Scale)</a> 的概念是利用多台電腦組成一個龐大的網路，進行運算提供服務<br>
+這個網路，稱為 <strong>cluster</strong></p>
+
+<blockquote>
+  <p>注意到 cluster 跟 distributed system 在定義上是有所不同的</p>
+  <ul>
+    <li>cluster <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> work as a single system</li>
+    <li>distributed system <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> work together to achieve common goal</li>
+  </ul>
+
+  <p>cluster 為 distributed system 的一種</p>
+</blockquote>
+
+<p>分散式系統通常由網路將節點(node)連接起來，提供服務</p>
+
+<h2 id="brief-introduction-of-issues-with-distributed-system">Brief Introduction of Issues with Distributed System</h2>
+<p>多節點在設計上需要注意很多事情</p>
+
+<p>比如說最簡單的資料複製的問題<br>
+我有很多個節點，我希望不管我 query 哪一台，資料永遠會是一致的(i.e. <a href="#consistency">Consistency</a>)</p>
+
+<p>我要怎麼確保並發(concurrent)讀寫的時候，衝突得以正確的被解決？</p>
+
+<p>又或者網路出問題<br>
+我的系統是不是還能 work?(i.e. <a href="#availability">Availability</a> 以及 <a href="#partition-tolerance">Partition Tolerance</a>)<br>
+更甚至節點掛掉怎麼辦？</p>
+
+<blockquote>
+  <p>有關分散式系統中，會遇到的問題<br>
+可以參考 <a href="../../database/database-distributed-issue">資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="cap-theorem">CAP Theorem</h2>
+<p>CAP Theorem(又名 <code class="language-plaintext highlighter-rouge">Brewer's Theorem</code>)，是一個分散式系統的 trade off 規則</p>
+
+<p>前面提到了一些分散式可能會有的問題，所以不難發現，使用分散式系統是會有代價的，而這個代價分為三種</p>
+
+<h3 id="consistencyc">Consistency(C)</h3>
+<p>資料的正確性對於某些系統而言，是很重要<br>
+如同先前提到的，要怎們確保資料在每一個節點都是正確的呢？</p>
+
+<p>另外，它需要馬上正確嗎？ 還是它可以提供 <strong>最終正確性(Eventual Consistency)</strong> 就好？</p>
+
+<blockquote>
+  <p>Eventual Consistency 指的是總有一天它會同步完成<br>
+較正式的定義是: 暫停寫入，給一點時間，follower 最終會同步完成，保持資料一致</p>
+</blockquote>
+
+<h3 id="availabilitya">Availability(A)</h3>
+<p>可用性，指的是說，即使有部份節點<strong>意外下線</strong>(可能是系統重啟等等的)<br>
+我的系統仍然可以順暢的處理服務</p>
+
+<h3 id="partition-tolerancep">Partition Tolerance(P)</h3>
+<p>分區容錯性的意思是，節點之間<strong>斷開連線</strong>(可能是網路問題)<br>
+系統依然可以正常的運作</p>
+
+<blockquote>
+  <p>你會想，它長的跟 <a href="#availability">Availability</a> 可真像<br>
+回顧 distributed system 的定義，是指 “共同合作達成某個目標”<br>
+所以一件事情可能仰賴多個節點(每個 node 各負責不同的事情)</p>
+
+  <p>既然是 “共同合作”, 所以萬一途中有個節點無法建立連線<br>
+那麼目標就無法達成，因此 partition tolerance 是在確保這件事情</p>
+</blockquote>
+
+<hr>
+
+<p>以上三種代價，根據 <a href="#cap-theorem">CAP Theorem</a> 所述，分散式系統必須犧牲其中一個代價<br>
+因此，可以得知有三種系統</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">System Type</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">CP</td>
+      <td style="text-align: left">犧牲 <a href="#availabilitya">Availability</a>
+</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">AP</td>
+      <td style="text-align: left">犧牲 <a href="#consistencyc">Consistency</a>
+</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">CA</td>
+      <td style="text-align: left">犧牲 <a href="#partition-tolerancep">Partition Tolerance</a>
+</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>具體要用哪一種，取決於你的需求<br>
+不過 CA 系統較少使用，因為其犧牲了 <a href="#partition-tolerancep">Partition Tolerance</a><br>
+分散式系統中，大量的依賴了網路的基礎建設，因此網路出問題是不可避免的，所以基本不會選擇 CA 系統</p>
+
+<h2 id="replication">Replication</h2>
+<p>既然我們討論的 scope 是資料庫嘛，一定會遇到資料要複製到不同節點上的問題<br>
+擁有相同資料的節點稱為 <strong><em>replica(副本)</em></strong></p>
+
+<p>一般而言，資料複製可以簡略的分為兩種類別</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Category</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Synchronous</td>
+      <td style="text-align: left">當<strong>每個節點</strong>都同步完成之後，才視為操作完成，並返回 client</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Asynchronous</td>
+      <td style="text-align: left">只要當前 node 寫入之後，立即返回，其餘節點的同步依靠<strong>背景程序</strong>
+</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>至於資料複製的路徑有這三種(如圖所示)
+<img src="https://ebrary.net/htm/img/15/554/48.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://ebrary.net/64721/computer_science/multi_leader_replication_topologies">Multi-Leader Replication Topologies</a></p>
+</blockquote>
+
+<p>上圖適用於 <a href="#multi-leader">Multi Leader</a> 的複製(因為 <a href="#single-leadermaster-slave">Single Leader</a> 的路徑是唯一的)<br>
+環狀跟星狀的會有缺點就是只要其中一個節點壞掉，它就不能往下同步</p>
+
+<p>實務上，資料複製有幾種作法<br>
+一一看吧</p>
+
+<h3 id="statement-based">Statement Based</h3>
+<p>最直覺想到的作法就是將 SQL 語句(e.g. <code class="language-plaintext highlighter-rouge">INSERT INTO User xxx VALUES xxx</code>)同步到各節點上，然後每個節點自己執行<br>
+但是要注意到一些 <a href="https://learn.microsoft.com/en-us/sql/relational-databases/user-defined-functions/deterministic-and-nondeterministic-functions?view=sql-server-ver16">non deterministic function</a> 如 <a href="https://www.w3schools.com/sql/func_mysql_now.asp">NOW()</a> 或是 <a href="https://www.w3schools.com/sql/func_mysql_rand.asp">RAND()</a><br>
+這些函數在不同節點上，它不一定會回復一樣的值，即使它用 <code class="language-plaintext highlighter-rouge">Synchronous</code> 的方法也一樣</p>
+
+<p>解決辦法也算簡單，只要使用固定數值予以取代即可</p>
+
+<h3 id="write-ahead-log">Write-ahead Log</h3>
+<p>為了避免系統掛掉之後資料遺失，通常會有所謂的 log file<br>
+而資料庫系統也有，稱為 write-ahead log</p>
+
+<p>真正寫入磁碟之前，會額外存一份在 log file 裡<br>
+而此類 log file 的內容通常會更靠近底層<br>
+因此它與</p>
+<ol>
+  <li>資料庫系統</li>
+  <li>資料庫系統版本</li>
+</ol>
+
+<p>是緊密耦合的</p>
+
+<p>在遇到不同系統，不同版本的節點，要做升級只有兩條路</p>
+<ol>
+  <li>zero downtime upgrade</li>
+  <li>停機升級 <img class="emoji" title=":arrow_left:" alt=":arrow_left:" src="https://github.githubassets.com/images/icons/emoji/unicode/2b05.png" height="20" width="20"> 這種狀況要盡量避免(因為停機等於中斷服務，等於沒錢)</li>
+</ol>
+
+<h3 id="logical-log">Logical Log</h3>
+<p>跟 <a href="#statement-based">Statement Based</a> 的概念類似<br>
+不同的是 logical log 會將真正的 values 算出來</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="k">User</span><span class="p">(</span><span class="n">userID</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">created_at</span><span class="p">)</span> 
+<span class="k">Values</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nv">"ambersun1234"</span><span class="p">,</span> <span class="nv">"2023-08-07 15:40:06"</span><span class="p">)</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>可以看到這裡的 <code class="language-plaintext highlighter-rouge">created_at</code> 我先把它算出來<br>
+然後這串數值同步到其他節點上，就不會遇到 non-deterministic function 的問題了<br>
+記得 log 裡面要包含能指到特定 row 的資訊哦(e.g. <code class="language-plaintext highlighter-rouge">primary key</code>)</p>
+
+<blockquote>
+  <p>有關 index 的討論，可以參考 <a href="../../database/database-index-histogram">資料庫 - Index 與 Histogram 篇 | Shawn Hsu</a></p>
+</blockquote>
+
+<h3 id="store-procedure-based">Store Procedure Based</h3>
+<p>這個方法提供了一些客製化的彈性<br>
+就是說前面幾種都是完整的資料複製，透過 Store Procedure(SP) 可以對 log file 進行特定的操作<br>
+比如說你只想同步某幾筆這樣</p>
+
+<p>由於其高度客製化的特性，也有不少人選擇使用它</p>
+
+<blockquote>
+  <p>有關 Store Procedure 可以參考 <a href="../../database/database-optimization">資料庫 - 最佳化 Read/Write 設計(軟體層面) | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="architecture">Architecture</h2>
+<h3 id="single-leadermaster-slave">Single Leader(Master Slave)</h3>
+<p>叢集裡面，選一個節點當 leader(master), 剩下的人都 follower(slave)<br>
+這樣分要幹啥子呢</p>
+
+<p><img src="https://notes.shichao.io/dda/figure_5-1_600.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://notes.shichao.io/dda/ch5/#chatper-5-replication">Chatper 5. Replication</a></p>
+</blockquote>
+
+<p>他的目的在於<code class="language-plaintext highlighter-rouge">區分讀寫</code><br>
+write 只找 leader, 而 read 可以隨便找任意一個都行<br>
+這樣的好處在於說它可以 <strong>提昇讀取的效率</strong><br>
+壞處也很明顯 <strong>寫入的速度會被受限(但寫入不會有衝突)</strong></p>
+
+<p>遇到節點損壞的時候，勢必要將其中一個 follower 升格為 leader<br>
+升格的過程你可能會遇到一些問題，舉例來說，有可能 old leader 沒有意識到它已經被降級了<br>
+它仍然在執行 leader 的功能，這就會造成同一時間有兩個 leader 存在的問題<br>
+而這稱為 <code class="language-plaintext highlighter-rouge">Split Brain</code>(腦分裂)</p>
+
+<blockquote>
+  <p>有關 Split Brain 的討論，可以參考 <a href="../../database/database-distributed-issue#split-brain">資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 | Shawn Hsu</a></p>
+</blockquote>
+
+<h3 id="multi-leader">Multi Leader</h3>
+<p><img src="https://ebrary.net/htm/img/15/554/46.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://ebrary.net/64713/computer_science/cases_multi_leader_replication">Use Cases for Multi-Leader Replication</a></p>
+</blockquote>
+
+<p>既然 <a href="#single-leadermaster-slave">Single Leader</a> 僅解決了讀取的效能問題<br>
+那麼允許多個節點提供寫入的功能不也行嗎<br>
+當然是沒問題的</p>
+
+<p>使用 multi leader 的方法可以大幅度的的高讀寫的效能<br>
+它僅有一個缺點，<strong>寫入會有衝突</strong>，而這是一個很大的缺點<br>
+就像 git 在使用的時候一樣，如果多個人對同一份檔案進行更改<br>
+那要以誰為主？</p>
+
+<p>因此實務上，<a href="#multi-leader">Multi Leader</a> 會增加系統的複雜度</p>
+
+<h3 id="leaderless">Leaderless</h3>
+<p>顧名思義，沒有所謂 leader(master) 的存在<br>
+亦即每個節點都可以接受 read/write<br>
+通常實作都是同時的將請求發給 <strong><em>所有的 node</em></strong></p>
+
+<blockquote>
+  <p>或者是由 coordinator 協助轉送 request</p>
+</blockquote>
+
+<p>那我要怎麼確保每個節點的資料是一致的？<br>
+<a href="#mutli-leader">Multi Leader</a> 會遇到的問題，我也會遇到<br>
+那它不就跟它長的一樣了</p>
+
+<p>一樣都允許 <code class="language-plaintext highlighter-rouge">並行寫入</code>，一樣都會遇到 <code class="language-plaintext highlighter-rouge">衝突</code><br>
+差別在於，當遇到衝突的時候</p>
+<ul>
+  <li>
+<a href="#multi-leader">Multi Leader</a> 僅需要 leader 們解決</li>
+  <li>
+<a href="#leaderless">Leaderless</a> 需要全體成員參與決策</li>
+</ul>
+
+<h2 id="consensus">Consensus</h2>
+<p>所以你有多個節點，讀寫資料是一個問題<br>
+每台機器上保存的資料可能都有一點落差(因為同步的問題)，你要怎麼確定 “哪一個資料” 才是正確的？<br>
+前面看了 <a href="#single-leadermaster-slave">single leader</a>, <a href="#multi-leader">multi leader</a>, <a href="#leaderless">leaderless</a><br>
+他們要怎麼互相的協調才能提供 <strong>正確的資料</strong>？</p>
+
+<h3 id="quorum-consensus">Quorum Consensus</h3>
+<p>想的簡單點，Quorum 共識機制其實就是 <code class="language-plaintext highlighter-rouge">取得多數人的同意</code><br>
+什麼意思？ 當某個新的資料要寫入資料庫的時候，要怎麼確定資料已經寫入？<br>
+10 個節點只有其中 1 個人說寫入了，剩下 9 個人都說還沒<br>
+這樣應該不會視為是成功寫入</p>
+
+<p>當多數人都同意寫入成功之後，這個資料才算是成功寫入<br>
+這就是基本的 Quorum Consensus 的概念</p>
+
+<p>好處在於說，當一個節點掛掉的時候，其他人還認得說有這件事情發生過<br>
+換言之，資料不會不見</p>
+
+<p><code class="language-plaintext highlighter-rouge">n</code> 個節點，需要取得</p>
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">w</code> 個節點確認寫入成功才算數</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">r</code> 個節點確認讀取成功才算數</li>
+</ul>
+
+<p>要保證每次的讀取都有 <strong>最新</strong> 的值，可以遵照這個公式 <code class="language-plaintext highlighter-rouge">w + r &gt; n</code><br>
+他可以確定至少有一個節點擁有最新的資料(前提是 w 跟 r 的副本有重疊到)</p>
+
+<h4 id="tolerance-to-node-failure">Tolerance to Node Failure</h4>
+<p>假設 11 個節點</p>
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">w</code> 有 6 個節點</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">r</code> 有 7 個節點</li>
+</ul>
+
+<p>那最多你可以容忍 4 個節點掛掉<br>
+因為</p>
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">w</code> 的情況下需要 6 個節點是好的，總共是 11 個節點，4 個壞掉，7 個還是好的，所以是 <strong>有餘欲的</strong>
+</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">r</code> 的情況下需要 7 個節點是好的，總共是 11 個節點，4 個壞掉，7 個還是好的，所以是 <strong>剛好足夠的</strong>
+</li>
+</ul>
+
+<h4 id="sloppy-quorum">Sloppy Quorum</h4>
+<p>但是網路是不可靠的，網路斷線是很常發生的事情<br>
+也就是說容錯能力是有限的，斷個網 quorum 就失效了<br>
+畢竟你就是要那麼多節點幫你確認</p>
+
+<p>所以一個作法是，我一定需要 “那個” 節點嗎？<br>
+我可以有一個 hot standby 的節點，當 online 的節點掛了就將資料同步過去(i.e. <code class="language-plaintext highlighter-rouge">Failover</code>)<br>
+是不是也算滿足 quorum 了呢？</p>
+
+<p>事實上也的確如此<br>
+等到節點恢復的時候在將資料同步回來即可</p>
+
+<h3 id="raft-consensus">Raft Consensus</h3>
+<p>我們在 <a href="../../database/database-message-queue#partition-and-replication">資料庫 - 從 Apache Kafka 認識 Message Queue | Shawn Hsu</a> 裡大概知道 Raft Consensus 他是怎麼做的<br>
+那他跟 <a href="#quorum-consensus">Quorum Consensus</a> 有什麼不同呢？</p>
+
+<p>主要差異在於 Raft 有選舉的機制<br>
+當 leader 掛掉的時候，Raft 會自動選出新的 leader<br>
+而 Quorum 是使用多數決，他沒有所謂的 leader 以及選舉制度</p>
+
+<h1 id="different-approaches-of-increasing-demands-on-computer-system">Different Approaches of Increasing Demands on Computer System</h1>
+<p><img src="https://i.kym-cdn.com/entries/icons/facebook/000/019/404/upgradddd.jpg" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://knowyourmeme.com/memes/upgrade-button">Upgrade Button</a></p>
+</blockquote>
+
+<h2 id="scale-upvertical-scale">Scale Up(Vertical Scale)</h2>
+<h3 id="random-io-vs-sequential-io">Random I/O vs. Sequential I/O</h3>
+<p>硬碟的讀寫有分隨機讀寫以及連續讀寫</p>
+
+<p>他們的差別也很好理解<br>
+<code class="language-plaintext highlighter-rouge">連續讀寫 - Sequential I/O</code> 亦即 <em>你要找的資料就在下一個</em>，所以他是連續的<br>
+而 <em>你要找的東西不在下一個區塊</em>，就是屬於 <code class="language-plaintext highlighter-rouge">隨機讀寫 - Random I/O</code></p>
+
+<p>對於硬碟效能來說，這兩個讀取效率如果越高代表效能越好<br>
+你可以使用 <a href="https://crystalmark.info/en/software/crystaldiskmark/">CrystalDiskMark</a> 這套軟體測量硬碟讀寫的效能<br>
+<img src="https://truth.bahamut.com.tw/s01/202111/cba0925a47eca614554a437250e87340.JPG?w=1000" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://forum.gamer.com.tw/C.php?bsn=60030&amp;snA=589710">【問題】請問CrystalDiskMark的數值應該怎麼看?</a></p>
+</blockquote>
+
+<p>那麼哪些東西屬於隨機讀寫，哪些又是連續讀寫呢？</p>
+<ul>
+  <li>
+<em>連續讀寫 - Sequential I/O</em>
+    <ul>
+      <li>當你需要 copy 大檔案到，比如說你的隨身碟上面，這時候使用的就會是連續讀寫(因為你的一個檔案肯定是一個 byte 接著一個 byte 的)</li>
+    </ul>
+  </li>
+  <li>
+<em>隨機讀寫 - Random I/O</em>
+    <ul>
+      <li>其他剩下的基本上都屬於隨機讀寫(比如像是 掃描病毒 之類的)</li>
+      <li>其中 <strong><em>資料庫</em></strong> 也是屬於隨機讀寫</li>
+    </ul>
+  </li>
+</ul>
+
+<p>值得注意的是<br>
+傳統硬碟 HDD，針對隨機讀寫，會有影響<br>
+主要的原因是因為 HDD 採用機械結構，每一次的移動讀寫頭都是需要時間的<br>
+Disk Seek 在 HDD 幾乎不可能平行運算，因為機械裝置只有一個</p>
+<ol>
+  <li>Seek Time <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 尋找 Track 的時間</li>
+  <li>Rotational Latency <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 尋找 Sector 的時間</li>
+  <li>Transfer Time <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 資料傳輸至記憶體的時間</li>
+</ol>
+
+<p><img src="https://miro.medium.com/max/1400/1*MVIwSSxXLIuJlCCDtJIU0g.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://pages.cs.wisc.edu/~powerjg/cs354-fall15/Handouts/arulraj/ppt/CS354Lecture24.pdf">CS354: Machine Organization and Programming</a></p>
+</blockquote>
+
+<p>至於 SSD 因為沒有讀寫頭這種機械裝置(而是採用 Nand 顆粒)，所以不會有這個問題</p>
+
+<hr>
+
+<p>單純的堆料，提升單台伺服器的效能的方法<br>
+它終究是有其限制所在的，你無法加 “無限” 顆硬碟或 CPU 在一台電腦上<br>
+但你不得不承認他是一個簡單又暴力的解決辦法<br>
+這裡列出幾個有可能出現的瓶頸點供參考</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Hardware</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">CPU</td>
+      <td style="text-align: left">為了要能夠處理從 Disk 撈出來的資料，CPU 扮演了一個很重要的角色，時脈的高低取決於你能夠以多快的速度處理這些資料</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Disk</td>
+      <td style="text-align: left">毫無疑問的，硬碟是很重要的，從以前的 <a href="https://en.wikipedia.org/wiki/Magnetic_tape">Magnetic Tape 磁帶</a>，<a href="https://en.wikipedia.org/wiki/Hard_disk_drive">Hard Disk Drive 傳統硬碟</a> 到現在的 <a href="https://en.wikipedia.org/wiki/Solid-state_drive">Solid-state Drive 固態硬碟</a>，硬碟速度越高，代表能夠處理的越快速</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Memory Bandwidth</td>
+      <td style="text-align: left">當 memory 的頻寬來不及寫入 CPU cache, 這時候它就有可能為成為瓶頸所在。不過，通常這個不太會發生</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="scale-outhorizontal-scale">Scale Out(Horizontal Scale)</h2>
+<p>一台不夠？ 多台來湊！<br>
+多台的架設成本可能會比升級 CPU, 硬碟等等還要來的划算<br>
+也因此 scale out 也成為現今的主流選擇之一</p>
+
+<h2 id="summary">Summary</h2>
+<p><img src="https://www.researchgate.net/profile/Jeff-Sedayao/publication/273702105/figure/fig1/AS:391785424670724@1470420332559/Scale-out-storage-compared-to-scale-up-storage.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.researchgate.net/figure/Scale-out-storage-compared-to-scale-up-storage_fig1_273702105">https://www.researchgate.net/figure/Scale-out-storage-compared-to-scale-up-storage_fig1_273702105</a></p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>資料密集型應用系統設計(ISBN: 978-986-502-835-0)</li>
+  <li>內行人才知道的系統設計面試指南(ISBN: 978-986-502-885-5)</li>
+  <li><a href="https://docs.oracle.com/cd/E19455-01/806-3204/6jccb3gac/index.html">Optimizing for Random I/O and Sequential I/O</a></li>
+  <li><a href="https://medium.com/erens-tech-book/%E7%90%86%E8%A7%A3-i-o-%E9%9A%A8%E6%A9%9F%E8%88%87%E5%BA%8F%E5%88%97-a20f1df7b8c2">【恐龍】理解 I/O：隨機與順序</a></li>
+  <li><a href="https://www.geeksforgeeks.org/difference-between-internal-and-external-fragmentation/">Difference between Internal and External fragmentation</a></li>
+  <li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-file-space.html">15.11.2 File Space Management</a></li>
+  <li><a href="https://stackoverflow.com/questions/4401910/mysql-what-is-a-page">MySQL: What is a page?</a></li>
+  <li><a href="https://stackoverflow.com/questions/43384535/how-does-mysql-indexes-turn-random-i-o-into-sequential-i-o">How does mysql indexes turn random I/O into sequential I/O</a></li>
+  <li><a href="https://superuser.com/questions/1038943/can-we-calculate-the-bandwidth-for-a-cpu">Can we calculate the bandwidth for a CPU?</a></li>
+  <li><a href="https://www.crucial.tw/articles/about-memory/difference-among-ddr2-ddr3-and-ddr4-memory">SDRAM 與 DDR：他們之間有何差異？</a></li>
+  <li><a href="https://deavid.wordpress.com/2020/02/11/cpu-cache-and-memory-bottleneck/">Cpu cache and memory bottleneck</a></li>
+  <li><a href="https://medium.com/@rokaso/interview-question-how-to-scale-sql-database-to-allow-more-writes-6c8ba6d11ccd">Interview question: How to scale SQL database to allow more writes?</a></li>
+  <li><a href="https://medium.com/@mena.meseha/difference-between-distributed-and-cluster-aca9d50c2c44">Difference between Distributed and Cluster? What is a cloud computing platform? Distributed application scenarios?</a></li>
+  <li><a href="https://stackoverflow.com/questions/12346326/cap-theorem-availability-and-partition-tolerance">CAP theorem - Availability and Partition Tolerance</a></li>
+  <li><a href="https://blog.csdn.net/hezuijiudexiaobai/article/details/130946103">Quorum &amp; Raft &amp; Paxos</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#cap" class="page__taxonomy-item p-category" rel="tag">CAP</a><span class="sep">, </span>
+    
+      <a href="/tags/#cluster" class="page__taxonomy-item p-category" rel="tag">cluster</a><span class="sep">, </span>
+    
+      <a href="/tags/#database" class="page__taxonomy-item p-category" rel="tag">database</a><span class="sep">, </span>
+    
+      <a href="/tags/#distributed" class="page__taxonomy-item p-category" rel="tag">distributed</a><span class="sep">, </span>
+    
+      <a href="/tags/#leaderless" class="page__taxonomy-item p-category" rel="tag">leaderless</a><span class="sep">, </span>
+    
+      <a href="/tags/#logical-log" class="page__taxonomy-item p-category" rel="tag">logical log</a><span class="sep">, </span>
+    
+      <a href="/tags/#multi-leader" class="page__taxonomy-item p-category" rel="tag">multi leader</a><span class="sep">, </span>
+    
+      <a href="/tags/#quorum" class="page__taxonomy-item p-category" rel="tag">quorum</a><span class="sep">, </span>
+    
+      <a href="/tags/#quorum-consensus" class="page__taxonomy-item p-category" rel="tag">quorum consensus</a><span class="sep">, </span>
+    
+      <a href="/tags/#raft" class="page__taxonomy-item p-category" rel="tag">raft</a><span class="sep">, </span>
+    
+      <a href="/tags/#raft-consensus" class="page__taxonomy-item p-category" rel="tag">raft consensus</a><span class="sep">, </span>
+    
+      <a href="/tags/#random-io" class="page__taxonomy-item p-category" rel="tag">random io</a><span class="sep">, </span>
+    
+      <a href="/tags/#replication" class="page__taxonomy-item p-category" rel="tag">replication</a><span class="sep">, </span>
+    
+      <a href="/tags/#scale-out" class="page__taxonomy-item p-category" rel="tag">scale out</a><span class="sep">, </span>
+    
+      <a href="/tags/#scale-up" class="page__taxonomy-item p-category" rel="tag">scale up</a><span class="sep">, </span>
+    
+      <a href="/tags/#sequential-io" class="page__taxonomy-item p-category" rel="tag">sequential io</a><span class="sep">, </span>
+    
+      <a href="/tags/#single-leader" class="page__taxonomy-item p-category" rel="tag">single leader</a><span class="sep">, </span>
+    
+      <a href="/tags/#split-brain" class="page__taxonomy-item p-category" rel="tag">split brain</a><span class="sep">, </span>
+    
+      <a href="/tags/#store-procedure" class="page__taxonomy-item p-category" rel="tag">store procedure</a><span class="sep">, </span>
+    
+      <a href="/tags/#write-ahead-log" class="page__taxonomy-item p-category" rel="tag">write ahead log</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#database" class="page__taxonomy-item p-category" rel="tag">database</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E8%B3%87%E6%96%99%E5%BA%AB+-+%E5%88%9D%E6%8E%A2%E5%88%86%E6%95%A3%E5%BC%8F%E8%B3%87%E6%96%99%E5%BA%AB%20https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-distributed-database%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-distributed-database%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-distributed-database%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/algorithm/algorithm-binary-indexed-tree/" class="pagination--pager" title="神奇的演算法 - Binary Indexed Tree
+">Previous</a>
+    
+    
+      <a href="/random/swagger/" class="pagination--pager" title="如何正確模組化你的 OpenAPI 文件，以及如何建立 Mock Server
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/database/database-distributed-database/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/database/database-distributed-database"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

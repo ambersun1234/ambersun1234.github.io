@@ -1,0 +1,1742 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>單系統？ 何不多系統 | Shawn Hsu</title>
+<meta name="description" content="本篇文章將會教你如何在一台電腦上安裝多個作業系統，並且透過 GRUB 進行切換">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="單系統？ 何不多系統">
+<meta property="og:url" content="https://ambersuncreates.com/random/dual-boot/">
+
+
+  <meta property="og:description" content="本篇文章將會教你如何在一台電腦上安裝多個作業系統，並且透過 GRUB 進行切換">
+
+
+<meta property="og:image" content="/assets/img/og/dual-boot.png">
+
+
+
+
+  <meta property="article:published_time" content="2022-05-23T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2024-05-19T22:25:44+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/random/dual-boot/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#random" itemprop="item"><span itemprop="name">Random</span></a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">單系統？ 何不多系統</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com" />
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="單系統？ 何不多系統">
+    <meta itemprop="description" content="Multi System多系統對於一般非資訊專業人士而言，基本上是一個不需要了解的知識但是身為一個資訊專業人士，在某些情況下你可能會需要多開系統，比如說">
+    <meta itemprop="datePublished" content="2022-05-23T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2024-05-19T22:25:44+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/random/dual-boot/" class="u-url" itemprop="url">單系統？ 何不多系統
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2022-05-23">2022-05-23</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2024-05-19">
+            2024-05-19
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/dual-boot/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/dual-boot/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/dual-boot/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#multi-system">Multi System</a></li><li><a href="#introduction-to-dual-boot">Introduction to Dual Boot</a><ul><li><a href="#does-dual-boot-safe">Does Dual Boot Safe?</a></li><li><a href="#can-i-dual-boot-at-the-same-time">Can I Dual Boot at the Same Time?</a></li></ul></li><li><a href="#dual-boot-installation">Dual Boot Installation</a><ul><li><a href="#partitioning-your-disk">Partitioning your Disk</a></li><li><a href="#prepare-boot-device">Prepare Boot Device</a></li><li><a href="#bios-setting">BIOS Setting</a><ul><li><a href="#fast-boot">Fast Boot</a></li><li><a href="#secure-boot">Secure Boot</a></li><li><a href="#csm">CSM</a></li><li><a href="#boot-order">Boot Order</a></li></ul></li><li><a href="#install">Install</a></li><li><a href="#restore-bios-setting">Restore BIOS Setting</a></li></ul></li><li><a href="#multiple-disk-installation">Multiple Disk Installation</a></li><li><a href="#timezone-of-dual-boot">Timezone of Dual Boot</a></li><li><a href="#grub">GRUB</a></li><li><a href="#grub-default-boot-and-timeout">GRUB Default Boot and Timeout</a></li><li><a href="#how-about-triple-boot-or-n-boot">How about Triple Boot or N Boot?</a></li><li><a href="#uefi-vs-legacy-bios">UEFI vs. Legacy BIOS</a><ul><li><a href="#bios">BIOS</a></li><li><a href="#uefi---unified-efi-forum">UEFI - Unified EFI Forum</a></li></ul></li><li><a href="#references">References</a></li></ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="multi-system">Multi System</h1>
+<p>多系統對於一般非資訊專業人士而言，基本上是一個不需要了解的知識<br />
+但是身為一個資訊專業人士，在某些情況下你可能會需要多開系統，比如說</p>
+
+<ul>
+  <li>當你的電腦是 MacBook Pro，而老師要求你明天交一個 word 檔</li>
+  <li>當你的電腦是 MacBook Pro, 而你很想要打遊戲</li>
+  <li>當你的電腦是 Windows, 你想跑得開源專案只支援 Linux</li>
+</ul>
+
+<p>這時候多數人會選擇使用虛擬機的方式<br />
+像是 macOS 可以跑所謂的 <a href="https://www.parallels.com/hk/products/desktop/">Parallel Desktop</a> 的方式運行<br />
+如果是 Linux 或是 Windows 系統，你可以使用 <a href="https://www.virtualbox.org/">VirtualBox</a><br />
+這樣你就可以 <strong>同時</strong> 跑兩個系統，解決你的使用需求</p>
+
+<p>普通的使用情境下這樣做當然是一個很好的選擇<br />
+但上述的操作會對你的機器造成較大的覆載<br />
+因為對於作業系統而言，它必須要模擬出上面的那個作業系統<br />
+而模擬這件事情是很耗效能的</p>
+
+<p>相比 container 與 host machine 共用 kernel 這件事<br />
+顯然每個 VM(Virtual Machine 虛擬機) 都要自己模擬 kernel 會比較吃效能<br />
+(可以參考下圖的架構)</p>
+
+<p><img src="https://www.researchgate.net/profile/Ankita-Atrey/publication/329563819/figure/fig1/AS:705534504226819@1545223942759/Comparison-of-virtual-machine-container-and-unikernel-system-architecture.ppm" alt="" /></p>
+
+<h1 id="introduction-to-dual-boot">Introduction to Dual Boot</h1>
+<p>既然 <strong>虛擬機</strong> 會明顯比較吃效能<br />
+那有沒有一種方法是可以在一台電腦上裝上兩個系統 在我需要的時候就可以做切換了呢？</p>
+
+<p>Dual Boot 就是這個問題的最佳解了！<br />
+在一台機器上安裝兩套系統，可以避免開虛擬機太耗效能的問題</p>
+
+<h2 id="does-dual-boot-safe">Does Dual Boot Safe?</h2>
+<p>雙系統會對現有系統造成影響嗎？</p>
+
+<p>先說結論 不會</p>
+
+<p>作業系統本質上就是一堆 <strong>檔案</strong><br />
+所以在電腦上安裝兩套的作業系統並不會對現有系統有任何影響(前提是你安裝的過程沒有失誤)</p>
+
+<h2 id="can-i-dual-boot-at-the-same-time">Can I Dual Boot at the Same Time?</h2>
+<p>雙系統跟傳統的虛擬機不同<br />
+虛擬機可以同時開很多個<br />
+比方說你的主機是 Windows, 你可以多開 Linux</p>
+
+<p>而雙系統的意思是<br />
+電腦上安裝了兩套系統，但是 <strong>同一時間只能開一套起來使用</strong></p>
+
+<h1 id="dual-boot-installation">Dual Boot Installation</h1>
+<p>接下來會帶到所有安裝雙系統，你需要做的準備</p>
+
+<h2 id="partitioning-your-disk">Partitioning your Disk</h2>
+<p>這裡講的是單硬碟安裝多系統的情況<br />
+如果說你要安裝多硬碟，可以參考 <a href="#multiple-disk-installation">Multiple Disk Installation</a></p>
+
+<p>理所當然的，如果要在單顆硬碟上安裝多系統勢必要對硬碟做切割<br />
+但是你不能直接切個資料夾或是分區什麼的</p>
+
+<blockquote>
+  <p>資料夾真的不能拿來安裝系統</p>
+</blockquote>
+
+<p>不能直接切分區的原因是因為<br />
+在 Windows 裡面，檔案系統預設是使用 <a href="https://en.wikipedia.org/wiki/NTFS">NTFS</a><br />
+由於 NTFS 是使用 fixed-size block 進行檔案讀寫的，因此 NTFS 非常容易造成 <strong>Fragmentation</strong><br />
+導致資料東一塊 西一塊<br />
+因此你在切磁碟分區的時候，必須先進行壓縮，將資料全部集中到一起，再切割就沒問題了</p>
+
+<blockquote>
+  <p>有關 Fragmentation, 可以參考 <a href="../../database/database-index-histogram#fragmentation">資料庫 - Index 與 Histogram 篇 | Shawn Hsu</a></p>
+</blockquote>
+
+<hr />
+
+<p>一開始先使用 <code class="language-plaintext highlighter-rouge">win</code> + <code class="language-plaintext highlighter-rouge">x</code> 叫出磁碟管理應用程式(如下圖)<br />
+<img src="/assets/img/posts/win0.jpg" alt="" /><br />
+我自己的電腦只有一個硬碟，所以你有看到只有一列(其中包含開機磁區以及 C 槽)<br />
+<img src="/assets/img/posts/win1.jpg" alt="" /><br />
+對 C 槽的部份右鍵叫出選單，選擇 <code class="language-plaintext highlighter-rouge">壓縮磁區</code><br />
+<img src="/assets/img/posts/win2.jpg" alt="" /><br />
+這裡我想要切 500 GB 出來，所以填 <code class="language-plaintext highlighter-rouge">500000</code> MB<br />
+<img src="/assets/img/posts/win3.jpg" alt="" /><br />
+切好之後會長這樣<br />
+<img src="/assets/img/posts/win4.jpg" alt="" /></p>
+
+<p>這樣就好<br />
+有些文章會希望你創建新的磁碟區<br />
+但是這樣會增加之後的操作的危險性<br />
+所以把它弄成為配置的空間即可</p>
+
+<h2 id="prepare-boot-device">Prepare Boot Device</h2>
+<p>接下來是要準備你的系統的部份<br />
+你要準備的東西會是所謂的 <a href="https://zh.wikipedia.org/zh-tw/ISO%E6%98%A0%E5%83%8F">映像檔</a></p>
+
+<p>映像檔當初是為了進行跨裝置大檔案的傳輸所開發出來的格式<br />
+你可以將大檔案以無壓縮的方式打包成映像檔(i.e. <code class="language-plaintext highlighter-rouge">iso</code>), 之後就可以寫入 CD 或 DVD 之上(用於傳輸或儲存)<br />
+當然現在其實很少人在用這種傳統儲存媒體了，多數都是用於製作開機碟相關</p>
+
+<p>那開機碟映像檔的內容包含</p>
+<ul>
+  <li>必要的作業系統檔案系統</li>
+  <li>必要開機程式</li>
+</ul>
+
+<p>接下來就是選擇你的目標系統映像檔了</p>
+<ul>
+  <li>假設你想要 Dual Boot Windows
+    <ul>
+      <li>Windows 11 必須要透過安裝媒體 <a href="https://go.microsoft.com/fwlink/?linkid=2156295">建立 Windows 11 安裝媒體</a> 下載映像檔</li>
+      <li>Windows 10 則可以直接在官網 <a href="https://www.microsoft.com/zh-tw/software-download/windows10ISO">下載 Windows 10 光碟映像 (ISO 檔案)</a> 下載映像檔</li>
+    </ul>
+  </li>
+  <li>Linux 的部份則是可以直接下載(以 Ubuntu 為例)
+    <ul>
+      <li>到官網就可以下載映像檔了 <a href="https://ubuntu.com/download/desktop">Download Ubuntu Desktop</a></li>
+    </ul>
+  </li>
+</ul>
+
+<hr />
+
+<p>為了能夠讓 BIOS 可以用該 iso 檔進行開機<br />
+因此我們需要將它寫到 CD 上…嗎？<br />
+其實你可以用 usb 隨身碟就可以了(依照過往的經驗大概 8 GB 的就夠了)</p>
+
+<p>你可以使用 <a href="https://rufus.ie/zh_TW/">rufus</a> 製作開機碟<br />
+基本上只要將 <strong>裝置</strong> 以及 <strong>iso 檔案</strong> 選擇好<br />
+接著讓它跑完，開機碟就製作完成了</p>
+
+<p><img src="https://i.imgur.com/HS608K9.png" alt="" />\</p>
+<blockquote>
+  <p>ref: <a href="https://rufus.ie/zh_TW/">https://rufus.ie/zh_TW/</a></p>
+</blockquote>
+
+<h2 id="bios-setting">BIOS Setting</h2>
+<p>為了要能夠正確的讀取到剛剛製作好的開機碟<br />
+BIOS 的設定是需要做調整的</p>
+
+<h3 id="fast-boot">Fast Boot</h3>
+<p>快速開機，就是要快速<br />
+在 BIOS 層要達成這件事情就是必須得要省去檢查的步驟<br />
+當然不是說都不要檢查，而是略過一些相對不太重要的檢查程序<br />
+包括但不限於</p>
+<ul>
+  <li>不做 memory test</li>
+  <li>不載入外接設備</li>
+  <li>省去 BIOS 界面等待時間</li>
+</ul>
+
+<p>這樣對於 user 來說，就可以更快的進入到系統辦正事了</p>
+
+<p>但你有沒有發現，如果啟用快速開機<br />
+這樣它就不能從 usb 開機(因為 BIOS 不會檢查外接設備直到真正開機完成才會做載入)<br />
+所以要將 fast boot 設為 <strong>Disabled</strong>(如下圖)</p>
+
+<p><img src="/assets/img/posts/bios2.jpg" alt="" /></p>
+
+<hr />
+
+<p>注意到這裡的 Fast Boot 跟 windows 內建的快速啟動不一樣<br />
+windows 的快速啟動指的是藉由所謂的 <strong>假關機</strong> 來讓下一次的開機更快<br />
+具體來說它就是將你的 <code class="language-plaintext highlighter-rouge">應用程式狀態寫到檔案存起來，下一次開機的時候就直接從檔案直接讀取狀態</code><br />
+也就是所謂的 <strong>休眠</strong></p>
+
+<h3 id="secure-boot">Secure Boot</h3>
+<p>顧名思義，安全啟動</p>
+
+<p>據說是為了確保電腦本身只能執行製造商所認可的韌體而設計的<br />
+因為我們要安裝第二個系統，需要用到的韌體肯定不會是預裝的<br />
+所以要將它 <strong>關閉</strong></p>
+
+<blockquote>
+  <p>關於 UEFI 關閉 secure boot 的方法，可以參考 <a href="https://jianjiesun.medium.com/asus-%E4%B8%BB%E6%A9%9F%E6%9D%BF-%E9%97%9C%E9%96%89-secure-boot-%E5%8F%8A-fast-boot-fd2f94b8a8a7">ASUS 主機板 關閉 Secure Boot 及 Fast Boot</a></p>
+</blockquote>
+
+<p><img src="/assets/img/posts/bios3.jpg" alt="" /></p>
+
+<h3 id="csm">CSM</h3>
+<p>CSM - Compatibility Support Module 是相容性支持模組<br />
+有些作業系統不支援 UEFI 開機，所以這個模組的用義是為了支持傳統 Legacy BIOS 開機<br />
+如今多數系統是都支援 UEFI 了，但保險起見，你還是可以把它打開(如下圖)</p>
+
+<p><img src="/assets/img/posts/bios1.jpg" alt="" /></p>
+
+<blockquote>
+  <p>有關 UEFI 與 Legacy BIOS 的差別可以參考 <a href="#uefi-vs-legacy-bios">UEFI vs. Legacy BIOS</a></p>
+</blockquote>
+
+<h3 id="boot-order">Boot Order</h3>
+<p>前面提到過，電腦開機一次只能跑一個系統(撇除 VM 以及 Container 的情況)<br />
+那麼如果有兩個可以開機的系統，要如何選擇？<br />
+因此 BIOS 裡面會有所謂的開機順序(Boot Order)<br />
+必須將開機順序更改<br />
+<img src="https://i.imgur.com/4k0IITz.png" alt="" />\</p>
+<blockquote>
+  <p>ref: <a href="https://www.anandtech.com/show/12506/the-asus-rog-maximus-x-apex-review/3">The ASUS ROG Maximus X Apex Review: X Marks the Spot, Literally</a></p>
+</blockquote>
+
+<p>找到你的 usb 隨身碟裝置(你通常可以透過製造商找到相對應的選項, e.g. <code class="language-plaintext highlighter-rouge">SanDisk</code>)<br />
+<strong>將前面製作的 usb 開機碟放在第一個順位</strong></p>
+
+<blockquote>
+  <p>note: 每一家的 BIOS 都長的不一樣<br />
+有的可能是下拉式選單、可以滑鼠拖拉的<br />
+會需要找一下設定</p>
+</blockquote>
+
+<hr />
+
+<p>全部做完存檔離開就可以進到下一步了</p>
+
+<h2 id="install">Install</h2>
+<p>本文將使用 <a href="https://ubuntu.com/blog/ubuntu-22-04-lts-released">Ubuntu 22.04 LTS</a> 作為第二個系統</p>
+
+<p>首先，先 boot 進去你的開機碟</p>
+<blockquote>
+  <p>如果你上述步驟有跟好，應該是沒問題的</p>
+</blockquote>
+
+<p>接著就可以開始安裝了
+<img src="/assets/img/posts/ubuntu1.png" alt="" /><br />
+<img src="/assets/img/posts/ubuntu2.png" alt="" /><br />
+<img src="/assets/img/posts/ubuntu3.jpg" alt="" /><br />
+如果有網路可以連，沒有也沒差<br />
+<img src="/assets/img/posts/ubuntu4.png" alt="" /><br />
+<img src="/assets/img/posts/ubuntu5.jpg" alt="" /><br />
+接下來這個，選擇 <code class="language-plaintext highlighter-rouge">Something else</code>(一定要選這個，不然就麻煩了)<br />
+<img src="/assets/img/posts/ubuntu6.jpg" alt="" /><br />
+在這裡你就可以看到有很多磁碟區<br />
+上面我們切了 <strong>500GB</strong> 的磁碟空間出來<br />
+為什麼說不要建立新的磁碟區，讓它保持 free space? 因為你可以從上圖看到，他的代號都會是 <code class="language-plaintext highlighter-rouge">/dev/sdx</code> 的格式<br />
+而且空間的計算方式會有誤差，所以你看到的空間 <strong>不一定是 500 GB</strong>, 以這個例子就是 <strong>524289 MB</strong><br />
+<strong><em>而這個步驟是整個安裝雙系統最危險的地方</em></strong>，多數情況下如果你的磁碟空間分配的平均，如果沒有仔細查看，你可能會不小心選錯</p>
+
+<p>因此這裡就是選擇之前切出來的 <strong>500 GB</strong> free space 空間<br />
+並且 boot loader 的部份，單硬碟的情況下選擇硬碟本身就可以了<br />
+多硬碟的情況，可參考 <a href="#multiple-disk-installation">Multiple Disk Installation</a></p>
+
+<p><img src="/assets/img/posts/ubuntu7.jpg" alt="" /><br />
+這裡針對詞結空間的部份，檔案系統選擇 <code class="language-plaintext highlighter-rouge">ext4</code> 日誌系統<br />
+掛載目錄選擇 <strong>根目錄(i.e. /)</strong> 就可以了</p>
+<blockquote>
+  <p>有些人會選擇把 <code class="language-plaintext highlighter-rouge">/home</code>, <code class="language-plaintext highlighter-rouge">/root</code> 個別切開<br />
+這裡不建議這樣做，因為如果你切的空間不夠大，導致資料塞滿是沒有得救的(應該不是不行，但會很麻煩啦)<br />
+根目錄包含了所有的子目錄(e.g. /home, /root, … etc.), 所以你只要把全部空間都給根目錄就可以了</p>
+</blockquote>
+
+<p><img src="/assets/img/posts/ubuntu8.png" alt="" /><br />
+<img src="/assets/img/posts/ubuntu9.jpg" alt="" /><br />
+最後做幾個簡單的設定就可以等它跑</p>
+
+<p>完成之後，恭喜你，你已經成功的安裝雙系統在你的電腦上面了</p>
+
+<h2 id="restore-bios-setting">Restore BIOS Setting</h2>
+<p>在你完全安裝完成之後<br />
+BIOS 的設定必須改回去<br />
+其實主要要改的是 <a href="#boot-order">boot order</a>, 其他的要不要改沒有什麼差別</p>
+
+<p>不過當你安裝完成之後，系統會提示你將 usb 隨身碟移除<br />
+這個時候 boot order 預設的第一個順位就會是 GRUB2 的開機頁面了<br />
+就不用在做額外的調整了</p>
+
+<p><a href="#csm">CSM</a>，<a href="#secure-boot">Secure Boot</a>, <a href="#fast-boot">Fast Boot</a> 你可以不用把它改回去<br />
+當然要改也是可以，看你</p>
+
+<h1 id="multiple-disk-installation">Multiple Disk Installation</h1>
+<p>多硬碟安裝會需要注意一件事情<br />
+就是你的 boot loader</p>
+
+<p>只是需要注意的是你的 boot loader 要裝在 <strong>有 Windows 的那顆硬碟上</strong><br />
+(或者是硬碟 A 有 Windows boot loader, 硬碟 B 有 GRUB2 boot loader, 然後將 <a href="#boot-order">boot order</a> 設為硬碟 B 優先)<br />
+只有這樣開機的時候才可以選擇不同的 OS</p>
+
+<p>其他的安裝步驟都是一樣的，可以參考 <a href="#dual-boot-installation">Dual Boot Installation</a></p>
+
+<h1 id="timezone-of-dual-boot">Timezone of Dual Boot</h1>
+<p>你可能會發現，當你切換不同 OS(作業系統) 的時候，時區會亂掉<br />
+會亂掉的通常都是 Windows</p>
+
+<p>主要的原因呢<br />
+是因為 Hardware Clock 以及 System Clock 的關係<br />
+當你在作業系統裡面切換不同的時區(e.g. 台灣是 UTC+8)<br />
+它會嘗試將 System Clock 的時間寫入 Hardware Clock<br />
+又因為 Linux 與 Windows 對於時間的解讀是不一樣的</p>
+<ul>
+  <li>Linux 將 Hardware Clock 視為是 <strong>標準時間</strong></li>
+  <li>Windows 將 Hardware Clock 視為是 <strong>當地時間</strong></li>
+</ul>
+
+<p>就是一個奇妙的解讀方式<br />
+導致說你在切換不同系統的時候，Windows 的時間永遠都是錯的(以台灣來說，Windows 顯示的時間永遠會慢 8 個小時，因為台灣是 UTC+8)</p>
+
+<p>解決的辦法也很簡單<br />
+在 Linux 下這個指令，將 Kernel 設定成讀取 當地時間 就可以了</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span>timedatectl set-local-rtc 1
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre></td><td class="rouge-code"><pre>// 設定前
+<span class="nv">$ </span>timedatectl
+        Local <span class="nb">time</span>: 四 2022-05-26 02:04:01 CST
+    Universal <span class="nb">time</span>: 三 2022-05-25 18:04:01 UTC
+          RTC <span class="nb">time</span>: 三 2022-05-25 18:04:02
+      Time zone: Asia/Taipei <span class="o">(</span>CST, +0800<span class="o">)</span>
+System clock synchronized: <span class="nb">yes
+          </span>NTP service: active
+RTC <span class="k">in </span><span class="nb">local </span>TZ: no
+
+// 設定後
+<span class="nv">$ </span>timedatectl
+        Local <span class="nb">time</span>: 四 2022-05-26 02:04:01 CST
+    Universal <span class="nb">time</span>: 三 2022-05-25 18:04:01 UTC
+          RTC <span class="nb">time</span>: 四 2022-05-26 02:04:01 CST
+      Time zone: Asia/Taipei <span class="o">(</span>CST, +0800<span class="o">)</span>
+System clock synchronized: <span class="nb">yes
+          </span>NTP service: active
+RTC <span class="k">in </span><span class="nb">local </span>TZ: <span class="nb">yes</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p>c.f.<br />
+UTC: 世界標準時間<br />
+CST: CST 可以表示多種時區，不過以這個例子他是指 China Standard Time(i.e. UTC+8)</p>
+</blockquote>
+
+<blockquote>
+  <p>有關 Hardware Clock 以及 System Clock 的介紹可以參考 <a href="../../linux/linux-clock">Linux Kernel - Clock | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="grub">GRUB</h1>
+<p><img src="https://phoenixnap.com/kb/wp-content/uploads/2023/09/grub-in-linux-mint-pnap.png" alt="" />\</p>
+<blockquote>
+  <p>ref: <a href="https://phoenixnap.com/kb/what-is-grub">What Is GRUB Bootloader in Linux?</a></p>
+</blockquote>
+
+<p>boot loader 是在作業系統前第一個執行的程式<br />
+它主要負責載入 Kernel, 隨後在交由 Kernel 啟動整個作業系統</p>
+
+<p>Windows 有自己的開機程式<br />
+而 Linux 則是使用 <a href="https://www.gnu.org/software/grub/manual/grub/grub.html">GRUB2</a></p>
+
+<p>GRUB 可以提供多個 OS 的開機選項<br />
+也就是說 GRUB 不只可以做到開機 Linux, 它也可以開機 Windows(透過 <a href="https://www.gnu.org/software/grub/manual/grub/grub.html#Chain_002dloading">Chain-loading</a> 的方式，亦即呼叫另一個 boot loader)<br />
+相反的，Windows 只能做到啟動 Windows</p>
+
+<blockquote>
+  <p>這也就是為什麼有人會說必須先裝 Windows 再裝 Linux 的原因<br />
+因為會被蓋掉，導致你沒辦法進入 Linux</p>
+</blockquote>
+
+<h1 id="grub-default-boot-and-timeout">GRUB Default Boot and Timeout</h1>
+<p>你可能會發現，GRUB 的選單如果你沒有手動指定要開哪個作業系統(使用鍵盤方向鍵上下移動)，它會在 10 秒之後自動進到第一個順位的 OS<br />
+對於常常使用 Windows 而非 Linux 的人來說，如果能夠讓它預設進入 Windows 就太好了對吧</p>
+
+<p>透過修改 config 檔我們可以做到這個功能</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span><span class="nb">sudo </span>vim /etc/default/grub
+<span class="nv">GRUB_DEFAULT</span><span class="o">=</span>0
+<span class="nv">GRUB_HIDDEN_TIMEOUT</span><span class="o">=</span>0
+<span class="nv">GRUB_HIDDEN_TIMEOUT_QUIET</span><span class="o">=</span><span class="nb">true
+</span><span class="nv">GRUB_TIMEOUT</span><span class="o">=</span>10
+<span class="nv">GRUB_DISTRIBUTOR</span><span class="o">=</span><span class="sb">`</span>lsb_release <span class="nt">-i</span> <span class="nt">-s</span> 2&gt; /dev/null <span class="o">||</span> <span class="nb">echo </span>Debian<span class="sb">`</span>
+<span class="nv">GRUB_CMDLINE_LINUX_DEFAULT</span><span class="o">=</span><span class="s2">"quiet splash"</span>
+<span class="nv">GRUB_CMDLINE_LINUX</span><span class="o">=</span><span class="s2">""</span>
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>這裡我們關心的主要就是兩點<br />
+預設啟動 OS 以及選單的 timeout 時間</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">GRUB_DEFAULT</code>
+    <ul>
+      <li>這裡的 0 指的是相對於選單的號碼，由上而下分別是(Ubuntu: 0, Advanced options for Ubuntu: 1, Windows Boot Manager (on /dev/sda1): 2, System setup: 3)</li>
+      <li>假設你想要預設是啟動 Windows, 就把設定改成 <code class="language-plaintext highlighter-rouge">GRUB_DEFAULT=2</code></li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">GRUB_TIMEOUT</code>
+    <ul>
+      <li>timeout 指的是在選單停留的時間(不過當你有手動操作的時候就會取消倒數), 他的單位是 seconds</li>
+      <li>你可以把它改為 1 分鐘(也就是 60 seconds), 設定就會變成 <code class="language-plaintext highlighter-rouge">GRUB_TIMEOUT=60</code></li>
+    </ul>
+  </li>
+</ul>
+
+<p>當你全部改完之後要對 GRUB 本身做更新</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td><td class="rouge-code"><pre><span class="nv">$ </span><span class="nb">sudo </span>update-grub
+</pre></td></tr></tbody></table></code></pre></div></div>
+<p>就可以了</p>
+
+<h1 id="how-about-triple-boot-or-n-boot">How about Triple Boot or N Boot?</h1>
+<p>既然你可以裝雙系統，那麼理所當然的也可以裝多系統對吧</p>
+
+<p>事實上當然可以，而且安裝過程基本一致<br />
+唯獨在多硬碟的情況下需要注意一下 boot loader 的位置<br />
+詳細可以參考 <a href="#multiple-disk-installation">Multiple Disk Installation</a></p>
+
+<h1 id="uefi-vs-legacy-bios">UEFI vs. Legacy BIOS</h1>
+<p>其實本文對於 BIOS 的描述不算太嚴謹<br />
+因為實際上 UEFI 與 BIOS 是兩個不同的東西<br />
+不過為了方便起見，這裡都還是以 BIOS 代稱</p>
+
+<h2 id="bios">BIOS</h2>
+<p>BIOS 或稱之為 Legacy BIOS 是 Basic Input Output System 的縮寫<br />
+它主要會在系統啟動之前做必要的檢查並且引導系統進行開機</p>
+
+<p>BIOS 使用 MBR 格式(單一磁碟分割區可以到 16TB, 可以有 4 個 primary partition)，並且支援 32-bits 以及 64-bits 的操作系統<br />
+如果是稍有年代的電腦，就會配備 Legacy BIOS 的韌體</p>
+
+<p><img src="https://tw.easeus.com/images/partition-manager/bios-setup-screen.jpg" alt="" />\</p>
+<blockquote>
+  <p>ref: <a href="https://tw.easeus.com/partition-manager-tips/uefi-vs-bios.html">UEFI vs BIOS：有什麼差異以及哪一個更好</a></p>
+</blockquote>
+
+<h2 id="uefi---unified-efi-forum">UEFI - Unified EFI Forum</h2>
+<p>相比舊版的 BIOS，UEFI 提供了更漂亮的畫面、更高的安全性、還可以連網<br />
+至於 UEFI 會不會做自檢(POST - Power-On Self Test)這件事情<br />
+答案是會的，但它其實簡化的 BIOS 的自檢流程</p>
+
+<p>因為早期 BIOS 的年代，BIOS 是沒辦法儲存週邊設備的硬體情況的<br />
+導致每次開機都要全部重新做一次 POST<br />
+UEFI 可以儲存這些訊息，也就是說不用每次都做自檢(針對不常變動的設備)</p>
+
+<p>UEFI 使用了 GPT 格式(單一磁碟分割區可以到 18EB，可以有 128 個分區)，並且支援 32-bits 以及 64-bits 的操作系統<br />
+現在多數電腦都配備了 UEFI 開機系統</p>
+
+<blockquote>
+  <p><a href="https://blog.miniasp.com/post/2010/04/08/unit-information-Bit-Byte-KB-MB-GB-TB-PB-EB-ZB-YB">儲存容量單位：Bit, Byte, KB, MB, GB, TB , PB, EB, ZB, YB</a></p>
+</blockquote>
+
+<blockquote>
+  <p>EFI - Extensible Firmware Interface</p>
+</blockquote>
+
+<p><img src="https://benchlife.info/wp-content/uploads/2020/06/ASUS-ROG-Strix-B550-E-Gaming-BIOS-1.jpg" alt="" /></p>
+<blockquote>
+  <p>ref: <a href="https://benchlife.info/equipped-with-audio-usb-type-c-ai-noise-reduction-function-asus-rog-strix-b550-e-gaming-hands-on/asus-rog-strix-b550-e-gaming-bios-1/">ASUS ROG Strix B550-E Gaming – BIOS (1)</a></p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://zhuanlan.zhihu.com/p/29053035">Unikernel: 从不入门到入门</a></li>
+  <li><a href="https://www.unbxtech.com/2018/04/howto-take-screenshot-motherboard-bios.html">How to Take A Screenshot in Your Motherboard BIOS</a></li>
+  <li><a href="https://www.zhihu.com/question/329859138/answer/767164916">电脑BIOS设置里面的快速开机是什么原理?开启后对电脑有什么别的影响?</a></li>
+  <li><a href="https://docs.microsoft.com/zh-tw/windows-hardware/test/weg/delivering-a-great-startup-and-shutdown-experience">提供絕佳的啟動和關機體驗</a></li>
+  <li><a href="https://itsfoss.com/wrong-time-dual-boot/">Wrong Time Displayed in Windows-Linux Dual Boot Setup? Here’s How to Fix it</a></li>
+  <li><a href="https://askubuntu.com/questions/148095/how-do-i-set-the-grub-timeout-and-the-grub-default-boot-entry">How do I set the grub timeout and the grub default boot entry?</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Ext4">ext4</a></li>
+  <li><a href="https://opensource.com/article/17/5/introduction-ext4-filesystem">An introduction to Linux’s EXT4 filesystem</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/File_system_fragmentation">File system fragmentation</a></li>
+  <li><a href="https://www.serverbrain.org/reference-2003/ntfs-fragmentation.html">NTFS Fragmentation</a></li>
+  <li><a href="https://www.netadmin.com.tw/netadmin/zh-tw/technology/23D09E63D4CD46349410CDA0E36FC465">Linux磁區配置從頭開始 搞定MBR、GPT與UEFI</a></li>
+  <li><a href="https://tw.easeus.com/partition-manager-tips/uefi-vs-bios.html">UEFI vs BIOS：有什麼差異以及哪一個更好</a></li>
+  <li><a href="https://www.zhihu.com/question/28815746">UEFI是不需要自检还是弱化了自检这个概念？</a></li>
+  <li><a href="https://forum.gamer.com.tw/C.php?bsn=60030&amp;snA=506558">【問題】UEFI? BIOS? Legacy? 淺談主機板UEFI觀念與迷思</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#dual-boot" class="page__taxonomy-item p-category" rel="tag">dual boot</a><span class="sep">, </span>
+    
+      <a href="/tags/#linux" class="page__taxonomy-item p-category" rel="tag">linux</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#random" class="page__taxonomy-item p-category" rel="tag">random</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E5%96%AE%E7%B3%BB%E7%B5%B1%EF%BC%9F+%E4%BD%95%E4%B8%8D%E5%A4%9A%E7%B3%BB%E7%B5%B1%20https%3A%2F%2Fambersuncreates.com%2Frandom%2Fdual-boot%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Frandom%2Fdual-boot%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fambersuncreates.com%2Frandom%2Fdual-boot%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/devops/devops-unit-test/" class="pagination--pager" title="DevOps - 單元測試 Unit Test
+">Previous</a>
+    
+    
+      <a href="/git/git-add/" class="pagination--pager" title="Git 進階使用 - Git Add
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2024-05-19">
+            2024-05-19
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2024-05-19">
+            2024-05-19
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2024-05-19">
+            2024-05-19
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+      &nbsp;&nbsp;&nbsp;
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+        &nbsp;&nbsp;&nbsp;
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2024-05-19">
+            2024-05-19
+          </time>
+        </span>
+
+        &nbsp;&nbsp;&nbsp;
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/random/dual-boot/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/random/dual-boot"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

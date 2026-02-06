@@ -1,0 +1,2018 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>資料庫 - Index 與 Histogram 篇 | Shawn Hsu</title>
+<meta name="description" content="本文會介紹 Index 如何對你的效能產生重大的影響。我們會一一檢視各種 index 的實作方式，並且探討它們的優缺點">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="資料庫 - Index 與 Histogram 篇">
+<meta property="og:url" content="https://ambersuncreates.com/database/database-index-histogram/">
+
+
+  <meta property="og:description" content="本文會介紹 Index 如何對你的效能產生重大的影響。我們會一一檢視各種 index 的實作方式，並且探討它們的優缺點">
+
+
+<meta property="og:image" content="/assets/img/og/database-index-histogram.png">
+
+
+
+
+  <meta property="article:published_time" content="2022-12-25T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-01-24T02:24:11+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/database/database-index-histogram/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#database" itemprop="item"><span itemprop="name">Database</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">資料庫 - Index 與 Histogram 篇</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="資料庫 - Index 與 Histogram 篇">
+    <meta itemprop="description" content="Speed up Search In Large Data">
+    <meta itemprop="datePublished" content="2022-12-25T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-01-24T02:24:11+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/database/database-index-histogram/" class="u-url" itemprop="url">資料庫 - Index 與 Histogram 篇
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2022-12-25">2022-12-25</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-24">
+            2026-01-24
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-index-histogram/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-index-histogram/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-index-histogram/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li><a href="#speed-up-search-in-large-data">Speed up Search In Large Data</a></li>
+<li>
+<a href="#what-is-index">What is Index</a><ul>
+<li><a href="#composite-index">Composite Index</a></li>
+<li><a href="#partial-index">Partial Index</a></li>
+</ul>
+</li>
+<li>
+<a href="#type-of-index">Type of Index</a><ul>
+<li><a href="#clustered-index">Clustered Index</a></li>
+<li><a href="#covering-indexindex-with-included-columns">Covering Index(Index with Included Columns)</a></li>
+<li><a href="#non-clustered-index">Non-clustered Index</a></li>
+</ul>
+</li>
+<li>
+<a href="#index-implementations">Index Implementations</a><ul>
+<li><a href="#hash-index">Hash Index</a></li>
+<li><a href="#sstablelsm-tree">SSTable(LSM Tree)</a></li>
+<li><a href="#b-tree-index">B Tree Index</a></li>
+<li><a href="#b-tree-index-1">B+ Tree Index</a></li>
+</ul>
+</li>
+<li>
+<a href="#fragmentation">Fragmentation</a><ul>
+<li><a href="#internal-fragmentation">Internal Fragmentation</a></li>
+<li><a href="#external-fragmentation">External Fragmentation</a></li>
+</ul>
+</li>
+<li>
+<a href="#predicates">Predicates</a><ul>
+<li><a href="#access-predicates">Access Predicates</a></li>
+<li><a href="#filter-predicates">Filter Predicates</a></li>
+</ul>
+</li>
+<li>
+<a href="#scans">Scans</a><ul>
+<li><a href="#index-only-scan">Index Only Scan</a></li>
+<li><a href="#index-scan">Index Scan</a></li>
+<li><a href="#index-seek">Index Seek</a></li>
+<li><a href="#table-scan">Table Scan</a></li>
+</ul>
+</li>
+<li><a href="#when-will-database-do-a-full-table-scan">When will Database do a Full Table Scan</a></li>
+<li><a href="#histogram">Histogram</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="speed-up-search-in-large-data">Speed up Search In Large Data</h1>
+<p><img src="https://rhollick.wordpress.com/wp-content/uploads/2016/04/img_01661.jpg" width="400" height="600"></p>
+
+<blockquote>
+  <p>ref: <a href="https://rhollick.wordpress.com/2016/11/18/thumb-indexing/">Making Book</a></p>
+</blockquote>
+
+<p>還記得小時候學習的過程中，一定會用到字典這個東西<br>
+在沒有網路的時代，字典可以說是查找單字以及成語的少數方法之一了<br>
+字典通常都很大本對吧 光是要從中找到目標資訊就很不容易了<br>
+所以字典通常都會有 <strong>部首查字</strong>, <strong>筆劃查字</strong> 等的方法<br>
+而且都會用不同顏色標注在書的側面，讓你可以很快的就縮短查找範圍</p>
+
+<p>這其實就是索引的一種<br>
+而資料庫說白了也就是一個很大的字典<br>
+因此接下來我們將探討 Index 在資料庫中的各種知識</p>
+
+<h1 id="what-is-index">What is Index</h1>
+<p>所以 Index 總的來說就是加速資料查詢的時間的一個方法<br>
+不同的是，Index 是透過拿取一個或多個 column data 建立另一個 table<br>
+由於這個 table 僅有存放少數 column data 加上它會自動幫你排序<br>
+搜尋的時候，因為已經排序過了，所以是用 binary search/tree traversal 的方式，也因此他的查詢會變得相對簡單且快速</p>
+
+<h2 id="composite-index">Composite Index</h2>
+<p>有 single index 就有 composite index<br>
+顧名思義，他是由多個 column 組成的 index</p>
+
+<p>需要注意的是，composite index 的使用條件相對嚴苛<br>
+假設你建立了一個 index <strong>(a, b, c)</strong><br>
+index 的使用 <strong>必須要照順序</strong><br>
+以下這些是 <code class="language-plaintext highlighter-rouge">可以使用到 composite index</code> 的</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td>
+<td class="rouge-code"><pre>WHERE a=1
+WHERE a&gt;=12 AND a&lt;15
+WHERE a=1 AND b &lt; 5
+WHERE a=1 AND b = 17 AND c &gt;= 40
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>以下是 <code class="language-plaintext highlighter-rouge">沒辦法使用到 composite index</code> 的</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td>
+<td class="rouge-code"><pre>WHERE b=10
+WHERE c=221
+WHERE b&gt;=12 AND c=15
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>每一家資料庫的實作都不盡相同<br>
+就好比如說</p>
+<ul>
+  <li>
+<a href="https://www.ibm.com/docs/zh-tw/informix-servers/12.10?topic=product-overview">IBM Informix 12.10</a> 規定的是
+    <ul>
+      <li>query condition 第一個條件必須是 equality filter(只能用 =)</li>
+      <li>之後的條件必須是 range expressions(只能用 &gt;, &lt;, &gt;=, &lt;=)</li>
+    </ul>
+
+    <blockquote>
+      <p>ref: <a href="https://www.ibm.com/docs/en/informix-servers/12.10?topic=indexes-use-composite">Use composite indexes</a></p>
+    </blockquote>
+  </li>
+  <li>
+<a href="https://www.mysql.com/">MySQL 8.0</a> 規定只要是
+    <ul>
+      <li>query 的條件順序是 composite index 的 prefix 就行(i.e. <code class="language-plaintext highlighter-rouge">(a, b) is prefix of (a, b, c)</code>, <code class="language-plaintext highlighter-rouge">(b, c) is not a prefix of (a, b, c)</code>)</li>
+    </ul>
+
+    <blockquote>
+      <p>ref: <a href="https://dev.mysql.com/doc/refman/8.0/en/multiple-column-indexes.html">8.3.6 Multiple-Column Indexes</a></p>
+    </blockquote>
+  </li>
+</ul>
+
+<p>另外，在定義 composite index 的時候<br>
+遵循著一個原則，<strong>low cardinality 在前，high cardinality 在後</strong><br>
+這樣的設計有助於再次提高效能</p>
+
+<blockquote>
+  <p>cardinality 是一個數值，用以表示資料的重複性，<code class="language-plaintext highlighter-rouge">數字越大，重複性越小</code></p>
+</blockquote>
+
+<p>總的來說，共通點都是<br>
+他們的 <strong><em>查詢順序要符合定義的順序</em></strong><br>
+這樣才吃的到 index</p>
+
+<blockquote>
+  <p>注意到如果你使用 composite index 的時候沒有依照建構順序<br>
+在你嘗試使用 explain 去看 execution plan 也不見得會顯現出來差別<br>
+但實務上他的執行速度還是有差別的</p>
+</blockquote>
+
+<h2 id="partial-index">Partial Index</h2>
+<p>既然 index 的使用，跟他的數值有極大的關係(i.e. <code class="language-plaintext highlighter-rouge">cardinality</code>)<br>
+太多重複的資料會導致資料庫甚至選擇不使用該 index 查詢<br>
+所以其實這種限制是不太方便的，因為很多時候你的查詢條件就長那樣，index 也用不到，是很可惜的<br>
+<code class="language-plaintext highlighter-rouge">Partial Index</code> 旨在解決這個問題</p>
+
+<blockquote>
+  <p>注意到 Partial Index 並非 SQL Standard 的一部分</p>
+</blockquote>
+
+<p>原始問題是，index 內部儲存 “整張表” 的 column data<br>
+如果我可以調整儲存的資料內容，只保留部份資料，使得 <code class="language-plaintext highlighter-rouge">cardinality</code> 提高，是不是就可以讓 index 活過來，繼續被使用？<br>
+除此之外，因為我只 index 部份資料，所以佔用空間更小<br>
+並且資料更新時，也可以加速，因為只有部份需要更新</p>
+
+<p>部份資料的作法，就是根據 query condition 來決定 index 的儲存內容<br>
+假設，我有 <code class="language-plaintext highlighter-rouge">user</code> 以及 <code class="language-plaintext highlighter-rouge">post</code> 兩個 table<br>
+我有一個 query 是這樣的</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="k">select</span> <span class="o">*</span> <span class="k">from</span> <span class="n">post</span> 
+<span class="k">where</span> <span class="n">user_id</span> <span class="o">=</span> <span class="n">uid</span> <span class="k">and</span> <span class="n">visible</span> <span class="o">=</span> <span class="k">true</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>其實你可以針對 <code class="language-plaintext highlighter-rouge">visible</code> 建立一個 partial index</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">CREATE</span> <span class="k">INDEX</span> <span class="n">idx_post_visible</span> <span class="k">ON</span> <span class="n">post</span> <span class="p">(</span><span class="n">visible</span><span class="p">)</span> <span class="k">WHERE</span> <span class="n">visible</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">visible</code> 欄位是 boolean, 所以重複的數值會很多(因為就兩種)<br>
+如果 true 的數量是相對於 false 小很多，這時候 partial index 的效益就會非常明顯</p>
+
+<p>使用 partial index 你也可以直接過濾掉 “不感興趣” 的資料<br>
+如果只有單純使用 uid 的 index，<code class="language-plaintext highlighter-rouge">visible = false</code> 的資料也會被查詢到<br>
+index 撈出來的資料數量越來越小(或者說越接近你要的最終結果)，越可以加速查詢速度</p>
+
+<hr>
+
+<p>使用 index 的好壞處，可以簡單的寫成以下</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Pros</th>
+      <th style="text-align: left">Cons</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">能夠更快速的讀取資料庫中的資料</td>
+      <td style="text-align: left">因為 index 的建立是仰賴 <strong>空間換時間</strong><br>並且 index 的 table 是保持著排序好的狀態<br>因此每一次的更新，除了更改原本 table 資料外，index table 也需要做同步的更新<br>所以可能會有較高的 overhead</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="type-of-index">Type of Index</h1>
+<h2 id="clustered-index">Clustered Index</h2>
+<p>clustered index 是用於決定資料在 <strong>實際硬體上的儲存順序</strong><br>
+通常 clustered index 在 table 建立之初就會決定好了</p>
+
+<p>clustered index 儲存的資料是 key-pair 的方式 <code class="language-plaintext highlighter-rouge">index column value</code> <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> <code class="language-plaintext highlighter-rouge">row data</code>(如下圖)<br>
+也就是說，透過 clustered index 進行 query 不用作二次 look up 可以大幅度的縮短時間</p>
+<blockquote>
+  <p>換言之，沒有用到 clustered index 的資料就會是 <a href="#table-scan">Table Scan</a></p>
+</blockquote>
+
+<p><img src="https://vladmihalcea.com/wp-content/uploads/2021/04/ClusteredIndexTable-2048x997.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://vladmihalcea.com/clustered-index/">Clustered Index</a></p>
+</blockquote>
+
+<blockquote>
+  <p>需要注意的是，並不是每一種 DBMS 都使用 B+ Tree</p>
+</blockquote>
+
+<p>如果對 clustered index 進行更新刪除會發生什麼事情<br>
+well 由於 clustered index 的順序是直接對應到 physical 儲存順序的<br>
+因此，如果你恰好更改了 index column 的數值，後果就是 DBMS 需要額外花力氣移動硬碟上的資料 進而導致效能減損<br>
+所以，使用 clustered index 的情況只對 <code class="language-plaintext highlighter-rouge">SELECT</code> 有幫助</p>
+
+<p>MySQL 對於 clustered index 的建立，在官方文件中有說明到 <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html">MySQL 8.0 15.6.2.1 Clustered and Secondary Indexes</a></p>
+
+<blockquote>
+  <p>When you define a PRIMARY KEY on a table, InnoDB uses it as the clustered index. <br>
+A primary key should be defined for each table. If there is no logical unique and non-null column or set of columns to use a the primary key, add an auto-increment column. <br>
+Auto-increment column values are unique and are added automatically as new rows are inserted. <br>
+<br>
+If you do not define a PRIMARY KEY for a table, InnoDB uses the first UNIQUE index with all key columns defined as NOT NULL as the clustered index. <br>
+<br>
+If a table has no PRIMARY KEY or suitable UNIQUE index, <br>
+InnoDB generates a hidden clustered index named GEN_CLUST_INDEX on a synthetic column that contains row ID values. <br>
+The rows are ordered by the row ID that InnoDB assigns. <br>
+The row ID is a 6-byte field that increases monotonically as new rows are inserted.
+Thus, the rows ordered by the row ID are physically in order of insertion.</p>
+</blockquote>
+
+<p>簡言之</p>
+<ul>
+  <li>有 primary key <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> clustered index = primary key</li>
+  <li>沒 primary key <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 找第一個 unique field 當 clustered index</li>
+  <li>啥都沒有 <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 我自己幫你偷偷建立一個</li>
+</ul>
+
+<h2 id="covering-indexindex-with-included-columns">Covering Index(Index with Included Columns)</h2>
+<p>與其完全不儲存資料，Covering Index 僅儲存 <em>部份</em> 的 column data<br>
+算是一種介於 <a href="#clustered-index">Clustered Index</a> 與 <a href="#non-clustered-index">Non-clustered Index</a> 之間的解決方案</p>
+
+<h2 id="non-clustered-index">Non-clustered Index</h2>
+<p>就是我們常見自己加的 index</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="nv">`table`</span> <span class="k">ADD</span> <span class="k">INDEX</span> <span class="nv">`product_id_index`</span> <span class="p">(</span><span class="nv">`product_id`</span><span class="p">)</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>與 clustered index 不同的是，non-clustered index <strong>並不會儲存 row data</strong>, 他是儲存一個 pointer to original data(i.e. reference)<br>
+也因此在 query 的時候，使用 non-clustered index 會需要做 <strong>二次 look up</strong>(相對 clustered index 會慢一點)<br>
+更重要的是，non-clustered index 不一定是 unique 的</p>
+
+<p><img src="https://vladmihalcea.com/wp-content/uploads/2021/04/ClusteredIndexSecondaryIndex-1536x1145.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://vladmihalcea.com/clustered-index/">Clustered Index</a></p>
+</blockquote>
+
+<p>non-clustered index 又稱 secondary index</p>
+<blockquote>
+  <p>但 clustered index 不等於 primary index 請特別注意</p>
+</blockquote>
+
+<hr>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Index Type</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Primary Index</td>
+      <td style="text-align: left">不完全等於 <a href="#clustered-index">Clustered Index</a>
+</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Secondary Index</td>
+      <td style="text-align: left">等於 <a href="#non-clustered-index" class="anchor">Non-clustered index</a>
+</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Bitmap Index</td>
+      <td style="text-align: left">針對特定欄位做個 bitmap<br>用性別舉例, 男的 1 女的是 0<br>這時候如果要對性別 query, DBMS 可以很快的 apply bitmap 上去取得結果(bitwise operation)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Dense Index</td>
+      <td style="text-align: left">儲存所有 record 的 pair(1 對 1)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Sparse Index</td>
+      <td style="text-align: left">儲存 <strong>部份</strong> record 的 block 起點(每個 block 有若干 record，亦即1 對 多)<br>找到該 block 後 sequential 尋找目標 record</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Reverse Index</td>
+      <td style="text-align: left">將 key 反過來存(i.e. <code class="language-plaintext highlighter-rouge">24538</code> <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> <code class="language-plaintext highlighter-rouge">83542</code>)<br>這樣可以減緩 leaf block contention, 因為原本緊鄰的 data, primary key 反轉之後位置會差很多<br>(<code class="language-plaintext highlighter-rouge">24538</code> <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> <code class="language-plaintext highlighter-rouge">83542</code>, <code class="language-plaintext highlighter-rouge">24539</code> <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> <code class="language-plaintext highlighter-rouge">93542</code>)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Inverted Index</td>
+      <td style="text-align: left">多用於搜尋功能，其資料結構為 hashmap, key 為 content, value 為位置<br>比如說 <code class="language-plaintext highlighter-rouge">cat</code> 一詞出現在 document <code class="language-plaintext highlighter-rouge">1, 4, 22, 103 頁</code>
+</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="index-implementations">Index Implementations</h1>
+<h2 id="hash-index">Hash Index</h2>
+<p>Hash index 顧名思義是用 hash 來達成的<br>
+用 hash 的好處之一就是快速，只要算一下就可以馬上定位到資料 $O(1)$</p>
+
+<blockquote>
+  <p>需要注意像是 wildcard query(e.g. WHERE username LIKE ‘john%’) 這種 hash index 也沒辦法處理就是</p>
+</blockquote>
+
+<p>但同時缺點也很明顯，針對範圍查詢，效率也會很低<br>
+更甚至如果找不到資料的話就可能會是 <a href="#table-scan">Full Table Scan</a> 了</p>
+
+<blockquote>
+  <p>它不全然會是 full table scan 的原因是，你的 query 可能剛好有其他 index 可以用，不需要 table scan</p>
+</blockquote>
+
+<p>另一個問題是 hash collision<br>
+它取決於你的 hash function 怎麼設計，即使是 <a href="https://en.wikipedia.org/wiki/SHA-2">sha256</a> 也有 $4.3 \times 10^{-60}$ 的機率會碰撞到</p>
+
+<blockquote>
+  <p>出現 hash collision 有兩種解法<br>
+<a href="https://en.wikipedia.org/wiki/Linear_probing">Linear Probing</a><br>
+<a href="https://www.geeksforgeeks.org/double-hashing/">Double Hashing</a></p>
+</blockquote>
+
+<p>並且使用 hash index 對於 disk read-ahead 沒有幫助<br>
+因為下一頁的資料不一定在你的旁邊<br>
+因此這種操作屬於 <strong>Random I/O</strong></p>
+
+<blockquote>
+  <p>詳細可以參考 <a href="../../database/database-distributed-database">資料庫 - 初探分散式資料庫 | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="sstablelsm-tree">SSTable(LSM Tree)</h2>
+<p>另一種 index 實作的方式是稱為 SSTable(Sorted String Table)<br>
+亦即將 key 進行排序<br>
+排序過後的好處就是說，我能夠花較少的時間 query 到我想要的資料<br>
+比如說使用 <a href="https://en.wikipedia.org/wiki/Binary_search_algorithm">binary search</a></p>
+
+<p>為了避免日後 Random I/O 造成的效能瓶頸<br>
+SSTable 會先在記憶體中維護一個資料結構(e.g. <a href="https://en.wikipedia.org/wiki/AVL_tree">AVL Tree</a>, <a href="https://en.wikipedia.org/wiki/Red%E2%80%93black_tree">Red-Black Tree</a>)<br>
+等到寫入超過一定的量之後，在存到硬碟裡面(segment file)<br>
+不同的 segment file 可能會包含相同 key 的 entry<br>
+所以也必須適時的進行 <strong>合併與壓縮的操作</strong><br>
+又因為說 segment file 的內容是排序過的，所以合併的操作效率也不會太慢</p>
+
+<blockquote>
+  <p>符合 <code class="language-plaintext highlighter-rouge">合併與壓縮</code> 的儲存引擎，通稱 LSM Tree(Log-Structured Merge-Tree)<br>
+要注意的是，合併壓縮的操作會在某種程度上影響到效能，因為他是開一條 thread 下去處理，但同時你還在持續 serve client</p>
+</blockquote>
+
+<p>另外 SSTable 也有所謂的 log file，避免你在寫入 disk 的時候意外中斷，造成資料遺失</p>
+
+<blockquote>
+  <p>作法跟 Redis 的 RDB, AOF 一樣，可參考 <a href="../../database/database-cache">資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu</a></p>
+</blockquote>
+
+<p>重點來了<br>
+因為可能你有很多個 segment file<br>
+所以當你要查詢的時候，有可能會 miss 掉(i.e. 該 key 不存在於該 segment file 當中)<br>
+因此必須要往前一份資料找<br>
+你可以配合一些其他的工具避免此類的狀況(e.g. <a href="../../database/database-filter#bloom-filter">Bloom Filter</a>)</p>
+
+<blockquote>
+  <p>Bloom Filter 相關的介紹可以參考 <a href="../../database/database-filter">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用 | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="b-tree-index">B Tree Index</h2>
+<p><img src="https://builtin.com/sites/www.builtin.com/files/styles/ckeditor_optimize/public/inline-images/1_b-tree-indexing.jpg" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://builtin.com/data-science/b-tree-index">How Database B-Tree Indexing Works</a></p>
+</blockquote>
+
+<p>B Tree 是一種自平衡的樹狀資料結構，也就是從 root 到每一個節點，所花費的時間最多不超過 $O(Log(n))$<br>
+<a href="#sstablelsm-tree">SSTable</a> 最差的情況會是 $O(n)$，相比 B Tree，它可以在最短時間內找到你要的資料</p>
+
+<p>B Tree 將資料以 page 為單位分開，大小通常為 <code class="language-plaintext highlighter-rouge">4KB</code>(MySQL 的分頁大小為 <code class="language-plaintext highlighter-rouge">16KB</code>)<br>
+每個 page 對應樹狀結構中的 node，且每個 node 都包含有資料以及 child node 的 pointer</p>
+
+<p>B Tree 的所有操作都是基於 page 的修改<br>
+新增，刪除都會重寫整個 page 的資料<br>
+但是當 page 剩餘空間不夠的時候，就會遇到 <a href="#fragmentation">Fragmentation</a> 的問題了<br>
+那，這個例子是屬於哪一種的斷裂？ 是 <a href="#external-fragmentation">External Fragmentation</a></p>
+
+<h2 id="b-tree-index-1">B+ Tree Index</h2>
+<p><img src="https://builtin.com/sites/www.builtin.com/files/styles/ckeditor_optimize/public/inline-images/6_b-tree-indexing.jpeg" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://builtin.com/data-science/b-tree-index">How Database B-Tree Indexing Works</a></p>
+</blockquote>
+
+<p>B Tree 在 sequential scan 的情況下，必須來回 parent/child node 之間<br>
+而 B+ Tree 則是在園有的基礎上做了些改進</p>
+
+<ol>
+  <li>B+ Tree <strong>僅有在 leaf node 儲存資料</strong>
+</li>
+  <li>leaf node 之間都會用 pointer 互相連接(linked list)</li>
+</ol>
+
+<p>這樣的作法有助於 <strong>提昇 locality</strong>(資料庫多半會做 pre-load(i.e. disk read-ahead) 增進效能)<br>
+並且在 full table scan 下的效能海放 B Tree(因為後者必須執行 tree traversal 可能會 <strong>cache miss</strong>, 前者可以依靠連接的 pointer)</p>
+
+<h1 id="fragmentation">Fragmentation</h1>
+<h2 id="internal-fragmentation">Internal Fragmentation</h2>
+<p>內部斷裂指的是 <strong>當一個 process 被分配到的空間太大，導致說有部份的空間被浪費(i.e. 沒有被使用到)</strong><br>
+且該未使用的空間太小不足以再塞入其他 process</p>
+
+<p>這通常是因為每次分配的空間大小都一樣所導致的<br>
+解決辦法就是針對不同大小的 process 分配相對應的記憶體大小(動態大小記憶體分配)</p>
+
+<p><img src="https://media.geeksforgeeks.org/wp-content/uploads/20190924115421/Untitled-Diagram-146.png" alt=""></p>
+
+<h2 id="external-fragmentation">External Fragmentation</h2>
+<p>外部斷裂指的是 <strong>剩餘記憶體空間足夠, 但單個記憶體空間不夠大</strong></p>
+
+<p>這通常是因為採用了動態大小的記憶體配置<br>
+解決辦法可以使用 <a href="https://support.microsoft.com/zh-tw/windows/%E7%82%BA%E6%82%A8%E7%9A%84-windows-10-%E9%9B%BB%E8%85%A6%E9%80%B2%E8%A1%8C%E7%A3%81%E7%A2%9F%E9%87%8D%E7%B5%84-048aefac-7f1f-4632-d48a-9700c4ec702a">磁碟重組</a> 或者是使用 <a href="https://www.geeksforgeeks.org/paging-in-operating-system/">paging</a> 的機制</p>
+
+<p><img src="https://media.geeksforgeeks.org/wp-content/uploads/20200729172413/2581.png" alt=""></p>
+
+<hr>
+
+<p>檔案系統的 Fragmentation 會導致資料不連續<br>
+如果是使用傳統硬碟(HDD)，在讀寫資料會因為資料不連續的問題，必須額外的做 seek 的動作<br>
+進而造成效能瓶頸</p>
+
+<h1 id="predicates">Predicates</h1>
+<p>predicates 基本上分為</p>
+<ul>
+  <li>Access Predicates</li>
+  <li>Filter Predicates</li>
+</ul>
+
+<h2 id="access-predicates">Access Predicates</h2>
+<p>access predicates 指的是當 query 根據 condition 撈出相對應的資訊</p>
+
+<blockquote>
+  <p>如果 condition 用的欄位剛好有 index, 那就稱為 index access predicates(反之則是 table-level access predicates)</p>
+</blockquote>
+
+<p>index access predicates 可以直接將資料限縮到某個區間範圍<br>
+比如說</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">customers</span> <span class="k">WHERE</span> <span class="n">last_name</span> <span class="o">=</span> <span class="s1">'John'</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+<p>如此一來，我就能夠限縮上述的 sql query 到某個特定範圍了<br>
+由於 B+ Tree 的特性，資料都是儲存在 leaf nodes 上<br>
+藉由給定的條件，我可以輕鬆的減少資料範圍</p>
+
+<h2 id="filter-predicates">Filter Predicates</h2>
+<p>filter predicates 也是根據 condition 撈資料<br>
+不同的是它只會用在 leaf node traversal 上面而已<br>
+也就是說當我在特定區間(由 access predicates 限縮後的)上找資料的時候，我會一個一個檢查他有沒有符合剩下的條件<br>
+(透過 B+ Tree leaf node 上的 linked list 達成 traversal)</p>
+
+<p>所以 filter predicates 不會限縮資料區間範圍，它會在這個範圍內做 filter 的動作</p>
+
+<blockquote>
+  <p>如果 condition 用的欄位剛好有 index, 那就稱為 index filter predicates(反之則是 table-level filter predicates)</p>
+</blockquote>
+
+<p>注意到並不是所有 multiple condition 都稱為 filter predicates<br>
+有可能你做 composite index 然後所有 query condition 都是使用 composite index 的欄位<br>
+那它本質上還是屬於 access predicates</p>
+
+<h1 id="scans">Scans</h1>
+<h2 id="index-only-scan">Index Only Scan</h2>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">customers</span> <span class="k">WHERE</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="o">//</span> <span class="n">assume</span> <span class="n">id</span> <span class="k">is</span> <span class="k">primary</span> <span class="k">key</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>這種情況就是 index only scan<br>
+因為上面說過，clustered index 上面是會儲存所有 table 資料的<br>
+然後你都用 clustered index 下去 query 了<br>
+並且撈出來的資料全部都在 table 上面(因為它就是原本放資料的 table)</p>
+
+<p>所以這種情況是最佳的，只會做一次 look up(data table)</p>
+
+<h2 id="index-scan">Index Scan</h2>
+<p>index scan 指的是 DBMS 會一個一個看過所有 index, 選出符合條件的 row<br>
+舉例來說，</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">customers</span> <span class="k">WHERE</span> <span class="n">last_name</span> <span class="o">=</span> <span class="s1">'John'</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>你說如果 last_name 有 index，那它還會一個一個看過嗎？<br>
+hmm 這其實是根據 DBMS 自己決定的<br>
+可能會左右他的決定的有以下情況</p>
+<ul>
+  <li>查詢條件</li>
+  <li>Index 的 cardinality</li>
+  <li>Table Size</li>
+  <li>Index Size</li>
+</ul>
+
+<p>並不是說你有加了 index 它就一定會用<br>
+視情況不同 DBMS 會自己斟酌</p>
+
+<h2 id="index-seek">Index Seek</h2>
+<p>index seek 就是完美的吃到了 index 的狀況<br>
+舉例來說，</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">customers</span> <span class="k">WHERE</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="o">//</span> <span class="n">assume</span> <span class="n">id</span> <span class="k">is</span> <span class="n">secondary</span> <span class="k">index</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>如果是 B+ Tree 它就能以最短時間查詢到對應的 row(複雜度 $O(Log(n))$)<br>
+由於 index table 並不包含全部 row data<br>
+所以接下來在找到它原本的 data 就完成了<br>
+總共是 2 次的 table look up(index table + data table)</p>
+
+<p>如果你剛好用到 clustered index<br>
+那它就會變成 <a href="#index-only-scan">Index Only Scan</a></p>
+
+<p>也要切記一件事情<br>
+並不是所有 case 都可以用到 index(即使你的 query 有用到)<br>
+影響條件如下</p>
+<ul>
+  <li>查詢條件</li>
+  <li>Index 的 cardinality</li>
+  <li>Table Size</li>
+  <li>Index Size</li>
+</ul>
+
+<p>有的資料庫並沒有所謂的 index seek 的概念，如 <a href="https://www.postgresql.org/">PostgreSQL</a></p>
+<blockquote>
+  <p>There are different types of scan nodes for different table access methods:<br>
+sequential scans, index scans, and bitmap index scans.<br>
+ref: <a href="https://www.postgresql.org/docs/current/using-explain.html">14.1. Using EXPLAIN</a></p>
+</blockquote>
+
+<p>這時候其實 index seek 的概念就是 <a href="#index-scan">Index Scan</a></p>
+
+<h2 id="table-scan">Table Scan</h2>
+<p>Full Table Scan 指的是，資料庫引擎必須讀取 table 內的所有資料<br>
+如果說 table 資料量小，可能不會有太大的影響，但如果資料量大就另當別論了</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">customers</span> <span class="k">WHERE</span> <span class="n">last_name</span> <span class="k">LIKE</span> <span class="s1">'%John%'</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+<p>這種情況是百分之百的 full table scan<br>
+因為 index 的建立沒辦法判斷這種 wildcard 的情況</p>
+
+<p>但是！</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">customers</span> <span class="k">WHERE</span> <span class="n">last_name</span> <span class="k">LIKE</span> <span class="s1">'John%'</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+<p>這種情況就吃的到 index 所以它並不是 full table scan<br>
+原因在於 index 的建立是從左到右的<br>
+至少這個 case 它可以匹配前 4 個字母</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="n">customers</span> <span class="k">WHERE</span> <span class="n">last_name</span> <span class="k">LIKE</span> <span class="s1">'Jo%hn%'</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+<p>wildcard 在中間的情況也不會是 full table scan<br>
+因為它也至少可以匹配前 2 個字母</p>
+
+<p>要記住一件事情，對於電腦來說，I/O 是一件很花時間的事情(相比 register, cache, memory 來說)<br>
+因此我們必須要盡力避免過多的讀寫操作</p>
+
+<p>資料庫查詢會慢，很大的原因是因為 Full Table Scan 的關係</p>
+
+<h1 id="when-will-database-do-a-full-table-scan">When will Database do a Full Table Scan</h1>
+<p>那麼哪些會造成 Full Table Scan?<br>
+原因多半有以下</p>
+
+<ul>
+  <li>當你的資料量小於 10 筆的時候
+    <ul>
+      <li>Full Table Scan 的速度都比你去查 index 還要來的快</li>
+      <li>因為 index table 跟資料是分開存的, 等於要看兩次</li>
+    </ul>
+  </li>
+  <li>當你的查詢條件(e.g. <code class="language-plaintext highlighter-rouge">WHERE</code>, <code class="language-plaintext highlighter-rouge">ON</code>) 沒有包含 index 的時候</li>
+  <li>當你用 <code class="language-plaintext highlighter-rouge">WHERE</code> 篩出來的 row(e.g. <code class="language-plaintext highlighter-rouge">WHERE indexed_col = 1</code>)包含了 <strong>很大部份的 table 資料(e.g. 90%)</strong>
+    <ul>
+      <li>那麼與其用 where clause 慢慢篩出來不如直接 Full Table Scan 然後再挑出你要的資料</li>
+    </ul>
+  </li>
+  <li>當你的 index 屬於 <a href="https://en.wikipedia.org/wiki/Cardinality_%28SQL_statements%29">low cardinality</a> 的時候
+    <ul>
+      <li>cardinality 是一個數值，用以表示資料的重複性，<code class="language-plaintext highlighter-rouge">數字越大，重複性越小</code>
+</li>
+      <li>low cardinality 代表你的 index 內包含很多重複性資料，也就是你的 index 並不能指定到唯一的資料</li>
+      <li>那麼它還要經過更多次的 key lookup 可能才能找到你要的資料，那乾脆就直接 Full Table Scan</li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="histogram">Histogram</h1>
+<blockquote>
+  <p>to be continued</p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>資料密集型應用系統設計(ISBN: 978-986-502-835-0)</li>
+  <li><a href="https://blog.darkthread.net/blog/index-scan-vs-seek/">SQL筆記：Index Scan vs Index Seek</a></li>
+  <li><a href="https://stackoverflow.com/questions/10354248/optimizing-mysql-like-string-queries-in-innodb">Optimizing MySQL LIKE ‘%string%’ queries in innoDB</a></li>
+  <li><a href="https://stackoverflow.com/questions/11418932/performance-of-like-queries-on-multmillion-row-tables-mysql">Performance of LIKE queries on multmillion row tables, MySQL</a></li>
+  <li><a href="https://cloud.tencent.com/developer/article/1628479">一文读懂MySQL 8.0直方图</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Database_index">Database index</a></li>
+  <li><a href="https://www.ibm.com/docs/en/informix-servers/12.10?topic=indexes-use-composite">Use composite indexes</a></li>
+  <li><a href="https://dev.mysql.com/doc/refman/8.0/en/multiple-column-indexes.html">8.3.6 Multiple-Column Indexes</a></li>
+  <li><a href="https://user3141592.medium.com/single-vs-composite-indexes-in-relational-databases-58d0eb045cbe">Single vs Composite Indexes in Relational Databases</a></li>
+  <li><a href="https://stackoverflow.com/questions/19882785/what-is-the-point-of-reverse-indexing">What is the point of reverse indexing?</a></li>
+  <li><a href="https://docs.oracle.com/database/121/CNCPT/indexiot.htm#CNCPT1181">3 Indexes and Index-Organized Tables</a></li>
+  <li><a href="https://www.guru99.com/indexing-in-database.html#2">Indexing in DBMS: What is, Types of Indexes with EXAMPLES</a></li>
+  <li><a href="https://stackoverflow.com/questions/20824686/what-is-difference-between-primary-index-and-secondary-index-exactly">What is difference between primary index and secondary index exactly? [duplicate]</a></li>
+  <li><a href="https://ithelp.ithome.com.tw/articles/10221572">30-12 之資料庫層的核心 - MySQL 的索引實現</a></li>
+  <li><a href="https://medium.com/@genchilu/%E6%B7%BA%E8%AB%87-innodb-%E7%9A%84-cluster-index-%E5%92%8C-secondary-index-f75da308352e">淺談 InnoDB 的 Cluster Index 和 Secondary Index</a></li>
+  <li><a href="https://medium.com/@mena.meseha/what-is-the-difference-between-mysql-innodb-b-tree-index-and-hash-index-ed8f2ce66d69">What is the difference between Mysql InnoDB B+ tree index and hash index? Why does MongoDB use B-tree?</a></li>
+  <li><a href="https://www.qwertee.io/blog/postgresql-b-tree-index-explained-part-1/">PostgreSQL B-Tree Index Explained - PART 1</a></li>
+  <li><a href="https://vicxu.medium.com/%E7%BF%BB%E8%AD%AF-how-database-b-tree-indexing-works-8c95010e0a3a">【 翻譯 】How Database B-tree Indexing Works</a></li>
+  <li><a href="https://stackoverflow.com/questions/65419712/does-mysql-use-only-one-index-per-query-sub-query">Does MySQL use only one index per query/sub-query?</a></li>
+  <li><a href="https://use-the-index-luke.com/sql/explain-plan/oracle/filter-predicates">Distinguishing Access and Filter-Predicates</a></li>
+  <li><a href="https://blog.csdn.net/u013230234/article/details/78345333">Index Seek和Index Scan的区别以及适用情况</a></li>
+  <li><a href="https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees">What are the differences between B trees and B+ trees?</a></li>
+  <li><a href="https://www.geeksforgeeks.org/difference-between-internal-and-external-fragmentation/">Difference between Internal and External fragmentation</a></li>
+  <li><a href="https://www.postgresql.org/docs/current/indexes-partial.html">Partial Indexes</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#access-predicates" class="page__taxonomy-item p-category" rel="tag">access predicates</a><span class="sep">, </span>
+    
+      <a href="/tags/#avl-tree" class="page__taxonomy-item p-category" rel="tag">avl tree</a><span class="sep">, </span>
+    
+      <a href="/tags/#b-tree-index" class="page__taxonomy-item p-category" rel="tag">b+ tree index</a><span class="sep">, </span>
+    
+      <a href="/tags/#b-tree-index" class="page__taxonomy-item p-category" rel="tag">b-tree index</a><span class="sep">, </span>
+    
+      <a href="/tags/#bitmap-index" class="page__taxonomy-item p-category" rel="tag">bitmap index</a><span class="sep">, </span>
+    
+      <a href="/tags/#cardinality" class="page__taxonomy-item p-category" rel="tag">cardinality</a><span class="sep">, </span>
+    
+      <a href="/tags/#clustered-index" class="page__taxonomy-item p-category" rel="tag">clustered index</a><span class="sep">, </span>
+    
+      <a href="/tags/#composite-index" class="page__taxonomy-item p-category" rel="tag">composite index</a><span class="sep">, </span>
+    
+      <a href="/tags/#dense-index" class="page__taxonomy-item p-category" rel="tag">dense index</a><span class="sep">, </span>
+    
+      <a href="/tags/#double-hashing" class="page__taxonomy-item p-category" rel="tag">double hashing</a><span class="sep">, </span>
+    
+      <a href="/tags/#execution-plan" class="page__taxonomy-item p-category" rel="tag">execution plan</a><span class="sep">, </span>
+    
+      <a href="/tags/#explain" class="page__taxonomy-item p-category" rel="tag">explain</a><span class="sep">, </span>
+    
+      <a href="/tags/#external-fragmentation" class="page__taxonomy-item p-category" rel="tag">external fragmentation</a><span class="sep">, </span>
+    
+      <a href="/tags/#filter-predicates" class="page__taxonomy-item p-category" rel="tag">filter predicates</a><span class="sep">, </span>
+    
+      <a href="/tags/#fragmentation" class="page__taxonomy-item p-category" rel="tag">fragmentation</a><span class="sep">, </span>
+    
+      <a href="/tags/#full-table-scan" class="page__taxonomy-item p-category" rel="tag">full table scan</a><span class="sep">, </span>
+    
+      <a href="/tags/#full-table-scan" class="page__taxonomy-item p-category" rel="tag">full table scan</a><span class="sep">, </span>
+    
+      <a href="/tags/#hash-index" class="page__taxonomy-item p-category" rel="tag">hash index</a><span class="sep">, </span>
+    
+      <a href="/tags/#high-cardinality" class="page__taxonomy-item p-category" rel="tag">high cardinality</a><span class="sep">, </span>
+    
+      <a href="/tags/#histogram" class="page__taxonomy-item p-category" rel="tag">histogram</a><span class="sep">, </span>
+    
+      <a href="/tags/#histogram" class="page__taxonomy-item p-category" rel="tag">histogram</a><span class="sep">, </span>
+    
+      <a href="/tags/#index" class="page__taxonomy-item p-category" rel="tag">index</a><span class="sep">, </span>
+    
+      <a href="/tags/#index-only-scan" class="page__taxonomy-item p-category" rel="tag">index only scan</a><span class="sep">, </span>
+    
+      <a href="/tags/#index-scan" class="page__taxonomy-item p-category" rel="tag">index scan</a><span class="sep">, </span>
+    
+      <a href="/tags/#index-seek" class="page__taxonomy-item p-category" rel="tag">index seek</a><span class="sep">, </span>
+    
+      <a href="/tags/#internal-fragmentation" class="page__taxonomy-item p-category" rel="tag">internal fragmentation</a><span class="sep">, </span>
+    
+      <a href="/tags/#inverted-index" class="page__taxonomy-item p-category" rel="tag">inverted index</a><span class="sep">, </span>
+    
+      <a href="/tags/#linear-probing" class="page__taxonomy-item p-category" rel="tag">linear probing</a><span class="sep">, </span>
+    
+      <a href="/tags/#locality" class="page__taxonomy-item p-category" rel="tag">locality</a><span class="sep">, </span>
+    
+      <a href="/tags/#low-cardinality" class="page__taxonomy-item p-category" rel="tag">low cardinality</a><span class="sep">, </span>
+    
+      <a href="/tags/#lsm-tree" class="page__taxonomy-item p-category" rel="tag">lsm tree</a><span class="sep">, </span>
+    
+      <a href="/tags/#non-clustered-index" class="page__taxonomy-item p-category" rel="tag">non-clustered index</a><span class="sep">, </span>
+    
+      <a href="/tags/#partial-index" class="page__taxonomy-item p-category" rel="tag">partial index</a><span class="sep">, </span>
+    
+      <a href="/tags/#predicates" class="page__taxonomy-item p-category" rel="tag">predicates</a><span class="sep">, </span>
+    
+      <a href="/tags/#red-black-tree" class="page__taxonomy-item p-category" rel="tag">red-black tree</a><span class="sep">, </span>
+    
+      <a href="/tags/#reverse-index" class="page__taxonomy-item p-category" rel="tag">reverse index</a><span class="sep">, </span>
+    
+      <a href="/tags/#secondary-index" class="page__taxonomy-item p-category" rel="tag">secondary index</a><span class="sep">, </span>
+    
+      <a href="/tags/#sparse-index" class="page__taxonomy-item p-category" rel="tag">sparse index</a><span class="sep">, </span>
+    
+      <a href="/tags/#sstable" class="page__taxonomy-item p-category" rel="tag">sstable</a><span class="sep">, </span>
+    
+      <a href="/tags/#table-scan" class="page__taxonomy-item p-category" rel="tag">table scan</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#database" class="page__taxonomy-item p-category" rel="tag">database</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E8%B3%87%E6%96%99%E5%BA%AB+-+Index+%E8%88%87+Histogram+%E7%AF%87%20https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-index-histogram%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-index-histogram%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-index-histogram%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/database/database-sqln1/" class="pagination--pager" title="資料庫 - SQL N + 1 問題
+">Previous</a>
+    
+    
+      <a href="/random/golang-goroutine/" class="pagination--pager" title="Goroutine 與 Golang Runtime Scheduler
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-24">
+            2026-01-24
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-24">
+            2026-01-24
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-24">
+            2026-01-24
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-24">
+            2026-01-24
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/database/database-index-histogram/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/database/database-index-histogram"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

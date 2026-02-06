@@ -1,0 +1,1974 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響 | Shawn Hsu</title>
+<meta name="description" content="Goroutine 本身是輕量的，但如果無上限的開 Goroutine 會對程式造成一定的影響。本篇文章會先探討 Golang Garbage Collection 的機制，從早期 non fully stop the world 的 GC 到現在的 Green Tea GC，這些改進對於整體效能可以有多大的提昇。最後透過一個簡單的實驗視覺化新版 Green Tea GC 的表現，以此了解在不同數量級下的 Goroutine 會有多大的影響">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響">
+<meta property="og:url" content="https://ambersuncreates.com/random/golang-gc/">
+
+
+  <meta property="og:description" content="Goroutine 本身是輕量的，但如果無上限的開 Goroutine 會對程式造成一定的影響。本篇文章會先探討 Golang Garbage Collection 的機制，從早期 non fully stop the world 的 GC 到現在的 Green Tea GC，這些改進對於整體效能可以有多大的提昇。最後透過一個簡單的實驗視覺化新版 Green Tea GC 的表現，以此了解在不同數量級下的 Goroutine 會有多大的影響">
+
+
+<meta property="og:image" content="/assets/img/og/golang-gc.png">
+
+
+
+
+  <meta property="article:published_time" content="2026-01-15T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-01-15T01:00:33+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/random/golang-gc/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#random" itemprop="item"><span itemprop="name">Random</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響">
+    <meta itemprop="description" content="PrefaceGoroutine 作為 Golang 的一大特色其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作用以達到併發的效果">
+    <meta itemprop="datePublished" content="2026-01-15T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-01-15T01:00:33+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/random/golang-gc/" class="u-url" itemprop="url">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-15">
+            2026-01-15
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li><a href="#preface">Preface</a></li>
+<li><a href="#stack-vs-heap-allocation">Stack vs. Heap Allocation</a></li>
+<li>
+<a href="#introduction-to-garbage-collection">Introduction to Garbage Collection</a><ul>
+<li>
+<a href="#gc-mechanism">GC Mechanism</a><ul>
+<li><a href="#reference-counting">Reference Counting</a></li>
+<li>
+<a href="#mark-and-sweep">Mark and Sweep</a><ul><li><a href="#cyclic-reference">Cyclic Reference</a></li></ul>
+</li>
+</ul>
+</li>
+<li><a href="#moving-vs-non-moving-gc">Moving vs Non-moving GC</a></li>
+</ul>
+</li>
+<li>
+<a href="#garbage-collection-trade-offs">Garbage Collection Trade-offs</a><ul>
+<li><a href="#gogc">GOGC</a></li>
+<li><a href="#gomemlimit">GOMEMLIMIT</a></li>
+</ul>
+</li>
+<li>
+<a href="#evolution-of-golang-garbage-collector">Evolution of Golang Garbage Collector</a><ul>
+<li><a href="#stop-the-world-mark-and-sweep">Stop-the-World Mark and Sweep</a></li>
+<li>
+<a href="#tricolor-mark-and-sweep">Tricolor Mark and Sweep</a><ul><li>
+<a href="#write-barrier">Write Barrier</a><ul>
+<li><a href="#dijkstra-barrier">Dijkstra barrier</a></li>
+<li><a href="#yuasa-style-deletion-write-barrier">Yuasa-style Deletion Write Barrier</a></li>
+<li><a href="#hybrid-write-barrier">Hybrid write barrier</a></li>
+</ul>
+</li></ul>
+</li>
+<li>
+<a href="#green-tea-garbage-collector">Green Tea Garbage Collector</a><ul><li><a href="#performance-evaluation">Performance Evaluation</a></li></ul>
+</li>
+</ul>
+</li>
+<li><a href="#goroutine-count-to-affect-garbage-collection">Goroutine Count to Affect Garbage Collection</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="preface">Preface</h1>
+<p>Goroutine 作為 Golang 的一大特色<br>
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多<br>
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作<br>
+用以達到併發的效果</p>
+
+<blockquote>
+  <p>有關 Goroutine 的介紹可以參考 <a href="../../random/golang-goroutine">Goroutine 與 Golang Runtime Scheduler | Shawn Hsu</a></p>
+</blockquote>
+
+<p>Goroutine 本身屬於 coroutine，縱使他的開銷相對較低，也還是會有一定的成本<br>
+比如說 Golang Runtime Scheduler 必須要管理這些 Goroutine 進行任務調度<br>
+頻繁的 context switch 會導致 scheduler 本身都在處理調度任務，反而實際的任務根本沒在執行</p>
+
+<p>這些種種的問題都是我們在開發時需要注意的地方<br>
+而本篇文章將會詳細的探討 Goroutine 本身的開銷以及 Garbage Collection 是如何處理這些 Goroutine 的</p>
+
+<h1 id="stack-vs-heap-allocation">Stack vs. Heap Allocation</h1>
+<p>有哪些東西是不會被 GC 處理的?<br>
+non-pointer 的 value 是不需要被 GC 處理的(slice 那些除外)<br>
+因為在 compile time 的時候就可以決定他的生命週期了<br>
+這種資料位於 stack 上，普遍被稱為 <code class="language-plaintext highlighter-rouge">stack allocation</code></p>
+
+<p>針對那些動態的記憶體存取，比方說根據使用者的輸入決定記憶體大小<br>
+或者是指標類型的，因為你不太能確定這塊記憶體會被怎麼用以及哪時候可以安全的被回收<br>
+這種動態的記憶體存取就是 GC 需要主動介入的</p>
+
+<h1 id="introduction-to-garbage-collection">Introduction to Garbage Collection</h1>
+<p>以前在學 C 語言的時候，或多或少可能都聽過 <code class="language-plaintext highlighter-rouge">malloc 完要記得 free</code> 這句話<br>
+這是因為在 C 語言中，記憶體的管理是由開發者自己來負責的<br>
+如果你忘記 free 掉你 malloc 的記憶體，就會造成 memory leak</p>
+
+<p>阿 人類就很懶惰嘛，所以就想說能不能有一個機制來幫我們管理記憶體<br>
+Garbage Collection 就是這樣一個機制，它會自動幫你管理記憶體<br>
+當你沒有要使用記憶體的時候，GC 會自動幫你回收這些記憶體(所以你可以用完就丟著，有人會幫你收拾)</p>
+
+<blockquote>
+  <p>local variable 不需要讓 GC 處理，因為 compile time 就可以決定他的生命週期了<br>
+需要 GC 通常是你不知道哪時候不會用到，可以被回收，比如說 slice</p>
+</blockquote>
+
+<p>GC 有很多種實作，比如 <a href="#reference-counting">Reference Counting</a> 以及 <a href="#mark-and-sweep">Mark and Sweep</a></p>
+
+<h2 id="gc-mechanism">GC Mechanism</h2>
+<h3 id="reference-counting">Reference Counting</h3>
+<p>怎麼定義這塊記憶體可以被回收？ 最簡單的想法就是看他有沒有正在被使用<br>
+假設這塊記憶體正在被 2 個人使用，那想當然不要回收它是比較正確的<br>
+這種作法被稱為 <code class="language-plaintext highlighter-rouge">reference counting</code></p>
+
+<p>當你把每個變數的 reference count 都記錄下來<br>
+當 reference count 為 0 的時候，就可以把這塊記憶體回收了</p>
+
+<h3 id="mark-and-sweep">Mark and Sweep</h3>
+<p><code class="language-plaintext highlighter-rouge">Mark and Sweep</code> 是另一種 GC 的實作方式<br>
+他是 <code class="language-plaintext highlighter-rouge">Tracing GC</code> 的一種，這種方式會建立一個 <strong>依賴關係圖</strong>(稱為 <code class="language-plaintext highlighter-rouge">object graph</code>)<br>
+這個關係圖會紀錄每一個 object 彼此使用的關係，所以你可以很輕易的觀察哪些資源正在被使用<br>
+之後就可以透過這張關係圖去區分說哪些資源是可以被回收的</p>
+
+<p>你需要兩個步驟執行它</p>
+<ol>
+  <li>建立 object graph(i.e. <code class="language-plaintext highlighter-rouge">scanning</code>)</li>
+  <li>掃描 object graph 並回收不需要的記憶體(i.e. <code class="language-plaintext highlighter-rouge">mark and sweep</code>)</li>
+</ol>
+
+<p>具體一點來說，GC 會走訪整個 object graph(從 root 開始)</p>
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">mark</code>
+    <ul>
+      <li>每一個走到的 object 它都會標記一下，表示這個 object 是活著的(i.e. <code class="language-plaintext highlighter-rouge">live</code>)</li>
+    </ul>
+  </li>
+  <li>
+<code class="language-plaintext highlighter-rouge">sweep</code>
+    <ul>
+      <li>全部都標完之後，那些沒有被標記到的 object 就可以被回收了</li>
+    </ul>
+  </li>
+</ol>
+
+<p>這個就是 <code class="language-plaintext highlighter-rouge">mark and sweep</code> 的概念</p>
+
+<p><img src="/assets/img/posts/mark_and_sweep.gif" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://go.dev/blog/greenteagc">The Green Tea Garbage Collector</a></p>
+</blockquote>
+
+<h4 id="cyclic-reference">Cyclic Reference</h4>
+<p>你會想，建立 object graph 不就是 <a href="#reference-counting">Reference Counting</a>？<br>
+不一樣！ 因為 <a href="#reference-counting">Reference Counting</a> 沒辦法區分出 <strong><em>循環引用的問題</em></strong><br>
+cycle import 的情況下，reference count 會永遠不會歸零，所以這塊記憶體永遠不會被回收<br>
+但是 <a href="#mark-and-sweep">Mark and Sweep</a> 不會</p>
+
+<p>因為 object graph 其實是有 root 節點的，這些 root 節點可以是 <code class="language-plaintext highlighter-rouge">local/global variables</code><br>
+從 root 節點往下找所有 object 使用情況，如果遇到 <strong>循環引用</strong> 但是它沒辦法從 root 節點走到，那它還是會被回收<br>
+所以 <a href="#mark-and-sweep">Mark and Sweep</a> 可以正確的回收這些循環引用的記憶體</p>
+
+<h2 id="moving-vs-non-moving-gc">Moving vs Non-moving GC</h2>
+<p>各位不曉得還記不記得所謂的 Fragmentation 問題<br>
+你動態分配的記憶體 free 掉之後，就會這邊一塊那邊一塊的<br>
+等到你真的需要一塊很大的連續記憶體的時候，你就沒辦法操作</p>
+
+<p>這種情況是所謂的 <code class="language-plaintext highlighter-rouge">External Fragmentation</code></p>
+
+<p><img src="https://inside.java/images/blog/compact-forwarding/heapgc_defrag.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://inside.java/2020/06/25/compact-forwarding/">Compact Forwarding Information</a></p>
+</blockquote>
+
+<p>GC 同樣也會面臨到相同的挑戰，既然記憶體是分散的<br>
+你是不是能手動把它整理在一起(就是每一塊記憶體都是緊緊貼著彼此的)，這樣碎裂化的問題就可以得到緩解？<br>
+這種方式稱為 <code class="language-plaintext highlighter-rouge">Moving GC</code></p>
+
+<p>具體來說怎麼做呢？<br>
+GC 會幫記憶體搬家，但是呢 所有使用到相同記憶體的地方都要更新(很合理嘛不然東西會錯掉)<br>
+為了確保你不會存取到錯誤的記憶體，在這個階段你的程式會被暫停</p>
+
+<p>舊的記憶體位置放所謂的 <code class="language-plaintext highlighter-rouge">forwarding pointer</code>，這個 pointer 指向新的記憶體位置<br>
+GC 會走訪整個 object graph，當碰到 forwarding pointer 的時候它就會更新成新的記憶體位置<br>
+到最後所有相對應的 reference 都會被更新</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre>object -&gt; old memory location
+object -&gt; forwarding pointer -&gt; new memory location
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<h1 id="garbage-collection-trade-offs">Garbage Collection Trade-offs</h1>
+<p>在上計算機組織的時候，有一個概念是 <strong>要讓常跑的東西跑得快</strong>，這樣整體效能就會有很大的提昇<br>
+對於 Garbage Collection 來說，也是一樣的道理</p>
+
+<p>GC 需要不間斷的運行，才能確保最高的記憶體利用效率<br>
+但是一直執行垃圾回收，對你本身的 application 來說也是會有一定的影響的<br>
+比如說你的程式會被暫停，這樣的話你的程式就會變得很慢</p>
+
+<p>垃圾回收機制本身會有哪些開銷呢？</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">type</th>
+      <th style="text-align: left">description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">CPU time</td>
+      <td style="text-align: left">能夠影響 CPU time 的會是 <code class="language-plaintext highlighter-rouge">object graph</code> 的大小<br>因為如果圖很大，走訪的時間就會比較久</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Memory</td>
+      <td style="text-align: left">
+<code class="language-plaintext highlighter-rouge">object graph</code> 會直接影響到記憶體的使用量<br>並且加上其他 metadata，這些都會佔用記憶體</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>真實世界中，你的記憶體不大可能是一直平穩的(i.e. <code class="language-plaintext highlighter-rouge">steady-state</code>)，比較多時候會是一下高一下低的狀況<br>
+比方說 web application, 可能遇到做活動流量突然爆增，這時候 GC 的開銷就會變大<br>
+而且你還要考慮這些記憶體，有可能會經過很多個 GC cycle, 也就是它執行很久(釋放的少，使用的多)</p>
+
+<p>我們可以藉由調整 GC 執行間隔換取不同的效能<br>
+比如說你想要節省 CPU 你就可以把 GC 的執行間隔拉長，但是這樣的話記憶體就會被佔用很多(因為沒清理)<br>
+同樣的，如果你想要節省記憶體，你就可以把 GC 的執行間隔拉短，但是這樣的話 CPU 就會被佔用很多(因為一直跑)</p>
+
+<p>舉例來說</p>
+<ul>
+  <li>假設一個 golang app 處於 <code class="language-plaintext highlighter-rouge">steady state</code>，記憶體使用量是 <code class="language-plaintext highlighter-rouge">10MiB/s</code>(意思就是每秒固定多 alloc 10MiB 的記憶體)</li>
+  <li>假設當前 live heap 的大小是 <code class="language-plaintext highlighter-rouge">10MiB</code>
+</li>
+  <li>GC 需要花費 1 cpu-second 掃描 <code class="language-plaintext highlighter-rouge">100MiB</code> 的記憶體</li>
+</ul>
+
+<p>如果</p>
+<ul>
+  <li>GC 執行 cycle 是 1 cpu-second，那麼表示
+    <ul>
+      <li>在 1-cpu second 內，有 <strong>額外的 10MiB</strong> 記憶體被索取，目前的 live heap 大小是原本的 10MiB 加上 10MiB，總共 <code class="language-plaintext highlighter-rouge">20MiB</code>
+</li>
+      <li>GC 需要花費 0.1 cpu-second 來掃描 <strong><em>當前的 live heap</em></strong>(也就是 <code class="language-plaintext highlighter-rouge">10MiB</code>)</li>
+      <li>所以 GC 佔用 CPU 的使用率是 <code class="language-plaintext highlighter-rouge">10%</code>
+</li>
+    </ul>
+  </li>
+  <li>GC 執行 cycle 是 2 cpu-second，那麼表示
+    <ul>
+      <li>在 2-cpu second 內，有 <strong>額外的 20MiB</strong> 記憶體被索取，目前的 live heap 大小是原本的 10MiB 加上 20MiB，總共 <code class="language-plaintext highlighter-rouge">30MiB</code>
+</li>
+      <li>GC 需要花費 <strong>仍然是</strong> 0.1 cpu-second 來掃描 <strong><em>當前的 live heap</em></strong>(也就是 <code class="language-plaintext highlighter-rouge">10MiB</code>)</li>
+      <li>所以 GC 佔用 CPU 的使用率是 <code class="language-plaintext highlighter-rouge">5%</code>
+</li>
+    </ul>
+  </li>
+</ul>
+
+<blockquote>
+  <p>為什麼 GC 只掃描 live heap 而不是整個 heap<br>
+你不需要掃描完整的 heap，如果套用 <a href="#mark-and-sweep">Mark and Sweep</a><br>
+從當前 live heap 如果走不到，那就代表它可以被回收<br>
+所以實際上的開銷會是 1.) 當前 live heap 的大小以及 2.) 能夠從 live heap 被走到的少量記憶體(額外的記憶體)</p>
+</blockquote>
+
+<p>當你調整 GC cycle 的速度調慢 <code class="language-plaintext highlighter-rouge">50%</code> 的時候，雖然 GC 的 CPU 使用率 <strong>降低</strong> <code class="language-plaintext highlighter-rouge">50%</code>，但是記憶體使用量 <strong>增加</strong> <code class="language-plaintext highlighter-rouge">50%</code></p>
+
+<h2 id="gogc">GOGC</h2>
+<p>你可以透過調整 <code class="language-plaintext highlighter-rouge">GOGC</code> 的參數<br>
+<code class="language-plaintext highlighter-rouge">GOGC</code> 的數值是 CPU 與 memory 的 trade-off<br>
+當數值越大，Target Heap 的容量越大，GC 的間隔會被拉長，進而導致 CPU overhead 降低，反之亦然</p>
+
+<blockquote>
+  <p>設計上 Target Heap memory 會影響 GC 的間隔，它就是這樣設計的</p>
+</blockquote>
+
+<h2 id="gomemlimit">GOMEMLIMIT</h2>
+<p>不過無限上調 GOGC 的數值是不合理的，因為記憶體數量終其有上限<br>
+所以可以設定 memory limit(i.e. <code class="language-plaintext highlighter-rouge">GOMEMLIMIT</code>)<br>
+這個限制主要是針對 Heap memory 的限制</p>
+
+<p>不過如果你設定了 memory limit 又把 GC 關閉，就會造成 <code class="language-plaintext highlighter-rouge">Thrashing</code> 的狀況<br>
+你把 GC 關了意味著記憶體不會回收，同時設定記憶體上限，最終記憶體就會被用光<br>
+進而導致你的程式逐漸失去回應(i.e. <code class="language-plaintext highlighter-rouge">stall</code>)</p>
+
+<p>為了避免這種狀況發生，Golang Runtime 其實將 memory limit 視為是 <strong><em>非硬性規定</em></strong><br>
+因為如果你兩個都設定了，最終一定會導致 <code class="language-plaintext highlighter-rouge">Thrashing</code> 的狀況發生<br>
+那不如讓你 bypass 掉這個限制，讓你的程式能夠繼續跑比較重要 是吧？<br>
+也就是說 application 可以拿到 CPU time 來跑，換句話說，GC 分到的 CPU time 就會變少<br>
+等於 GC 的 cycle 會被拉長，可以理解吧</p>
+
+<blockquote>
+  <p>cycle 拉長，一個 cpu-second 內原本能跑 0.3 cpu-second 的 GC，現在只有拿到 0.1 cpu-second 的 GC<br>
+原本等待時間是 0.7 cpu-second 變成 0.9 cpu-second</p>
+</blockquote>
+
+<p>GC 在一個 cycle 內能使用的 CPU time 通常會有一個上限，比如說最多只能佔 50% 的 CPU time<br>
+這樣的好處在於說，你的 application 最差只會慢 <strong>一倍</strong></p>
+
+<blockquote>
+  <p>GC 關掉，100% CPU time 都是 application 拿，假設花 10 秒<br>
+GC 開啟，50% CPU time 是 GC 拿，50% CPU time 是 application 拿，因為每個 cycle application 執行時間少了一半，所以總共花 20 秒<br>
+因此是 <code class="language-plaintext highlighter-rouge">10秒</code> 變 <code class="language-plaintext highlighter-rouge">20秒</code>，所以是一倍</p>
+</blockquote>
+
+<h1 id="evolution-of-golang-garbage-collector">Evolution of Golang Garbage Collector</h1>
+<h2 id="stop-the-world-mark-and-sweep">Stop-the-World Mark and Sweep</h2>
+<p>Golang 早期的實作是 <a href="#mark-and-sweep">Mark and Sweep</a> 並且屬於 <a href="#moving-vs-non-moving-gc">Non-moving GC</a><br>
+根據不同的 GC 實作，有的會需要 <strong>Stop-the-World</strong>(i.e. <strong>STW</strong>) 的機制，也就是說你的程式會被暫停，直到 GC 完成<br>
+這種作法無疑是犧牲了應用程式的效能，Golang 在這方面，選擇 GC 與 application 同步執行(i.e. <code class="language-plaintext highlighter-rouge">not fully Stop-the-World GC</code>)</p>
+
+<p>即使是 <strong>Stop-the-World</strong> 的作法，<a href="#mark-and-sweep">Mark and Sweep</a> 還是要走過完整的 <strong>Live Heap</strong><br>
+也就是說 <strong>STW</strong> 的情況下，GC 暫停的時間與 Live Heap 的大小成正比<br>
+又因為 <strong>STW</strong> 會導致應用程式暫停，所以 latency 會被拉高</p>
+
+<p>latency 維持比較低通常是比較好的狀況，代表使用者可以有比較好的體驗(按下按鈕到看到結果的時間是相對短暫的)<br>
+既然 <strong>STW</strong> 的作法會導致較高的延遲，自然而然就變成 <code class="language-plaintext highlighter-rouge">not fully Stop-the-World GC</code> 的實作</p>
+
+<blockquote>
+  <p>low latency != low throughput</p>
+</blockquote>
+
+<h2 id="tricolor-mark-and-sweep">Tricolor Mark and Sweep</h2>
+<p>相比於 <a href="#mark-and-sweep">Mark and Sweep</a>，Tricolor Mark and Sweep 在實作上引入了額外的一種狀態(處理中 的狀態)<br>
+使 GC 可以針對不同狀態的 object 進行不同的處理<br>
+這些狀態我們會使用三種顏色表示</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">color</th>
+      <th style="text-align: left">description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">white</code></td>
+      <td style="text-align: left">沒辦法被拜訪到的 object，之後可以被回收</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">gray</code></td>
+      <td style="text-align: left">可以拜訪到的 object，但是需要進一步掃描</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><code class="language-plaintext highlighter-rouge">black</code></td>
+      <td style="text-align: left">確定正在使用中的 object</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>當 GC 開始的時候，所有的 object 都會被標記為 <code class="language-plaintext highlighter-rouge">white</code><br>
+從 GC root 開始先把走得到的標記成 <code class="language-plaintext highlighter-rouge">gray</code><br>
+再把 <code class="language-plaintext highlighter-rouge">gray</code> 標記為 <code class="language-plaintext highlighter-rouge">black</code> 直到所有 <strong><em>處理中(gray)</em></strong> 的 object 都消失<br>
+這時候只剩下 <code class="language-plaintext highlighter-rouge">white</code> 跟 <code class="language-plaintext highlighter-rouge">black</code> 的 object</p>
+
+<p>因為我們確定說 <code class="language-plaintext highlighter-rouge">black</code> 的 object 是正在使用中的 object，所以就繼續放著<br>
+至於 <code class="language-plaintext highlighter-rouge">white</code> 的 object 就是可以被回收的 object<br>
+至此，GC 就完成了</p>
+
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/1/1d/Animation_of_tri-color_garbage_collection.gif" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection">Tracing garbage collection</a></p>
+</blockquote>
+
+<hr>
+
+<p>但是光有 Tricolor 的機制其實還不足<br>
+既然 Golang 選擇 <code class="language-plaintext highlighter-rouge">not fully Stop-the-World GC</code>，其中一個挑戰就是如何確保資料的正確性</p>
+
+<p>不同於 <a href="#mark-and-sweep">Mark and Sweep</a> 這種 STW GC<br>
+同時執行 GC 與 application，因為 app 會去動記憶體嘛，那是不是有可能之前標記過得資料被移動，導致 GC 標記錯誤<br>
+然後執行就會有問題</p>
+
+<h3 id="write-barrier">Write Barrier</h3>
+<p>即使是 <a href="#tricolor-mark-and-sweep">Tricolor Mark and Sweep</a>，GC 本身也需要額外透過 <em>Write Barrier</em> 的幫忙來解決記憶體移動，然後標記的問題<br>
+注意到 Race 本身還是存在的，只是說 <em>Write Barrier</em> 可以確保這個 Race 的結果會被 GC 所得知，進而避免錯誤的處理</p>
+
+<p>舉例來說，假設 A 已經被標記為 黑色 (Black)（代表 GC 已掃描完 A），而 B 是 灰色 (Gray)<br>
+原本的連結是 B -&gt; C<br>
+但是呢，app 突然將連結改成 A -&gt; C 並切斷了 B -&gt; C<br>
+在沒有 Write Barrier 的情況下：</p>
+<ol>
+  <li>下一個掃描步驟會把 B 標記為黑色，但因為 B -&gt; C 已斷開，GC 沒機會把 C 染灰</li>
+  <li>而 A 已經是黑色，GC 不會回頭再掃描 A，所以也不會發現 A -&gt; C</li>
+  <li>最後，C 仍維持 白色 (White)，導致這個還在被使用的物件被當成垃圾回收掉</li>
+</ol>
+
+<p>所以 <em>Write Barrier</em> 就是用來解決此類問題的</p>
+
+<h4 id="dijkstra-barrier">Dijkstra barrier</h4>
+<p>至於說他是怎麼做的呢？</p>
+
+<p>首先，Tricolor 的 GC 需要嚴格遵守以下的 invariant</p>
+
+<blockquote>
+  <p>No <code class="language-plaintext highlighter-rouge">black</code> object may contain a pointer to a <code class="language-plaintext highlighter-rouge">white</code> object.</p>
+</blockquote>
+
+<p>啥意思？ 因為 <code class="language-plaintext highlighter-rouge">white</code> object 會被 GC 掉，但如果被 reference 到，它應該要是 <code class="language-plaintext highlighter-rouge">gray</code> 的</p>
+
+<p>再來的問題是，我要檢查誰？ 只有指標是需要的，一般變數因為生命週期是可以預期的，所以 GC 可以不處理<br>
+當任何 pointer update(i.e. read、write 或是 read and write) 發生的時候都需要做再一次的檢查<br>
+為什麼是當 pointer update? 因為 GC 是透過 pointer 來拜訪 object 的<br>
+它指到誰 指到哪 很重要</p>
+
+<p>怎麼做就有趣了<br>
+Golang 原本只有單純的 <a href="https://www.cs.utexas.edu/~EWD/ewd04xx/EWD496B.PDF">Dijkstra barrier</a><br>
+實作上來說也挺簡單的</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td>
+<td class="rouge-code"><pre>writePointer(slot, ptr):
+    shade(ptr)
+    *slot = ptr
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>shade() 必須先將 <code class="language-plaintext highlighter-rouge">ptr</code> 標記為 <code class="language-plaintext highlighter-rouge">gray</code><br>
+因為如果他是白色的，就會違反 invariant<br>
+把它變成 <code class="language-plaintext highlighter-rouge">gray</code> 的另一個目的是讓 GC 不要把 ptr 當成是 <code class="language-plaintext highlighter-rouge">white</code> object 回收掉</p>
+
+<p><img src="https://www.dingyuqi.com/illustration/dijkstra-insert-write-barrier.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.dingyuqi.com/en/article/go-garbage-collection/">Understanding Garbage Collection in Go</a></p>
+</blockquote>
+
+<p>不過他也有缺點<br>
+<a href="#write-barrier">Write Barrier</a> 中提到的問題，<a href="#dijkstra-barrier">Dijkstra barrier</a> 本身有兩種方式可以解決</p>
+<ol>
+  <li>你需要一個 <code class="language-plaintext highlighter-rouge">Stack Memory Barrier</code>
+</li>
+  <li>你必須確保 stack 上的資料是 <code class="language-plaintext highlighter-rouge">permagray</code>(永久灰)</li>
+</ol>
+
+<p>Golang 選擇後者(因為 Stack Memory Barrier 的成本太高)，但是要怎麼保證 stack 上的資料是 <code class="language-plaintext highlighter-rouge">permagray</code> 呢？<br>
+你需要一直去檢查 <strong>goroutine</strong> 的 stack 內的東西是不是合法的(i.e. 符合 invariant)</p>
+
+<p>舉例來說，Heap 內的指標可能會指向 Stack 裡的 White Object<br>
+當碰到這種狀況，你必須要確保 Stack 內的 White Object 不會被回收掉<br>
+所以重新掃描是必要的(i.e. <code class="language-plaintext highlighter-rouge">Stack Rescan</code>)</p>
+
+<p>但這個掃描是很頻繁且耗時的<br>
+GC cycle 開始之前要掃一次，結束之前也要再掃一次<br>
+每一次的掃描其實都需要 Stop-the-World，不然 stack 內的資料有可能會被改動</p>
+
+<blockquote>
+  <p>Re-scanning the stacks can take 10’s to 100’s of milliseconds in an application with a large number of active goroutines.</p>
+</blockquote>
+
+<h4 id="yuasa-style-deletion-write-barrier">Yuasa-style Deletion Write Barrier</h4>
+<p><a href="https://www.sciencedirect.com/science/article/abs/pii/016412129090084Y">Yuasa-style deletion write barrier</a> 與 <a href="#dijkstra-barrier">Dijkstra barrier</a> 的差別在於，Yuasa-style 是標記 <strong>被刪除的 object</strong> 為 <code class="language-plaintext highlighter-rouge">gray</code><br>
+而 <a href="#dijkstra-barrier">Dijkstra barrier</a> 是標記 <strong>被更新的 pointer</strong> 為 <code class="language-plaintext highlighter-rouge">gray</code><br>
+所以 Yuasa-style 才稱為 <em>Deletion Write Barrier</em></p>
+
+<blockquote>
+  <p>ptr 不需要 shade 嗎？ 因為它其實是被 “chain” 起來的，所以 GC 會找到它</p>
+</blockquote>
+
+<p>實作上就會是</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre></td>
+<td class="rouge-code"><pre>writePointer(slot, ptr):
+    shade(*slot)
+    *slot = ptr
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>範例圖中要記得，shade() 的對象是 <code class="language-plaintext highlighter-rouge">B</code>，因為他才是被拔掉的 object</p>
+
+<p><img src="https://www.dingyuqi.com/illustration/yuasa-delete-write-barrier.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.dingyuqi.com/en/article/go-garbage-collection/">Understanding Garbage Collection in Go</a></p>
+</blockquote>
+
+<p>不過它有比 <a href="#dijkstra-barrier">Dijkstra barrier</a> 還要好嗎？<br>
+Yuasa 在 pointer update 之前就會先 shade 舊值，因此不論它被移動到哪裡去，GC 都會找到它<br>
+也因為這個特性，Yuasa 的作法不需要 Stack Rescan</p>
+
+<h4 id="hybrid-write-barrier">Hybrid write barrier</h4>
+<p>而為了要解決 <a href="#dijkstra-barrier">Dijkstra barrier</a> Stack Rescan 的缺點<br>
+新版 Golang GC 的架構採用 hybrid write barrier 來解決這個問題(結合了 <a href="#dijkstra-barrier">Dijkstra barrier</a> 與 <a href="#yuasa-style-deletion-write-barrier">Yuasa-style deletion write barrier</a>)</p>
+
+<p>最終 write barrier 的實作會長這樣</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td>
+<td class="rouge-code"><pre>writePointer(slot, ptr):
+    shade(*slot)
+    if current stack is grey:
+        shade(ptr)
+    *slot = ptr
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>結合了兩種作法的優點</p>
+<ul>
+  <li>
+<a href="#dijkstra-barrier">Dijkstra barrier</a>: 允許 concurrent scan</li>
+  <li>
+<a href="#yuasa-style-deletion-write-barrier">Yuasa-style deletion write barrier</a>: 不需要 Stack Rescan</li>
+</ul>
+
+<blockquote>
+  <p>雖然 Dijkstra 與 Yuasa 都允許 concurrent scan，但是 Dijkstra 的 concurrent 程度更高</p>
+</blockquote>
+
+<p>但是新的 hybrid write barrier 實際上無法滿足 Tricolor 的 invariant<br>
+相反的是，提供了一個 <code class="language-plaintext highlighter-rouge">稍微弱的 invariant</code></p>
+
+<blockquote>
+  <p>No <code class="language-plaintext highlighter-rouge">black</code> object may contain a pointer to a <code class="language-plaintext highlighter-rouge">white</code> object. <img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"><br>
+Any white object pointed to by a black object is reachable from a grey object via a chain of white pointers (it is grey-protected). <img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></p>
+</blockquote>
+
+<p>自始至終 GC 的挑戰都是要能夠避免 “mutator” 隱藏 object 的問題<br>
+這個稍微弱的 invariant 允許隱藏得很深的 <code class="language-plaintext highlighter-rouge">white</code> object 能夠被 GC 所感知，那基本上要能夠走訪就代表它應該是在同一個 “chain” 上的</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">shade(*slot)</code>
+    <ul>
+      <li>借鑒 <a href="#yuasa-style-deletion-write-barrier">Yuasa-style deletion write barrier</a> 的作法，使其不需要進行 Stack Rescan。這個操作可以在 “從 Heap 搬遷到內部 Stack 的過程中” 防止 mutator 試圖隱藏 object</li>
+    </ul>
+  </li>
+  <li>
+<code class="language-plaintext highlighter-rouge">shade(ptr)</code>
+    <ul>
+      <li>借鑒 <a href="#dijkstra-barrier">Dijkstra barrier</a> 的作法。這個操作可以在 “從內部 Stack 搬遷到 Heap 的過程中” 防止 mutator 試圖隱藏 object，不過如果 stack 已經掃完然後變 <code class="language-plaintext highlighter-rouge">black</code>，那就不需要了(原本要把 ptr 標記為 <code class="language-plaintext highlighter-rouge">gray</code> 做後續處理，但因為 ptr 本身在的 stack 已經掃完了，所以不需要)</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="green-tea-garbage-collector">Green Tea Garbage Collector</h2>
+<p>針對 <a href="#mark-and-sweep">Mark and Sweep</a> 的算法來說，幾乎所有的成本都是在 mark 的過程，sweep 一直以來都沒什麼大問題<br>
+具體的差別大概是 90% mark 以及 10% sweep<br>
+而在 mark 階段中，大約會花費 35% 的時間是在等待 heap memory 的存取，這顯然是一個可以優化的空間</p>
+
+<p>而造成這個問題的原因是，多數資料是分散在記憶體中的<br>
+GC 在執行的時候如果東西不在旁邊(i.e. cache)，就需要跑到 main memory 去拿<br>
+而這會浪費很多時間</p>
+
+<p>與其這樣做，不如盡量讓所有資料存取可以在附近就拿到<br>
+這樣我們可以縮短 memory 的存取時間，進而提昇 GC 的效率</p>
+
+<hr>
+
+<p>新的 GC 算法旨在解決上述效能問題<br>
+不過它本質上也還是 <a href="#mark-and-sweep">Mark and Sweep</a>，其核心的概念是</p>
+
+<blockquote>
+  <p>Work with pages, not objects</p>
+</blockquote>
+
+<p>雖然說是處理 page, 但實際上你還是要處理 object，在某種程度上<br>
+所以新的架構會需要 metadata 來做這件事，這個 metadata 有兩個部分</p>
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">seen</code>: 代表這個 object 被看過</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">scanned</code>: 代表這個 object 被掃描過</li>
+</ul>
+
+<p>奇怪了？ 為什麼要區分 <code class="language-plaintext highlighter-rouge">seen</code> 跟 <code class="language-plaintext highlighter-rouge">scanned</code> 呢？<br>
+你看過不就等於掃描過了嗎<br>
+其實這正是 <strong>Green Tea</strong> 的精髓所在</p>
+
+<p>早期，每一個 object 只會被加入 work list 一次，但是 page 的方法下，每一個 page 都會被加入 “很多次”<br>
+而且不同的地方在於，如果他有 reference 到其他 object，他只會跑過去 <em>標記 seen</em> 而已，他並不會直接跑去掃描他<br>
+等到我掃描完一個 work list 之後，我再從 metadata 中找出那些被 seen 過的 object，並且把他們加入到 work list 中<br>
+這也是 <strong>Green Tea</strong> 效率高的關鍵</p>
+
+<p><img src="/assets/img/posts/greentea.gif" alt=""></p>
+
+<blockquote>
+  <p>ref: <a href="https://go.dev/blog/greenteagc">The Green Tea Garbage Collector</a></p>
+</blockquote>
+
+<p>改成掃描 page 的方式會減少 scan 的次數，不過每一次 scan 的時間會變長<br>
+但這也是沒關係的，因為每一個 page 裡面的 object 都是緊密相鄰的，也就是說 cache hit 的機率更高對吧<br>
+又因為 scan 的次數減少了，也代表 CPU 的壓力會降低</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Flood</th>
+      <th style="text-align: center">Green Tea</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><img src="https://go.dev/blog/greenteagc/graphflood-path2.png" alt=""></td>
+      <td style="text-align: center"><img src="https://go.dev/blog/greenteagc/greentea-path.png" alt=""></td>
+    </tr>
+    <tr>
+      <td style="text-align: center">ref: <a href="https://go.dev/blog/greenteagc">The Green Tea Garbage Collector</a>
+</td>
+      <td style="text-align: center">ref: <a href="https://go.dev/blog/greenteagc">The Green Tea Garbage Collector</a>
+</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>並且 <strong>Green Tea</strong> 可以受益於 CPU 架構的改進，例如 AVX-512 指令集擁有 512 位元的暫存器的大小允許 <strong>Green Tea</strong> 可以將 metadata 全部塞進去，而且在 vector register 上也有 bitwise operation 的支援，使得 Scanning 的過程僅需少量 CPU cycle 即可完成</p>
+
+<h3 id="performance-evaluation">Performance Evaluation</h3>
+<p>根據 Google 官方的測試，<code class="language-plaintext highlighter-rouge">Green Tea</code> 普遍情況下可以有 10% ~ 40% 左右的性能提升<br>
+不過在某些特定的情況下不是</p>
+
+<p><strong>Green Tea</strong> 的做法本質上是將瑣碎的 scan 的次數減少，合併成一個大型的 page scan 來達到加速的效果<br>
+問題是，並非每一次都可以這樣 scan<br>
+如果遇到 single object per page 的情況，那麼那些優勢就會蕩然無存</p>
+
+<p>注意到，極端情況下，performance 甚至可能會比 <code class="language-plaintext highlighter-rouge">Flood</code> 還要差<br>
+雖然說實作上有針對 single object per page 的情況做優化，但並沒辦法完全消除<br>
+不過，你可能很難遇到這種情況，事實上，只要你能夠掃描 <strong><em>2% 的 page 資料</em></strong>，其效能就能夠超越 <code class="language-plaintext highlighter-rouge">Flood</code> 算法</p>
+
+<h1 id="goroutine-count-to-affect-garbage-collection">Goroutine Count to Affect Garbage Collection</h1>
+<p>本次實驗，使用環境如下</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span><span class="nb">uname</span> <span class="nt">-a</span>
+Linux station 6.8.0-90-generic <span class="c">#91~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Nov 20 15:20:45 UTC 2 x86_64 x86_64 x86_64 GNU/Linux</span>
+
+<span class="nv">$ </span>go version
+go version go1.25.5 linux/amd64
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>實驗內容會開到 100000 個 Goroutine 一起測試<br>
+其內容就是單純的 <code class="language-plaintext highlighter-rouge">time.Sleep</code> 這樣</p>
+
+<p><img src="https://github.com/ambersun1234/blog-labs/blob/master/golang-gc/golang-memory.png?raw=true" alt=""></p>
+
+<p>先查看，不同數量的 Goroutine 開起來的時候，會需要多少的 Heap 以及 Stack 的空間<br>
+可以看到，<code class="language-plaintext highlighter-rouge">10w</code> 個 Goroutine 會使用到約 <code class="language-plaintext highlighter-rouge">200MB</code> 的 Stack 記憶體<br>
+可以得出一個 Goroutine 會先分配 <code class="language-plaintext highlighter-rouge">2KB</code> 的空間，跟官方宣稱的一樣</p>
+
+<p>Heap 記憶體的部份，<code class="language-plaintext highlighter-rouge">10w</code> 個 Goroutine 則是大概 <code class="language-plaintext highlighter-rouge">56MB</code> 左右</p>
+
+<p><img src="https://github.com/ambersun1234/blog-labs/blob/master/golang-gc/golang-gc-swt.png?raw=true" alt=""></p>
+
+<p><img src="https://github.com/ambersun1234/blog-labs/blob/master/golang-gc/golang-gc-total.png?raw=true" alt=""></p>
+
+<p>而實際測試出來的 GC 時間，也可以看到，基本上 Green Tea 的 GC 時間是比 Flood 要來的短<br>
+只不過正如前面提到的，性能提昇的幅度並不是很大<br>
+實際跑測試大概落在 <code class="language-plaintext highlighter-rouge">14%</code> 左右</p>
+
+<p>關於 benchmark 的實作可以參考 <a href="https://github.com/ambersun1234/blog-labs/tree/master/golang-gc">ambersun1234/blog-labs/golang-gc</a></p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Tracing_garbage_collection">Tracing garbage collection</a></li>
+  <li><a href="https://tip.golang.org/doc/gc-guide">A Guide to the Go Garbage Collector</a></li>
+  <li><a href="https://inside.java/2020/06/25/compact-forwarding/">Compact Forwarding Information</a></li>
+  <li><a href="https://go.dev/blog/greenteagc">The Green Tea Garbage Collector</a></li>
+  <li><a href="https://aimuke.github.io/go/2019/05/21/gc-tricolor-algorithm/">图解Golang的GC算法-三色标记法</a></li>
+  <li><a href="https://github.com/golang/proposal/blob/master/design/17503-eliminate-rescan.md">design/17503-eliminate-rescan.md</a></li>
+  <li><a href="https://www.facebook.com/groups/system.software2020/posts/531299507804253/">2020 年系統軟體系列課程討論區</a></li>
+  <li><a href="https://www.dingyuqi.com/en/article/go-garbage-collection/">Understanding Garbage Collection in Go</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#cycle-reference" class="page__taxonomy-item p-category" rel="tag">cycle reference</a><span class="sep">, </span>
+    
+      <a href="/tags/#dijkstra-barrier" class="page__taxonomy-item p-category" rel="tag">dijkstra barrier</a><span class="sep">, </span>
+    
+      <a href="/tags/#external-fragmentation" class="page__taxonomy-item p-category" rel="tag">external fragmentation</a><span class="sep">, </span>
+    
+      <a href="/tags/#flood-gc" class="page__taxonomy-item p-category" rel="tag">flood gc</a><span class="sep">, </span>
+    
+      <a href="/tags/#fragmentation" class="page__taxonomy-item p-category" rel="tag">fragmentation</a><span class="sep">, </span>
+    
+      <a href="/tags/#garbage-collection" class="page__taxonomy-item p-category" rel="tag">garbage collection</a><span class="sep">, </span>
+    
+      <a href="/tags/#gc" class="page__taxonomy-item p-category" rel="tag">gc</a><span class="sep">, </span>
+    
+      <a href="/tags/#gogc" class="page__taxonomy-item p-category" rel="tag">gogc</a><span class="sep">, </span>
+    
+      <a href="/tags/#golang" class="page__taxonomy-item p-category" rel="tag">golang</a><span class="sep">, </span>
+    
+      <a href="/tags/#golang-gc" class="page__taxonomy-item p-category" rel="tag">golang gc</a><span class="sep">, </span>
+    
+      <a href="/tags/#gomemlimit" class="page__taxonomy-item p-category" rel="tag">gomemlimit</a><span class="sep">, </span>
+    
+      <a href="/tags/#goroutine" class="page__taxonomy-item p-category" rel="tag">goroutine</a><span class="sep">, </span>
+    
+      <a href="/tags/#green-tea-gc" class="page__taxonomy-item p-category" rel="tag">green tea gc</a><span class="sep">, </span>
+    
+      <a href="/tags/#internal-fragmentation" class="page__taxonomy-item p-category" rel="tag">internal fragmentation</a><span class="sep">, </span>
+    
+      <a href="/tags/#live-heap" class="page__taxonomy-item p-category" rel="tag">live heap</a><span class="sep">, </span>
+    
+      <a href="/tags/#mark-and-sweep" class="page__taxonomy-item p-category" rel="tag">mark and sweep</a><span class="sep">, </span>
+    
+      <a href="/tags/#moving-gc" class="page__taxonomy-item p-category" rel="tag">moving gc</a><span class="sep">, </span>
+    
+      <a href="/tags/#non-moving-gc" class="page__taxonomy-item p-category" rel="tag">non-moving gc</a><span class="sep">, </span>
+    
+      <a href="/tags/#object-graph" class="page__taxonomy-item p-category" rel="tag">object graph</a><span class="sep">, </span>
+    
+      <a href="/tags/#reference-counting" class="page__taxonomy-item p-category" rel="tag">reference counting</a><span class="sep">, </span>
+    
+      <a href="/tags/#steady-state" class="page__taxonomy-item p-category" rel="tag">steady state</a><span class="sep">, </span>
+    
+      <a href="/tags/#steady-state" class="page__taxonomy-item p-category" rel="tag">steady state</a><span class="sep">, </span>
+    
+      <a href="/tags/#stop-the-world" class="page__taxonomy-item p-category" rel="tag">stop the world</a><span class="sep">, </span>
+    
+      <a href="/tags/#thrashing" class="page__taxonomy-item p-category" rel="tag">thrashing</a><span class="sep">, </span>
+    
+      <a href="/tags/#tricolor-mark-and-sweep" class="page__taxonomy-item p-category" rel="tag">tricolor mark and sweep</a><span class="sep">, </span>
+    
+      <a href="/tags/#write-barrier" class="page__taxonomy-item p-category" rel="tag">write barrier</a><span class="sep">, </span>
+    
+      <a href="/tags/#yuasa-style-deletion-write-barrier" class="page__taxonomy-item p-category" rel="tag">yuasa style deletion write barrier</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#random" class="page__taxonomy-item p-category" rel="tag">random</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E5%A4%9A%E9%96%8B+Goroutine+%E7%9A%84%E6%95%88%E8%83%BD%E7%93%B6%E9%A0%B8%E4%BB%A5%E5%8F%8A+Garbage+Collection+%E5%B0%8D%E5%85%B6%E7%9A%84%E5%BD%B1%E9%9F%BF%20https%3A%2F%2Fambersuncreates.com%2Frandom%2Fgolang-gc%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Frandom%2Fgolang-gc%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Frandom%2Fgolang-gc%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/kubernetes/kubernetes-workloads/" class="pagination--pager" title="Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+">Previous</a>
+    
+    
+      <a href="/database/database-filter/" class="pagination--pager" title="資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-15">
+            2026-01-15
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-15">
+            2026-01-15
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-15">
+            2026-01-15
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-traffic/" rel="permalink">Kubernetes 從零開始 - 在分散式的世界實現 Zero Downtime 路由管理
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          16 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-10-16">2025-10-16</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-15">
+            2026-01-15
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-traffic/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-traffic/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-traffic/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Proxy
+Proxy 是一個中間人，負責處理 client 與 server 之間的溝通請求
+相比於 client 直接與 server 溝通，Proxy 的優勢在於可以進行流量控制、負載平衡、安全性控制等
+他可以分為兩類 Forward Proxy 以及 Reverse Proxy
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/random/golang-gc/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/random/golang-gc"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>
