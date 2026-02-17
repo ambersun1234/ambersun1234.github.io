@@ -3,19 +3,25 @@ title: 資料庫 - 新手做 Data Migration 資料遷移
 date: 2024-02-08
 description: 隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題
 categories: [database]
-tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint, kafka, kafka connect, cdc, change data capture, statement replication, logical log, kubectl wait, argocd]
+tags: [data migration, sql, prisma, nodejs, idempotent, transaction, postgresql, upsert, backward compatibility, on-premise, saas, golang, alembic, reversibility, atlas, checkpoint, kafka, kafka connect, cdc, change data capture, statement replication, logical log, kubectl wait, argocd, logical replication slot, datamesh, netflix]
 math: true
 ---
 
 # Preface
 資料搬遷，在現代軟體服務當中屬於較為常見的一種需求\
-不論是單純的機器之間的搬資料抑或者是因應商業邏輯而需要做的資料搬遷\
+不論是單純的機器之間的搬資料抑或者是因應商業邏輯而需要做的資料搬遷等等\
 都是屬於 Data Migration
 
-本文將會專注在資料本身的 Migration\
-也就是因應商業邏輯的調整
-
 # Introduction to Data Migration
+雖然統稱 Data Migration 但實際上可以下分以下幾種
+
++ [Schema Migration](#schema-migration)
++ [Data Migration](#data-migration)
++ [Database Migration](#database-migration)
+
+> 有的時候你只需要進行一種，有時候是多種的組合
+
+## Schema Migration
 ![](https://www.prisma.io/blog/posts/2020-12-migrate-production-workflow.png)
 > ref: [Hassle-Free Database Migrations with Prisma Migrate](https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b)
 
@@ -30,9 +36,8 @@ math: true
 > 各個語言其實都已經有不同的 Migration 工具\
 > 如 Node.js 裡的 [Prisma](https://www.prisma.io/), Python 裡的 [Alembic](https://alembic.sqlalchemy.org/en/latest/) 以及 Golang 裡的 [golang-migrate](https://github.com/golang-migrate/migrate)
 
-<hr>
-
-不過這仍然是較為簡單的狀況\
+## Data Migration
+不過 [Schema Migration](#schema-migration) 仍然是較為簡單的狀況\
 真實世界可複雜的多\
 商業邏輯的改變，資料搬遷的功會比想像中的多
 
@@ -43,6 +48,11 @@ math: true
 所以我們需要針對這些舊有用戶，幫他們新增預設的通知設定
 
 > 新的使用者，因為初始化的時候已經做了，所以不需要包含在這次的搬遷內容裡面
+
+## Database Migration
+又或者是資料庫本身的遷移，比方說從 MySQL 遷移到 PostgreSQL\
+兩邊 metadata 的差異，也是必須要進行處理的\
+這種要考慮的點與 [Data Migration](#data-migration) 不太一樣，不過大方向依然是類似的
 
 # Preparation
 既然你已經知道你要針對哪一個部份做資料搬遷了\
@@ -151,7 +161,8 @@ def downgrade() -> None:
 以 [PostgreSQL](https://www.postgresql.org/) 來說\
 你可以使用
 ```sql
-INSERT INTO (xxx) VALUES(yyy) ON CONFLICT(zzz) DO UPDATE SET id = EXCLUDED.id
+INSERT INTO (xxx) VALUES(yyy) ON CONFLICT(zzz) 
+DO UPDATE SET id = EXCLUDED.id
 ```
 當你寫入的資料，有比對到一模一樣的資料的時候，它就會選擇使用原本的 id\
 而這個比對的基礎，是寫在 `ON CONFLICT` 裡面
@@ -162,7 +173,6 @@ INSERT INTO (xxx) VALUES(yyy) ON CONFLICT(zzz) DO UPDATE SET id = EXCLUDED.id
 當然這時候，使用 `transaction` 是相對比較好的選擇
 
 > 有關 transaction 的討論，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction)
-
 
 ## Long Migration Time
 當搬遷的資料數量過於龐大\
@@ -190,22 +200,24 @@ INSERT INTO (xxx) VALUES(yyy) ON CONFLICT(zzz) DO UPDATE SET id = EXCLUDED.id
 
 ### Change Data Capture(CDC)
 除了進一步優化 SQL 的部分，你也可以使用所謂 CDC 的機制\
-簡單來說，如果資料過於龐大導致遷移時間過長，系統就沒辦法正確動作\
-所以，一個想法是這樣，我假另一台 **額外的資料庫**，他長得跟原本的資料庫一模一樣\
-那現在有兩台相同的機器了對吧 那我進行以下操作
+簡單來說，如果資料過於龐大導致遷移時間過長，系統就沒辦法正確動作
 
-+ `A db` 與 `A code` 執行 **舊版** schema 與 code，並且 **對外** 給使用者
-+ `B db` 與 `B code` 執行 **新版** schema 與 code，一邊從 `A db` 同步資料(一開始是完整複製 A db)，一邊進行資料搬遷，並且 **不對外**
+如果可以一邊搬遷一邊提供服務，不就解決這件事情了嗎？\
+對於有實作向後相容的資料(i.e. [Backward Compatibility](#backward-compatibility))來說，這個想法是可行的\
+如果不相容，根本跑不起來
 
-> 基本上此時此刻只有 A 在服務，B db 執行 migration 而 B code 則在一旁待命
+所以實務上，會有兩台機器在運行
++ 一台是目前正在線上服務的資料庫，稱為 `source`
++ 另外一台是 "新版" 的資料庫，它會在後面慢慢的將舊版資料升級成新的資料格式，稱為 `destination`
 
-當整個 migration 操作基本上都結束了之後(99% 之類的，對於高流量的系統來說可能無時無刻都有人在使用，所以假定 100% 是不現實的)，我們就可以將服務切換到 `B db` 與 `B code` 上(也就是 **Blue Green Deployment**，可參考 [Kubernetes 從零開始 - 部署策略 101 \| Shawn Hsu](../../kubernetes/kubernetes-scale#blue-green-deployment))\
-達成 zero downtime 的資料搬遷
+當 `source` 資料庫有新的寫入，它會將這筆更新推播到 `destination` 資料庫\
+讓兩台資料庫的內容盡量保持一致(為什麼說盡量，因為推播沒那麼快)\
+這個技巧稱為 ***Change Data Capture***
 
-注意到，B 資料庫除了同步新寫入的資料以外，他還要處理原本的資料\
-原本的資料好處理，他本來就在線上，但是 "同步新寫入的資料" 這件事情就有趣了\
-也就是說你要有能力接收 source 的 `event` 並且將他推播到 target\
-這就是 Change Data Capture 的機制
+當兩台機器達到一定的同步程度，就可以把它切過去\
+這個 cutoff 會有極短暫的 downtime，但是相比其他方法來說，這個影響是最小的
+
+> 也就是 **Blue Green Deployment**，可參考 [Kubernetes 從零開始 - 部署策略 101 \| Shawn Hsu](../../kubernetes/kubernetes-scale#blue-green-deployment)
 
 <hr>
 
@@ -259,7 +271,7 @@ SAAS 的產品，我們可以直接存取到資料庫本身\
 
 其實官方是不推薦的，更甚至因為透過 Helm Hook 建立的 K8s Resource 本身是脫離 release 的\
 也就是說他的生命週期並不是跟著 `helm upgrade`, `helm delete` 一起的，你需要手動管理\
-在 on-permise 的環境這種做法是更糟糕的(可參考 [On-premise vs. SAAS Migration](#on-premise-vs-saas-migration)
+在 on-premise 的環境這種做法是更糟糕的(可參考 [On-premise vs. SAAS Migration](#on-premise-vs-saas-migration))
 
 ## Kubectl Wait
 基本上你會有幾種選擇
@@ -337,6 +349,121 @@ $ kubectl wait --timeout=60s --for=condition=complete --timeout=60s \
 
 這樣你就能夠解決資料庫與應用程式同時安裝，無法進行資料升級的問題了
 
+# How Netflix Perform Database Migration
+## Why Database Migration
+Netflix 的 platform team 在 2024 的時候決議要從 Amazon RDS PostgreSQL 遷移到 Aurora PostgreSQL(i.e. [Database Migration](#database-migration))\
+考慮的主要原因有以下
+1. PostgreSQL 作為 Netflix 廣泛使用的資料庫，有超過 `95%` 的 workload 依賴於 PostgreSQL，遷移過去成本較低
+2. 因為 PostgreSQL 已經逐漸被廣泛使用，社群支援完整
+3. Aurora 提供了高可用性以及分散式的特性，可以滿足 Netflix 的需求
+4. Aurora 目前提供了豐富的功能，以及其未來的規劃滿足 large-scale 的需求，也是 Netflix 所需要的
+
+## High Level Migration Plan
+既然決定要換，那具體怎麼做？\
+從 RDS 到 Aurora，主要有兩種作法
+1. 停止 RDS :arrow_right: 對 RDS 進行快照 :arrow_right: 從快照建立 Aurora 叢集並恢復
+2. 建立 RDS read replica 到 Aurora 的 [CDC](#change-data-capturecdc) :arrow_right: 等到同步差距非常微小之後，停止主要 RDS master 暫停寫入 :arrow_right: 等到完全追上，將其一 Aurora slave 升級為 master 並恢復
+
+> 注意到第二點的同步差距，它需要考慮的是一段時間內的差距趨於平穩，而不是單純某個時間點的微小差距而已
+
+兩者最主要的差距是在於 ***停機時間***\
+RDS 需要完全暫停，將全部資料複製並在 Aurora 上恢復，在此期間無法提供服務\
+反之，使用 [CDC](#change-data-capturecdc) 機制可以做到 "幾乎" 無停機遷移\
+當然，[CDC](#change-data-capturecdc) 的機制複雜程度會被拉高，需要額外考慮其他問題
+
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*_xydKq_VWpaxyqcwCwQyuA.png)
+> ref: [Automating RDS Postgres to Aurora Postgres Migration](https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f)
+
+最後他們選擇 [CDC](#change-data-capturecdc) 的機制，以最大程度減小 downtime
+
+## Database Migration
+當然，為了避免各種意外，首先一定是先做完整的備份(如同我們在 [Preparation](#preparation) 提到的)\
+再來就是要先準備好連線參數這些，要注意的是，資料這層 Netflix 是透過 Data Access Layer 隔離的，所以對於 application 來說，它不需要更動任何東西\
+只是 DAL 內部需要更新這樣，兩個資料庫的參數並不完全長一樣，所以這是需要事前調整的理由
+
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*a3JN0YW1wuYTuez8oWw5SA.png)
+> ref: [Automating RDS Postgres to Aurora Postgres Migration](https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f)
+
+搬遷的過程就如同 [Change Data Capture(CDC)](#change-data-capturecdc) 說明的一樣\
+具體來說是透過 `WAL(Write Ahead Logs)` 來同將資料同步，過程中 RDS 依然是主要的資料庫
+
+最重要的是切換對吧\
+`application level` 會被暫停，但這樣真的足夠嗎？\
+對於 Netflix 來說，它必須要做到除了 platform team 以外沒有任何人能夠存取 db\
+因此，他們在 `infra level` 也進行了阻擋(避免，比如說，錯誤的設定導致連線還開著，沒有通知到維護時間或者是連線還沒斷開等等的情況)\
+確保說，沒有任何連線到資料庫，避免任何資料意外的沒有被同步到更甚至損毀的程度
+
+關閉之後不能馬上切換，因為同步的過程會受到非常多因素干擾，最常見的是由於網路問題導致同步稍微變慢沒有跟上\
+所以會需要等待一段時間，到所有更新都同步，才能切換\
+怎麼判斷其實也很簡單，當 "待處理的 WAL 大小為 0 的時候" 就代表已經完成同步了\
+有趣的是，他們透過 metric 觀察到，三不五時還是會有 **64MB** 的資料沒有被同步到，如下圖
+
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*0pgUo0X6RiwoeATejg6NfQ.png)
+> ref: [Automating RDS Postgres to Aurora Postgres Migration](https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f)
+
+而原因在於，PostgreSQL 的 WAL 預設每五分鐘，就會執行 WAL switch\
+idle 期間沒有任何新的資料(因為你切斷所有連線了)，所以下一個五分鐘，執行 WAL switch 的時候，會寫入一個空的 WAL segment\
+而這個大小，恰好是 64MB，所以在 metric 上面你就會看到這樣的結果，但它本質上就是已經完成同步了\
+到這時候，我們就可以很確信同步已經完成，可以執行切換了
+
+> 基本上你需要確認說，這個 0 :arrow_right: 64MB 的 **模式** 存在，才可以更有信心說同步完成
+
+> WAL switch 的間隔 5 分鐘，如果對於那些不太能忍受太長 downtime 的系統來說，可能會是個問題\
+> 可以調整他的 idle 時間，及早確認 pattern 並提早結束停機
+
+對於 *application team* 來說，這個切換跟他們無關，因為所有的資料庫存取都是透過 DAL 這個 reverse proxy 來進行\
+連線資料那些也基本都是在 DAL，所以不論是程式碼還是資料庫參數，都不需要更動\
+data gateway 會自動將他們導向新的 Aurora 資料庫
+
+## Unexpected Migration Failure
+即使有縝密的規劃與安排，他們還是在搬遷的過程中遇到了點小插曲
+
+搬遷過程中，觀察 metric 發現到，"待處理的 WAL 大小" 一直偏高\
+這意味著，搬遷需要花費更長的時間才能完成\
+而造成這個的元兇是一個 **inactive [Logical Replication Slot](#logical-replication-slot)**
+
+### Logical Replication Slot
+Write Ahead Log(WAL) 裡面紀錄的是每個 "事件"\
+他是一個事件記錄簿，除了當資料庫出意外的時候可以使用它恢復資料，也可以作為 [Change Data Capture(CDC)](#change-data-capturecdc) 的資料來源
+
+每個 CDC 的 consumer 都需要紀錄說，自己已經讀取到 WAL 的哪個位置\
+這個位置的紀錄被稱作 `logical replication slot`\
+WAL 的資料會同時被很多人讀取，所以 slot 也會有很多個
+
+WAL 的檔案大小不可能無限大，它會需要定期清理\
+它哪時候該被清理？ 就是全部人都已經讀取過得時候 + checkpoint 已經寫入的時候(為方便討論，這邊僅考慮 slot 都已經讀取過)\
+當全部的 CDC consumer 都已經被讀取過之後，就能夠視為安全，可以被清理了
+
+### The Crisis
+而恰好就是因為 [Logical Replication Slot](#logical-replication-slot) 的關係，導致了這次的搬遷卡住\
+出事的是一個 inactive 的 slot，由於清理機制是需要 ***所有 logical replication slot 都已經被讀取過*** 才能清理\
+導致說 metric 怎麼計算就是還有很多 WAL 沒有被同步，加上其實 RDS 在當下還是繼續接收資料，待處理資料量直線上升
+
+要解決也很簡單，手動移除該 slot，之後整個搬遷過程就很順利了\
+也因為採取的是 [CDC](#change-data-capturecdc) 的機制，所以其實對客戶來說他們沒感覺到異常
+
+## How to Migrate CDC Consumer and Replication Slot
+我們知道 [Change Data Capture(CDC)](#change-data-capturecdc) 是將資料庫的事件推播出去的方法\
+但是現在換了一個資料庫，對於這個推播會有影響嗎？
+
+意思是說，[Logical Replication Slot](#logical-replication-slot) 是用來標記說我看到 WAL 的哪個位置，當換了一個資料庫，這個標記還有效嗎？ 還能夠銜接上去嗎？\
+理論上來說是不行的，所以其實 Netflix 他有一個專門的 CDC 服務稱為 `datamesh`
+
+> 因為 consumer 是從 datamesh 接收資料的，所以對它來說 Slot 的問題不是他要考慮的
+
+一開始，會先暫停 CDC consumer 並且移除該 [Logical Replication Slot](#logical-replication-slot)\
+此時 CDC consumer 一樣是穩定的不會斷線\
+當新的資料庫上線，因為舊的 slot 已經被移除，而且也不能繼續用因為是新的資料庫，所以會重新建立新的 [Logical Replication Slot](#logical-replication-slot)\
+並且為了銜接順利，會將全部資料包裝成事件，重新推播出去(稱為 refresh event)
+
+> 為什麼要移除 Logical Replication Slot?\
+> 舉例來說，[Unexpected Migration Failure](#unexpected-migration-failure) 提到的情況，如果沒有移除 slot，清理機制就不會執行，導致說 metric 怎麼計算就是還有很多 WAL 沒有被同步
+
+不要誤會，重新推播的目的 **不是因為資料庫的資料不一致**，而是要讓 ***事件重新推播*** 給下游\
+full backfill 可以讓下游與上游擁有 `一致且乾淨的 baseline`，因為推播是基於已經存在的資料做出改變，如果 baseline 不一致，後續的推播就會有問題\
+並且下游的 consumer 收到這些重複的事件應該要能夠處理(i.e. [Idempotent](#idempotent))\
+類似於一個完整的 reset 這樣
+
 # References
 + [Hassle-Free Database Migrations with Prisma Migrate](https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b)
 + [What is data migration?](https://www.ibm.com/topics/data-migration)
@@ -344,3 +471,4 @@ $ kubectl wait --timeout=60s --for=condition=complete --timeout=60s \
 + [COSCUP 2025 - Zero‑Downtime Online Schema Migration in PostgreSQL](https://docs.google.com/presentation/d/1VSET3c0F683bgUaTA9UiBigPE5xhSA08ehAwV0Bvuqo/edit?fbclid=IwY2xjawMHvUVleHRuA2FlbQIxMQABHipwC4GYref-40imaC8M3zKYwyi1XBOh08HMitTFKh0cyf_KLybiFinfmM0d_aem_RJQsGFbjWYXTf09Xi9k8ww&slide=id.g287fa921f8d_0_1382#slide=id.g287fa921f8d_0_1382)
 + [[資料工程]獲取資料庫所有異動記錄 — Change Data Capture(1)](https://wuyiru.medium.com/%E8%B3%87%E6%96%99%E5%B7%A5%E7%A8%8B-%E7%8D%B2%E5%8F%96%E8%B3%87%E6%96%99%E5%BA%AB%E6%89%80%E6%9C%89%E7%95%B0%E5%8B%95%E8%A8%98%E9%8C%84-change-data-capture-1-c61ce7ec3d27)
 + [Lab 4.2 - A Simple DAG Workflow: apply workflow with generate name](https://forum.linuxfoundation.org/discussion/865639/lab-4-2-a-simple-dag-workflow-apply-workflow-with-generate-name)
++ [Automating RDS Postgres to Aurora Postgres Migration](https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f)
