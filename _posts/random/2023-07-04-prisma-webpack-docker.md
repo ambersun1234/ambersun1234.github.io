@@ -113,10 +113,11 @@ $ npx prisma migrate dev --name init --schema schema.prisma
 然而，事情才剛剛開始
 
 # Prisma Architecture
+## Prisma v6(Legacy)
 在眾多 Node.js ORM 框架裡，[Prisma](https://www.prisma.io/) 是稍微年輕的後起之秀\
 而他的架構，是由 client 以及 server 所組成的，如下所示
-![](https://www.prisma.io/docs/assets/images/query-engine-node-js-at-runtime-61f411644a4f0a458cbd436380ffd72e.png)
-> ref: [The query engine at runtime](https://www.prisma.io/docs/orm/more/under-the-hood/engines#the-query-engine-at-runtime)
+![](https://www.prisma.io/docs/_next/static/media/query-engine-node-js-at-runtime.6ae2f1eb.png?dpl=dpl_3TX2XQhyhjSbhZ6qEeC7pbeVmZu8)
+> ref: [The query engine at runtime](https://www.prisma.io/docs/v6/orm/more/internals/engines#the-query-engine-at-runtime)
 
 Prisma 透過 JavaScript client 與 Query Engine 進行溝通，然後才到資料庫進行查詢\
 npx prisma generate 這行指令，上一節才看到，它會負責生成 client 以及 engine
@@ -133,6 +134,14 @@ npx prisma generate 這行指令，上一節才看到，它會負責生成 clien
 |:--|:--|:--|:--|
 |`libquery_engine-`|[Platform list](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#binarytargets-options)|`.so.node`|![](/assets/img/posts/prisma1.png)|
 |`query-engine-`|[Platform list](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#binarytargets-options)||![](/assets/img/posts/prisma2.png)|
+
+## Prisma v7
+新的 Prisma v7 改為使用 TypeScript 的 query compiler 取代了 Rust 的 query engine\
+你的 Query 會直接被編譯成 SQL(使用 query compiler)
+
+所以 [Prisma v6(Legacy)](#prisma-v6legacy) 裡面的 query engine 已經沒有作用了\
+也不需要下載，取而代之的是你需要接上 `driver adapter` 才能使用\
+而因為執行檔已經不需要了，所以你的專案實際上會更小，然後跨平台的支援度更高
 
 # Bundle all Source Code
 當你完成你的程式碼，並且將他們打包的時候\
