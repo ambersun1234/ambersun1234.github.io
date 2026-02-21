@@ -1,0 +1,1941 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>資料庫 - 新手做 Data Migration 資料遷移 | Shawn Hsu</title>
+<meta name="description" content="隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="資料庫 - 新手做 Data Migration 資料遷移">
+<meta property="og:url" content="https://ambersuncreates.com/database/database-migration/">
+
+
+  <meta property="og:description" content="隨著產品的不斷迭代，資料搬遷是一個不可避免的議題。本文將會介紹資料搬遷的一些基本觀念，以及一些可能會遇到的問題">
+
+
+<meta property="og:image" content="/assets/img/og/database-migration.png">
+
+
+
+
+  <meta property="article:published_time" content="2024-02-08T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-02-17T23:08:45+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/database/database-migration/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#database" itemprop="item"><span itemprop="name">Database</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">資料庫 - 新手做 Data Migration 資料遷移</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="資料庫 - 新手做 Data Migration 資料遷移">
+    <meta itemprop="description" content="Preface資料搬遷，在現代軟體服務當中屬於較為常見的一種需求不論是單純的機器之間的搬資料抑或者是因應商業邏輯而需要做的資料搬遷等等都是屬於 Data Migration">
+    <meta itemprop="datePublished" content="2024-02-08T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-02-17T23:08:45+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/database/database-migration/" class="u-url" itemprop="url">資料庫 - 新手做 Data Migration 資料遷移
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2024-02-08">2024-02-08</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-17">
+            2026-02-17
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-migration/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-migration/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-migration/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li><a href="#preface">Preface</a></li>
+<li>
+<a href="#introduction-to-data-migration">Introduction to Data Migration</a><ul>
+<li><a href="#schema-migration">Schema Migration</a></li>
+<li><a href="#data-migration">Data Migration</a></li>
+<li><a href="#database-migration">Database Migration</a></li>
+</ul>
+</li>
+<li>
+<a href="#preparation">Preparation</a><ul>
+<li><a href="#backup">Backup</a></li>
+<li><a href="#verify-business-requirement">Verify Business Requirement</a></li>
+</ul>
+</li>
+<li>
+<a href="#how-to-do-data-migration">How to do Data Migration?</a><ul><li><a href="#reversibility">Reversibility</a></li></ul>
+</li>
+<li>
+<a href="#possible-issues">Possible Issues</a><ul>
+<li><a href="#backward-compatibility">Backward Compatibility</a></li>
+<li><a href="#data-loss">Data Loss</a></li>
+<li><a href="#idempotent">Idempotent</a></li>
+<li>
+<a href="#long-migration-time">Long Migration Time</a><ul>
+<li><a href="#off-peak-time">Off-peak Time</a></li>
+<li><a href="#migration-checkpoint">Migration Checkpoint</a></li>
+<li><a href="#change-data-capturecdc">Change Data Capture(CDC)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#on-premise-vs-saas-migration">On-premise vs. SAAS Migration</a></li>
+<li>
+<a href="#data-migration-in-kubernetes">Data Migration In Kubernetes</a><ul>
+<li><a href="#kubectl-wait">Kubectl Wait</a></li>
+<li><a href="#k8s-job-lifecycle-and-argocd-synchronization">K8s Job Lifecycle and ArgoCD Synchronization</a></li>
+</ul>
+</li>
+<li>
+<a href="#how-netflix-perform-database-migration">How Netflix Perform Database Migration</a><ul>
+<li><a href="#why-database-migration">Why Database Migration</a></li>
+<li><a href="#high-level-migration-plan">High Level Migration Plan</a></li>
+<li><a href="#database-migration-1">Database Migration</a></li>
+<li>
+<a href="#unexpected-migration-failure">Unexpected Migration Failure</a><ul>
+<li><a href="#logical-replication-slot">Logical Replication Slot</a></li>
+<li><a href="#the-crisis">The Crisis</a></li>
+</ul>
+</li>
+<li><a href="#how-to-migrate-cdc-consumer-and-replication-slot">How to Migrate CDC Consumer and Replication Slot</a></li>
+</ul>
+</li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="preface">Preface</h1>
+<p>資料搬遷，在現代軟體服務當中屬於較為常見的一種需求<br>
+不論是單純的機器之間的搬資料抑或者是因應商業邏輯而需要做的資料搬遷等等<br>
+都是屬於 Data Migration</p>
+
+<h1 id="introduction-to-data-migration">Introduction to Data Migration</h1>
+<p>雖然統稱 Data Migration 但實際上可以下分以下幾種</p>
+
+<ul>
+  <li><a href="#schema-migration">Schema Migration</a></li>
+  <li><a href="#data-migration">Data Migration</a></li>
+  <li><a href="#database-migration">Database Migration</a></li>
+</ul>
+
+<blockquote>
+  <p>有的時候你只需要進行一種，有時候是多種的組合</p>
+</blockquote>
+
+<h2 id="schema-migration">Schema Migration</h2>
+<p><img src="https://www.prisma.io/blog/posts/2020-12-migrate-production-workflow.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b">Hassle-Free Database Migrations with Prisma Migrate</a></p>
+</blockquote>
+
+<p>有的時候，你可能會需要針對資料庫的某個欄位做些微的更動<br>
+比如說，增加 unique constraint 或者是設置 default value<br>
+這些，其實就是資料搬遷的一種</p>
+
+<p>以 <a href="https://www.prisma.io/">Prisma</a> 來說<br>
+每一次的搬遷，它都會新增一筆新的 entry<br>
+針對該欄位的更新 sql 就會寫在裡面</p>
+
+<blockquote>
+  <p>各個語言其實都已經有不同的 Migration 工具<br>
+如 Node.js 裡的 <a href="https://www.prisma.io/">Prisma</a>, Python 裡的 <a href="https://alembic.sqlalchemy.org/en/latest/">Alembic</a> 以及 Golang 裡的 <a href="https://github.com/golang-migrate/migrate">golang-migrate</a></p>
+</blockquote>
+
+<h2 id="data-migration">Data Migration</h2>
+<p>不過 <a href="#schema-migration">Schema Migration</a> 仍然是較為簡單的狀況<br>
+真實世界可複雜的多<br>
+商業邏輯的改變，資料搬遷的功會比想像中的多</p>
+
+<p>比如說<br>
+我們想要仿造 Youtube 的開啟小鈴鐺的功能，使用者可以自由切換要不要開啟通知<br>
+因為我們已經有使用者正在使用我們的服務了<br>
+所以針對 <strong>舊有的使用者</strong>，我們必須讓它也可以使用這個功能<br>
+所以我們需要針對這些舊有用戶，幫他們新增預設的通知設定</p>
+
+<blockquote>
+  <p>新的使用者，因為初始化的時候已經做了，所以不需要包含在這次的搬遷內容裡面</p>
+</blockquote>
+
+<h2 id="database-migration">Database Migration</h2>
+<p>又或者是資料庫本身的遷移，比方說從 MySQL 遷移到 PostgreSQL<br>
+兩邊 metadata 的差異，也是必須要進行處理的<br>
+這種要考慮的點與 <a href="#data-migration">Data Migration</a> 不太一樣，不過大方向依然是類似的</p>
+
+<h1 id="preparation">Preparation</h1>
+<p>既然你已經知道你要針對哪一個部份做資料搬遷了<br>
+你需要做哪一些準備工作呢？</p>
+
+<h2 id="backup">Backup</h2>
+<p>因為這種商業邏輯的資料搬遷往往伴隨著一定程度的危險<br>
+所以做好備份的工作是必要的</p>
+
+<p>最壞的狀況就是，當資料搬遷出了大問題<br>
+你已經沒辦法挽回的時候，至少還有一個拯救的辦法</p>
+
+<p>不過要注意的是，當系統升級完成但搬遷卻失敗<br>
+使用 backup 復原並不是一個好的辦法<br>
+因為你需要考慮到回復會不會造成系統相容性的問題等等的<br>
+有沒有 <strong>向後相容</strong>？ 它會不會造成現有服務運作異常<br>
+這個問題值得思考</p>
+
+<h2 id="verify-business-requirement">Verify Business Requirement</h2>
+<p>除了技術方面，你還得要確認商業邏輯的部份<br>
+他是不是符合公司的要求</p>
+
+<p>如果條件允許，也必須提及此次系統更新可能的影響<br>
+包含它是否商業上可行？ 會不會與未來的規劃有衝突等等的</p>
+
+<h1 id="how-to-do-data-migration">How to do Data Migration?</h1>
+<p>仔細想想其實也就兩種</p>
+
+<ol>
+  <li>手動升級</li>
+  <li>自動化升級</li>
+</ol>
+
+<p>其中手動升級是較為不推薦的作法<br>
+如果沒有適當的文件，它可能會難以維護<br>
+甚至你可能會忘記為什麼這個欄位會是這個數值</p>
+
+<p>自動化升級至少你還有 code 可以查看<br>
+而自動化的部份，你可以單純寫 SQL 或者是使用類似 <a href="https://prisma.io">Prisma</a> 這種工具幫你解決<br>
+如果遇到複雜的商業邏輯的部份，則可能要寫個小程式執行</p>
+
+<h2 id="reversibility">Reversibility</h2>
+<p>在資料搬遷的過程中，你必須要考慮到它是否可以被還原<br>
+也就是說，如果搬遷失敗，你必須要能夠將資料還原到搬遷前的狀態</p>
+
+<p>比如說，你新增了一個欄位(新增一個文章分類的欄位)，你也應該要考慮到他是否能夠在刪除的情況下正常運作<br>
+所以理論上你需要有兩個 script 來處理這件事情</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">up</code> script
+    <ul>
+      <li>新增一個欄位以及必要的舊資料升級</li>
+    </ul>
+  </li>
+  <li>
+<code class="language-plaintext highlighter-rouge">down</code> script
+    <ul>
+      <li>刪除新增的欄位</li>
+    </ul>
+  </li>
+</ul>
+
+<p>你可能會好奇為什麼要有 down script<br>
+萬一需要 rollback，整個 database 的狀態理應是 <strong>乾淨的</strong><br>
+以這個例子來說，新增的欄位必須要被剔除</p>
+
+<p>像是 <a href="https://alembic.sqlalchemy.org/en/latest/">alembic</a> 裡面 migration 的實作<br>
+你可以看到說也是有兩個 script 來處理這件事情</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td>
+<td class="rouge-code"><pre><span class="k">def</span> <span class="nf">upgrade</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="s">"""Upgrade schema."""</span>
+    <span class="c1"># ### commands auto generated by Alembic - please adjust! ###
+</span>    <span class="c1"># ### end Alembic commands ###
+</span>
+<span class="k">def</span> <span class="nf">downgrade</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="bp">None</span><span class="p">:</span>
+    <span class="s">"""Downgrade schema."""</span>
+    <span class="c1"># ### commands auto generated by Alembic - please adjust! ###
+</span>    <span class="c1"># ### end Alembic commands ###
+</span></pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<h1 id="possible-issues">Possible Issues</h1>
+<h2 id="backward-compatibility">Backward Compatibility</h2>
+<p>有的時候資料升級，你會遇到無法向後相容的部分<br>
+也就是說新的資料格式沒辦法正確的套用到舊有的資料上<br>
+倒也不是你資料錯誤導致，而是 <strong>資料缺失</strong> 造成的</p>
+
+<p>導致說更新完的資料會沒辦法與新版的系統正確的匹配運作<br>
+舉例來說，我目前碰到的狀況是我想要 “發文分類” 這個功能<br>
+但是早期建立的文章並沒有任何欄位可以區分(比方說 <code class="language-plaintext highlighter-rouge">個人空間</code> 還是 <code class="language-plaintext highlighter-rouge">公開空間</code>)<br>
+這樣的狀況你無從知道這些資料是屬於哪一個分類</p>
+
+<p>無可避免的，這種時候各種做法都會有它的缺點</p>
+<ul>
+  <li>全部搬遷到 個人空間/公開空間</li>
+  <li>保留 NULL 值，更改處理資料邏輯</li>
+</ul>
+
+<p>當然我們能做的，就是盡量將損失降到最低</p>
+
+<h2 id="data-loss">Data Loss</h2>
+<p>執行資料搬遷，我們絕對不希望它更改到其他不相干的部份<br>
+但它仍然是可能會發生的，所以測試是必要的</p>
+
+<p>針對你搬遷的部份，建立幾筆資料觀察它執行的結果<br>
+在上到 production 之前，可以在 dev 以及 staging 環境測試<br>
+我個人會推薦，在這些之前，也可以在本機進行測試</p>
+
+<h2 id="idempotent">Idempotent</h2>
+<p>最後也是最重要的一點，你的自動化搬遷的執行檔案<br>
+它必須要滿足 <code class="language-plaintext highlighter-rouge">Idempotent</code> 的條件</p>
+
+<p>何謂 Idempotent？ 就是你不管執行幾次，它得到的結果都要是一致的<br>
+比如說上面我們提到想要實作使用者的通知設定功能<br>
+你絕對不會希望一個使用者有多個相同設定</p>
+
+<p>因此，在設計 migration script 的時候，他要執行的是 <code class="language-plaintext highlighter-rouge">upsert</code><br>
+若是寫入的資料不存在，寫入，若存在，則略過或更新部份值<br>
+以 <a href="https://www.postgresql.org/">PostgreSQL</a> 來說<br>
+你可以使用</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="k">INSERT</span> <span class="k">INTO</span> <span class="p">(</span><span class="n">xxx</span><span class="p">)</span> <span class="k">VALUES</span><span class="p">(</span><span class="n">yyy</span><span class="p">)</span> <span class="k">ON</span> <span class="n">CONFLICT</span><span class="p">(</span><span class="n">zzz</span><span class="p">)</span> 
+<span class="k">DO</span> <span class="k">UPDATE</span> <span class="k">SET</span> <span class="n">id</span> <span class="o">=</span> <span class="n">EXCLUDED</span><span class="p">.</span><span class="n">id</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+<p>當你寫入的資料，有比對到一模一樣的資料的時候，它就會選擇使用原本的 id<br>
+而這個比對的基礎，是寫在 <code class="language-plaintext highlighter-rouge">ON CONFLICT</code> 裡面</p>
+
+<p>注意到，一模一樣的資料的定義是，它必須擁有 unique constraint 進行保護<br>
+有時候你要 upsert 的資料根本沒有 unique constraint<br>
+這時候其實你別無選擇，你只能先 query 有沒有該筆資料的存在，然後在寫入<br>
+當然這時候，使用 <code class="language-plaintext highlighter-rouge">transaction</code> 是相對比較好的選擇</p>
+
+<blockquote>
+  <p>有關 transaction 的討論，可以參考 <a href="../../database/database-transaction">資料庫 - Transaction 與 Isolation | Shawn Hsu</a></p>
+</blockquote>
+
+<h2 id="long-migration-time">Long Migration Time</h2>
+<p>當搬遷的資料數量過於龐大<br>
+花超過額外預期的時間是有可能會發生的</p>
+
+<p>資料庫系統的更新，因為會佔用一定的連線數量，以及一定的 I/O<br>
+系統的反應速度可能會變慢</p>
+
+<h3 id="off-peak-time">Off-peak Time</h3>
+<p>你可以選擇在半夜這種不會有太多使用者在線上的時候，執行系統升級</p>
+
+<h3 id="migration-checkpoint">Migration Checkpoint</h3>
+<p>或者是 migration 的檔案數量過多，導致執行時間需要拉長<br>
+如果遭遇頻繁的資料庫遷移，這種事情是可能發生的<br>
+一個解決方法是使用 <code class="language-plaintext highlighter-rouge">checkpoint</code> 的機制<br>
+我們知道，migration 是基於目前 “資料庫的狀態” 往上疊加的<br>
+所以 checkpoint 的概念是，我重設資料庫的狀態，然後以往的 migration 檔案因為狀態改變就不需要執行<br>
+這樣就可以減少 migration 的執行時間</p>
+
+<p>為了系統的可用性，我們通常會希望系統的 down time 越低越好<br>
+盡可能的提高使用者體驗</p>
+
+<!-- ### SQL Statement Optimization -->
+<!-- TODO -->
+
+<h3 id="change-data-capturecdc">Change Data Capture(CDC)</h3>
+<p>除了進一步優化 SQL 的部分，你也可以使用所謂 CDC 的機制<br>
+簡單來說，如果資料過於龐大導致遷移時間過長，系統就沒辦法正確動作</p>
+
+<p>如果可以一邊搬遷一邊提供服務，不就解決這件事情了嗎？<br>
+對於有實作向後相容的資料(i.e. <a href="#backward-compatibility">Backward Compatibility</a>)來說，這個想法是可行的<br>
+如果不相容，根本跑不起來</p>
+
+<p>所以實務上，會有兩台機器在運行</p>
+<ul>
+  <li>一台是目前正在線上服務的資料庫，稱為 <code class="language-plaintext highlighter-rouge">source</code>
+</li>
+  <li>另外一台是 “新版” 的資料庫，它會在後面慢慢的將舊版資料升級成新的資料格式，稱為 <code class="language-plaintext highlighter-rouge">destination</code>
+</li>
+</ul>
+
+<p>當 <code class="language-plaintext highlighter-rouge">source</code> 資料庫有新的寫入，它會將這筆更新推播到 <code class="language-plaintext highlighter-rouge">destination</code> 資料庫<br>
+讓兩台資料庫的內容盡量保持一致(為什麼說盡量，因為推播沒那麼快)<br>
+這個技巧稱為 <strong><em>Change Data Capture</em></strong></p>
+
+<p>當兩台機器達到一定的同步程度，就可以把它切過去<br>
+這個 cutoff 會有極短暫的 downtime，但是相比其他方法來說，這個影響是最小的</p>
+
+<blockquote>
+  <p>也就是 <strong>Blue Green Deployment</strong>，可參考 <a href="../../kubernetes/kubernetes-scale#blue-green-deployment">Kubernetes 從零開始 - 部署策略 101 | Shawn Hsu</a></p>
+</blockquote>
+
+<hr>
+
+<p>在 <a href="../../database/database-distributed-database">資料庫 - 初探分散式資料庫 | Shawn Hsu</a> 裡面，我們有提到，分散式資料庫的架構下，資料的同步是相當困難的<br>
+其中你可以使用 <a href="../../database/database-distributed-database#statement-based">Statement Replication</a> 的機制來達成資料的同步<br>
+但是由於自身的機制，它無法處理 <strong>non deterministic function</strong> 如 <code class="language-plaintext highlighter-rouge">NOW()</code> 或是 <code class="language-plaintext highlighter-rouge">RAND()</code> 等等的<br>
+因此比較推薦使用 <a href="../../database/database-distributed-database#logical-log">Logical Log</a> 的機制來達成資料的同步<br>
+而 Logical Log 本身，就可以視為是 Change Data Capture 的資料來源</p>
+
+<p>那這些 Event 資料屆時可以透過 <a href="https://kafka.apache.org/">Apache Kafka</a> 以及 <a href="https://kafka.apache.org/documentation/streams/developer-guide/connect.html">Kafka Connect</a> 來同步資料</p>
+
+<blockquote>
+  <p>有關 Kafka 的介紹，可以參考 <a href="../../database/database-message-queue">資料庫 - 從 Apache Kafka 認識 Message Queue | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="on-premise-vs-saas-migration">On-premise vs. SAAS Migration</h1>
+<p>有些產品是落地的，資料並不在我們的控制之下<br>
+在這種情況下，資料升級無疑是相當困難的</p>
+
+<p>SAAS 的產品，我們可以直接存取到資料庫本身<br>
+而我們很清楚服務內存在著什麼樣的資料<br>
+升級失敗復原相對容易且容易掌控<br>
+因為執行資料升級的會是開發服務本身的廠商</p>
+
+<p>到了 On-premise 這裡，事情會完全不一樣<br>
+客戶並不一定擁有足夠的知識能夠處理，甚至可以說是沒有這樣的知識<br>
+支援是相對薄弱的，這時候如果升級失敗將會是一場災難<br>
+若是遇到 <a href="#backward-compatibility">Backward Compatibility</a> 的問題，無疑是雪上加霜</p>
+
+<h1 id="data-migration-in-kubernetes">Data Migration In Kubernetes</h1>
+<p>如果你的資料庫是在 Kubernetes 內部運行，你可能會遇到跟我一樣的問題<br>
+我們的資料庫(i.e. PostgreSQL) 是透過 Helm subchart 來管理的<br>
+每一次 <code class="language-plaintext highlighter-rouge">$ helm install</code> 資料庫與應用程式會一併的進行安裝</p>
+
+<blockquote>
+  <p>有關 Helm Chart 可以參考 <a href="../../kubernetes/kubernetes-helm-chart">Kubernetes 從零開始 - Deployment 管理救星 Helm Chart | Shawn Hsu</a></p>
+</blockquote>
+
+<p>這就導致說，資料升級的這個過程無從下手<br>
+什麼意思呢？ 就如同 <a href="https://stackoverflow.com/questions/79173735/database-migrations-in-helm-charts-using-pre-install-pre-upgrade-hook">Database migrations in Helm charts using pre-install, pre-upgrade hook</a> 提到的<br>
+要執行 migration 需要資料庫先安裝，而且需要在應用程式啟動之前<br>
+這本質上是不可能的<br>
+因為 Helm Hook 本身並沒有那麼細緻的控制</p>
+
+<p><code class="language-plaintext highlighter-rouge">pre-install</code> 是完全不可行的，因為只有在 hook 完成之後 app 才會開始安裝<br>
+而 <code class="language-plaintext highlighter-rouge">post-install</code> 有可能 app 已經啟動完畢，但是 data migration 還沒完成，然後造成資料損毀</p>
+
+<blockquote>
+  <p>有關 Helm Hook 可以參考 <a href="../../kubernetes/kubernetes-helm-chart#helm-chart-hooks">Kubernetes 從零開始 - Deployment 管理救星 Helm Chart | Shawn Hsu</a></p>
+</blockquote>
+
+<p>再來是，Helm Hook 本身的設計也不是要拿來讓你跑長時間的任務<br>
+即使你說，沒有啊目前就大概 3 分鐘會跑完也是不適合的，就… 他不是設計給你這樣用的<br>
+根據 <a href="https://github.com/helm/helm/issues/10582">Question: Long Running Hooks - Yes or No?</a> 你也可以看到</p>
+
+<blockquote>
+  <p>Most of the time, a long running hook (for hours or days) isn’t a good idea.</p>
+</blockquote>
+
+<p>其實官方是不推薦的，更甚至因為透過 Helm Hook 建立的 K8s Resource 本身是脫離 release 的<br>
+也就是說他的生命週期並不是跟著 <code class="language-plaintext highlighter-rouge">helm upgrade</code>, <code class="language-plaintext highlighter-rouge">helm delete</code> 一起的，你需要手動管理<br>
+在 on-premise 的環境這種做法是更糟糕的(可參考 <a href="#on-premise-vs-saas-migration">On-premise vs. SAAS Migration</a>)</p>
+
+<h2 id="kubectl-wait">Kubectl Wait</h2>
+<p>基本上你會有幾種選擇</p>
+<ol>
+  <li>利用 Kubernetes Job 獨立執行 migration(透過 Helm Hook 控制順序)</li>
+  <li>在 Deployment 中使用 <code class="language-plaintext highlighter-rouge">initContainer</code> 執行 migration</li>
+  <li>在應用程式內部進行 migration(啟動 web server 之前執行)</li>
+  <li>透過 CI/CD pipeline 執行 migration</li>
+</ol>
+
+<blockquote>
+  <p>有關 Job/Deployment 可以參考 <a href="../../kubernetes/kubernetes-workloads#workload-resources">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources</a><br>
+有關 CI/CD pipeline 可以參考 <a href="../../devops/devops-github-action">DevOps - 從 GitHub Actions 初探 CI/CD</a></p>
+</blockquote>
+
+<p><code class="language-plaintext highlighter-rouge">2</code> 與 <code class="language-plaintext highlighter-rouge">3</code> 是一樣的，看似可以用但實際上你需要注意到 race condition 的問題<br>
+因為如果你需要 scaling, 多個 replica 會執行相同 migration script，沒處理好會導致資料不一致的問題<br>
+也同時必須考慮到升級時間過長的問題，可能會被 K8s kill 掉等問題</p>
+
+<p><code class="language-plaintext highlighter-rouge">4</code> 的假設是你的服務是 SAAS 的，落地的情況下根本無法實現</p>
+
+<p><code class="language-plaintext highlighter-rouge">1</code> 的情境其實是默認資料庫沒有跟 app 一起安裝，這種狀況用 <code class="language-plaintext highlighter-rouge">Helm Hook</code> 才有辦法</p>
+
+<p>但以我的例子來說，他們是一起安裝的，所以以上都無法使用<br>
+好在，我們還有一招 <a href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait">kubectl wait</a><br>
+這個指令可以用於等待資源的狀態達成某種條件<br>
+也就是說，其實是可以使用 Kubernetes Job 負責執行 migration<br>
+然後 app 的 deployment 使用 <code class="language-plaintext highlighter-rouge">kubectl wait</code> 等待 migration Job 完成後再啟動</p>
+
+<p>一開始的時候以下同時執行</p>
+<ul>
+  <li>app deployment 安裝</li>
+  <li>migration job 執行</li>
+  <li>database 安裝</li>
+</ul>
+
+<p>然後流程會變成這樣</p>
+<ol>
+  <li>database 先完成安裝(同時 migration job 與 app 都被 <code class="language-plaintext highlighter-rouge">initContainer</code> 的資料庫檢查 block 住)</li>
+  <li>migration job 完成執行(app 被執行 <a href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait">kubectl wait</a> 的 <code class="language-plaintext highlighter-rouge">initContainer</code> block 住，等待 migration job 完成)</li>
+  <li>app 完成安裝(這個時候 migration 已經成功)</li>
+</ol>
+
+<h2 id="k8s-job-lifecycle-and-argocd-synchronization">K8s Job Lifecycle and ArgoCD Synchronization</h2>
+<p>雖然使用 <a href="#kubectl-wait">Kubectl Wait</a> 可以解決資料庫與應用程式同時安裝，無法進行資料升級的問題<br>
+但是這種作法會需要非常小心</p>
+
+<p>如果你的 Job 有設定 <code class="language-plaintext highlighter-rouge">ttlSecondsAfterFinished</code>，Job 本身會在這個時間之後被刪除(不是底下的 Pod 而是 Job 本身)<br>
+這樣 Kubectl Wait 的判斷就會失效，導致你的主程式起不來(注意到並不是 deploy 才會用到判斷，如果你的 deployment 意外重啟而 Job 已經被刪除，同樣也適用)<br>
+搭配上 ArgoCD 這種作法只會更糟，因為 K8s 不允許同名的 Job，所以會無法同步<br>
+你唯一想的到的就是加上 ttl 讓 Job 自動被刪除，Argo 才能再次同步<br>
+不過問題又回到前面講的</p>
+
+<p>K8s Job 預設是不會清除的</p>
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td>
+<td class="rouge-code"><pre>NAME                   READY   STATUS      RESTARTS   AGE
+pod/sleep-test-vvk98   0/1     Completed   0          4h55m
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.43.0.1    &lt;none       443/TCP   4h55m
+
+NAME                   STATUS     COMPLETIONS   DURATION   AGE
+job.batch/sleep-test   Complete   1/1           57s        4h55m
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>所以怎麼辦呢？<br>
+你可以在 <a href="https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#wait">Kubectl Wait</a> 中指定使用 label 判斷<br>
+至於 Job 的名稱可以用 generate name 來生成<br>
+這樣就完美繞過以上的所有問題</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>kubectl <span class="nb">wait</span> <span class="nt">--timeout</span><span class="o">=</span>60s <span class="nt">--for</span><span class="o">=</span><span class="nv">condition</span><span class="o">=</span><span class="nb">complete</span> <span class="nt">--timeout</span><span class="o">=</span>60s <span class="se">\</span>
+    <span class="si">$(</span><span class="se">\</span>
+        kubectl get <span class="nb">jobs</span> <span class="nt">-l</span> <span class="nv">component</span><span class="o">=</span><span class="nb">sync</span> <span class="se">\</span>
+        <span class="nt">--sort-by</span><span class="o">=</span>.metadata.creationTimestamp <span class="nt">-o</span> name | <span class="nb">tail</span> <span class="nt">-n1</span> <span class="se">\</span>
+    <span class="si">)</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p>挑選 label 為 <code class="language-plaintext highlighter-rouge">component=sync</code> 的 Job，並且按照 creation timestamp 排序，選擇最後一個</p>
+</blockquote>
+
+<p>唯一的 drawback 是你會有很大量的 Job instance 存在<br>
+透過簡單的 cronjob 去清除是不錯的選擇</p>
+
+<p>這樣你就能夠解決資料庫與應用程式同時安裝，無法進行資料升級的問題了</p>
+
+<h1 id="how-netflix-perform-database-migration">How Netflix Perform Database Migration</h1>
+<h2 id="why-database-migration">Why Database Migration</h2>
+<p>Netflix 的 platform team 在 2024 的時候決議要從 Amazon RDS PostgreSQL 遷移到 Aurora PostgreSQL(i.e. <a href="#database-migration">Database Migration</a>)<br>
+考慮的主要原因有以下</p>
+<ol>
+  <li>PostgreSQL 作為 Netflix 廣泛使用的資料庫，有超過 <code class="language-plaintext highlighter-rouge">95%</code> 的 workload 依賴於 PostgreSQL，遷移過去成本較低</li>
+  <li>因為 PostgreSQL 已經逐漸被廣泛使用，社群支援完整</li>
+  <li>Aurora 提供了高可用性以及分散式的特性，可以滿足 Netflix 的需求</li>
+  <li>Aurora 目前提供了豐富的功能，以及其未來的規劃滿足 large-scale 的需求，也是 Netflix 所需要的</li>
+</ol>
+
+<h2 id="high-level-migration-plan">High Level Migration Plan</h2>
+<p>既然決定要換，那具體怎麼做？<br>
+從 RDS 到 Aurora，主要有兩種作法</p>
+<ol>
+  <li>停止 RDS <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 對 RDS 進行快照 <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 從快照建立 Aurora 叢集並恢復</li>
+  <li>建立 RDS read replica 到 Aurora 的 <a href="#change-data-capturecdc">CDC</a> <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 等到同步差距非常微小之後，停止主要 RDS master 暫停寫入 <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 等到完全追上，將其一 Aurora slave 升級為 master 並恢復</li>
+</ol>
+
+<blockquote>
+  <p>注意到第二點的同步差距，它需要考慮的是一段時間內的差距趨於平穩，而不是單純某個時間點的微小差距而已</p>
+</blockquote>
+
+<p>兩者最主要的差距是在於 <strong><em>停機時間</em></strong><br>
+RDS 需要完全暫停，將全部資料複製並在 Aurora 上恢復，在此期間無法提供服務<br>
+反之，使用 <a href="#change-data-capturecdc">CDC</a> 機制可以做到 “幾乎” 無停機遷移<br>
+當然，<a href="#change-data-capturecdc">CDC</a> 的機制複雜程度會被拉高，需要額外考慮其他問題</p>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:1100/format:webp/1*_xydKq_VWpaxyqcwCwQyuA.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f">Automating RDS Postgres to Aurora Postgres Migration</a></p>
+</blockquote>
+
+<p>最後他們選擇 <a href="#change-data-capturecdc">CDC</a> 的機制，以最大程度減小 downtime</p>
+
+<h2 id="database-migration-1">Database Migration</h2>
+<p>當然，為了避免各種意外，首先一定是先做完整的備份(如同我們在 <a href="#preparation">Preparation</a> 提到的)<br>
+再來就是要先準備好連線參數這些，要注意的是，資料這層 Netflix 是透過 Data Access Layer 隔離的，所以對於 application 來說，它不需要更動任何東西<br>
+只是 DAL 內部需要更新這樣，兩個資料庫的參數並不完全長一樣，所以這是需要事前調整的理由</p>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:1100/format:webp/1*a3JN0YW1wuYTuez8oWw5SA.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f">Automating RDS Postgres to Aurora Postgres Migration</a></p>
+</blockquote>
+
+<p>搬遷的過程就如同 <a href="#change-data-capturecdc">Change Data Capture(CDC)</a> 說明的一樣<br>
+具體來說是透過 <code class="language-plaintext highlighter-rouge">WAL(Write Ahead Logs)</code> 來同將資料同步，過程中 RDS 依然是主要的資料庫</p>
+
+<p>最重要的是切換對吧<br>
+<code class="language-plaintext highlighter-rouge">application level</code> 會被暫停，但這樣真的足夠嗎？<br>
+對於 Netflix 來說，它必須要做到除了 platform team 以外沒有任何人能夠存取 db<br>
+因此，他們在 <code class="language-plaintext highlighter-rouge">infra level</code> 也進行了阻擋(避免，比如說，錯誤的設定導致連線還開著，沒有通知到維護時間或者是連線還沒斷開等等的情況)<br>
+確保說，沒有任何連線到資料庫，避免任何資料意外的沒有被同步到更甚至損毀的程度</p>
+
+<p>關閉之後不能馬上切換，因為同步的過程會受到非常多因素干擾，最常見的是由於網路問題導致同步稍微變慢沒有跟上<br>
+所以會需要等待一段時間，到所有更新都同步，才能切換<br>
+怎麼判斷其實也很簡單，當 “待處理的 WAL 大小為 0 的時候” 就代表已經完成同步了<br>
+有趣的是，他們透過 metric 觀察到，三不五時還是會有 <strong>64MB</strong> 的資料沒有被同步到，如下圖</p>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:1100/format:webp/1*0pgUo0X6RiwoeATejg6NfQ.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f">Automating RDS Postgres to Aurora Postgres Migration</a></p>
+</blockquote>
+
+<p>而原因在於，PostgreSQL 的 WAL 預設每五分鐘，就會執行 WAL switch<br>
+idle 期間沒有任何新的資料(因為你切斷所有連線了)，所以下一個五分鐘，執行 WAL switch 的時候，會寫入一個空的 WAL segment<br>
+而這個大小，恰好是 64MB，所以在 metric 上面你就會看到這樣的結果，但它本質上就是已經完成同步了<br>
+到這時候，我們就可以很確信同步已經完成，可以執行切換了</p>
+
+<blockquote>
+  <p>基本上你需要確認說，這個 0 <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 64MB 的 <strong>模式</strong> 存在，才可以更有信心說同步完成</p>
+</blockquote>
+
+<blockquote>
+  <p>WAL switch 的間隔 5 分鐘，如果對於那些不太能忍受太長 downtime 的系統來說，可能會是個問題<br>
+可以調整他的 idle 時間，及早確認 pattern 並提早結束停機</p>
+</blockquote>
+
+<p>對於 <em>application team</em> 來說，這個切換跟他們無關，因為所有的資料庫存取都是透過 DAL 這個 reverse proxy 來進行<br>
+連線資料那些也基本都是在 DAL，所以不論是程式碼還是資料庫參數，都不需要更動<br>
+data gateway 會自動將他們導向新的 Aurora 資料庫</p>
+
+<h2 id="unexpected-migration-failure">Unexpected Migration Failure</h2>
+<p>即使有縝密的規劃與安排，他們還是在搬遷的過程中遇到了點小插曲</p>
+
+<p>搬遷過程中，觀察 metric 發現到，”待處理的 WAL 大小” 一直偏高<br>
+這意味著，搬遷需要花費更長的時間才能完成<br>
+而造成這個的元兇是一個 <strong>inactive <a href="#logical-replication-slot">Logical Replication Slot</a></strong></p>
+
+<h3 id="logical-replication-slot">Logical Replication Slot</h3>
+<p>Write Ahead Log(WAL) 裡面紀錄的是每個 “事件”<br>
+他是一個事件記錄簿，除了當資料庫出意外的時候可以使用它恢復資料，也可以作為 <a href="#change-data-capturecdc">Change Data Capture(CDC)</a> 的資料來源</p>
+
+<p>每個 CDC 的 consumer 都需要紀錄說，自己已經讀取到 WAL 的哪個位置<br>
+這個位置的紀錄被稱作 <code class="language-plaintext highlighter-rouge">logical replication slot</code><br>
+WAL 的資料會同時被很多人讀取，所以 slot 也會有很多個</p>
+
+<p>WAL 的檔案大小不可能無限大，它會需要定期清理<br>
+它哪時候該被清理？ 就是全部人都已經讀取過得時候 + checkpoint 已經寫入的時候(為方便討論，這邊僅考慮 slot 都已經讀取過)<br>
+當全部的 CDC consumer 都已經被讀取過之後，就能夠視為安全，可以被清理了</p>
+
+<h3 id="the-crisis">The Crisis</h3>
+<p>而恰好就是因為 <a href="#logical-replication-slot">Logical Replication Slot</a> 的關係，導致了這次的搬遷卡住<br>
+出事的是一個 inactive 的 slot，由於清理機制是需要 <strong><em>所有 logical replication slot 都已經被讀取過</em></strong> 才能清理<br>
+導致說 metric 怎麼計算就是還有很多 WAL 沒有被同步，加上其實 RDS 在當下還是繼續接收資料，待處理資料量直線上升</p>
+
+<p>要解決也很簡單，手動移除該 slot，之後整個搬遷過程就很順利了<br>
+也因為採取的是 <a href="#change-data-capturecdc">CDC</a> 的機制，所以其實對客戶來說他們沒感覺到異常</p>
+
+<h2 id="how-to-migrate-cdc-consumer-and-replication-slot">How to Migrate CDC Consumer and Replication Slot</h2>
+<p>我們知道 <a href="#change-data-capturecdc">Change Data Capture(CDC)</a> 是將資料庫的事件推播出去的方法<br>
+但是現在換了一個資料庫，對於這個推播會有影響嗎？</p>
+
+<p>意思是說，<a href="#logical-replication-slot">Logical Replication Slot</a> 是用來標記說我看到 WAL 的哪個位置，當換了一個資料庫，這個標記還有效嗎？ 還能夠銜接上去嗎？<br>
+理論上來說是不行的，所以其實 Netflix 他有一個專門的 CDC 服務稱為 <code class="language-plaintext highlighter-rouge">datamesh</code></p>
+
+<blockquote>
+  <p>因為 consumer 是從 datamesh 接收資料的，所以對它來說 Slot 的問題不是他要考慮的</p>
+</blockquote>
+
+<p>一開始，會先暫停 CDC consumer 並且移除該 <a href="#logical-replication-slot">Logical Replication Slot</a><br>
+此時 CDC consumer 一樣是穩定的不會斷線<br>
+當新的資料庫上線，因為舊的 slot 已經被移除，而且也不能繼續用因為是新的資料庫，所以會重新建立新的 <a href="#logical-replication-slot">Logical Replication Slot</a><br>
+並且為了銜接順利，會將全部資料包裝成事件，重新推播出去(稱為 refresh event)</p>
+
+<blockquote>
+  <p>為什麼要移除 Logical Replication Slot?<br>
+舉例來說，<a href="#unexpected-migration-failure">Unexpected Migration Failure</a> 提到的情況，如果沒有移除 slot，清理機制就不會執行，導致說 metric 怎麼計算就是還有很多 WAL 沒有被同步</p>
+</blockquote>
+
+<p>不要誤會，重新推播的目的 <strong>不是因為資料庫的資料不一致</strong>，而是要讓 <strong><em>事件重新推播</em></strong> 給下游<br>
+full backfill 可以讓下游與上游擁有 <code class="language-plaintext highlighter-rouge">一致且乾淨的 baseline</code>，因為推播是基於已經存在的資料做出改變，如果 baseline 不一致，後續的推播就會有問題<br>
+並且下游的 consumer 收到這些重複的事件應該要能夠處理(i.e. <a href="#idempotent">Idempotent</a>)<br>
+類似於一個完整的 reset 這樣</p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b">Hassle-Free Database Migrations with Prisma Migrate</a></li>
+  <li><a href="https://www.ibm.com/topics/data-migration">What is data migration?</a></li>
+  <li><a href="https://github.com/golang-migrate/migrate/blob/v4.18.3/MIGRATIONS.md">Migrations</a></li>
+  <li><a href="https://docs.google.com/presentation/d/1VSET3c0F683bgUaTA9UiBigPE5xhSA08ehAwV0Bvuqo/edit?fbclid=IwY2xjawMHvUVleHRuA2FlbQIxMQABHipwC4GYref-40imaC8M3zKYwyi1XBOh08HMitTFKh0cyf_KLybiFinfmM0d_aem_RJQsGFbjWYXTf09Xi9k8ww&amp;slide=id.g287fa921f8d_0_1382#slide=id.g287fa921f8d_0_1382">COSCUP 2025 - Zero‑Downtime Online Schema Migration in PostgreSQL</a></li>
+  <li><a href="https://wuyiru.medium.com/%E8%B3%87%E6%96%99%E5%B7%A5%E7%A8%8B-%E7%8D%B2%E5%8F%96%E8%B3%87%E6%96%99%E5%BA%AB%E6%89%80%E6%9C%89%E7%95%B0%E5%8B%95%E8%A8%98%E9%8C%84-change-data-capture-1-c61ce7ec3d27">[資料工程]獲取資料庫所有異動記錄 — Change Data Capture(1)</a></li>
+  <li><a href="https://forum.linuxfoundation.org/discussion/865639/lab-4-2-a-simple-dag-workflow-apply-workflow-with-generate-name">Lab 4.2 - A Simple DAG Workflow: apply workflow with generate name</a></li>
+  <li><a href="https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f">Automating RDS Postgres to Aurora Postgres Migration</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#alembic" class="page__taxonomy-item p-category" rel="tag">alembic</a><span class="sep">, </span>
+    
+      <a href="/tags/#argocd" class="page__taxonomy-item p-category" rel="tag">argocd</a><span class="sep">, </span>
+    
+      <a href="/tags/#atlas" class="page__taxonomy-item p-category" rel="tag">atlas</a><span class="sep">, </span>
+    
+      <a href="/tags/#backward-compatibility" class="page__taxonomy-item p-category" rel="tag">backward compatibility</a><span class="sep">, </span>
+    
+      <a href="/tags/#cdc" class="page__taxonomy-item p-category" rel="tag">cdc</a><span class="sep">, </span>
+    
+      <a href="/tags/#change-data-capture" class="page__taxonomy-item p-category" rel="tag">change data capture</a><span class="sep">, </span>
+    
+      <a href="/tags/#checkpoint" class="page__taxonomy-item p-category" rel="tag">checkpoint</a><span class="sep">, </span>
+    
+      <a href="/tags/#data-migration" class="page__taxonomy-item p-category" rel="tag">data migration</a><span class="sep">, </span>
+    
+      <a href="/tags/#datamesh" class="page__taxonomy-item p-category" rel="tag">datamesh</a><span class="sep">, </span>
+    
+      <a href="/tags/#golang" class="page__taxonomy-item p-category" rel="tag">golang</a><span class="sep">, </span>
+    
+      <a href="/tags/#idempotent" class="page__taxonomy-item p-category" rel="tag">idempotent</a><span class="sep">, </span>
+    
+      <a href="/tags/#kafka" class="page__taxonomy-item p-category" rel="tag">kafka</a><span class="sep">, </span>
+    
+      <a href="/tags/#kafka-connect" class="page__taxonomy-item p-category" rel="tag">kafka connect</a><span class="sep">, </span>
+    
+      <a href="/tags/#kubectl-wait" class="page__taxonomy-item p-category" rel="tag">kubectl wait</a><span class="sep">, </span>
+    
+      <a href="/tags/#logical-log" class="page__taxonomy-item p-category" rel="tag">logical log</a><span class="sep">, </span>
+    
+      <a href="/tags/#logical-replication-slot" class="page__taxonomy-item p-category" rel="tag">logical replication slot</a><span class="sep">, </span>
+    
+      <a href="/tags/#netflix" class="page__taxonomy-item p-category" rel="tag">netflix</a><span class="sep">, </span>
+    
+      <a href="/tags/#nodejs" class="page__taxonomy-item p-category" rel="tag">nodejs</a><span class="sep">, </span>
+    
+      <a href="/tags/#on-premise" class="page__taxonomy-item p-category" rel="tag">on-premise</a><span class="sep">, </span>
+    
+      <a href="/tags/#postgresql" class="page__taxonomy-item p-category" rel="tag">postgresql</a><span class="sep">, </span>
+    
+      <a href="/tags/#prisma" class="page__taxonomy-item p-category" rel="tag">prisma</a><span class="sep">, </span>
+    
+      <a href="/tags/#reversibility" class="page__taxonomy-item p-category" rel="tag">reversibility</a><span class="sep">, </span>
+    
+      <a href="/tags/#saas" class="page__taxonomy-item p-category" rel="tag">saas</a><span class="sep">, </span>
+    
+      <a href="/tags/#sql" class="page__taxonomy-item p-category" rel="tag">sql</a><span class="sep">, </span>
+    
+      <a href="/tags/#statement-replication" class="page__taxonomy-item p-category" rel="tag">statement replication</a><span class="sep">, </span>
+    
+      <a href="/tags/#transaction" class="page__taxonomy-item p-category" rel="tag">transaction</a><span class="sep">, </span>
+    
+      <a href="/tags/#upsert" class="page__taxonomy-item p-category" rel="tag">upsert</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#database" class="page__taxonomy-item p-category" rel="tag">database</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E8%B3%87%E6%96%99%E5%BA%AB+-+%E6%96%B0%E6%89%8B%E5%81%9A+Data+Migration+%E8%B3%87%E6%96%99%E9%81%B7%E7%A7%BB%20https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-migration%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-migration%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-migration%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/random/real-time-communication/" class="pagination--pager" title="淺談 Polling, Long Polling 以及其他即時通訊方法論
+">Previous</a>
+    
+    
+      <a href="/algorithm/algorithm-greedy/" class="pagination--pager" title="神奇的演算法 - Greedy Algorithm
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-17">
+            2026-02-17
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-17">
+            2026-02-17
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-17">
+            2026-02-17
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-17">
+            2026-02-17
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/database/database-migration/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/database/database-migration"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

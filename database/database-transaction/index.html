@@ -1,0 +1,2145 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>資料庫 - Transaction 與 Isolation | Shawn Hsu</title>
+<meta name="description" content="Transaction 的出現是為了保證 unit of work 的完整性，而 Isolation Level 則是為了保證資料一致性。本文著重在 Isolation Level 以及各種 Read Write Phenomena">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="資料庫 - Transaction 與 Isolation">
+<meta property="og:url" content="https://ambersuncreates.com/database/database-transaction/">
+
+
+  <meta property="og:description" content="Transaction 的出現是為了保證 unit of work 的完整性，而 Isolation Level 則是為了保證資料一致性。本文著重在 Isolation Level 以及各種 Read Write Phenomena">
+
+
+<meta property="og:image" content="/assets/img/og/database-transaction.png">
+
+
+
+
+  <meta property="article:published_time" content="2022-09-28T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-01-23T20:46:49+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/database/database-transaction/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#database" itemprop="item"><span itemprop="name">Database</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">資料庫 - Transaction 與 Isolation</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="資料庫 - Transaction 與 Isolation">
+    <meta itemprop="description" content="Transaction根據 google translate 的結果我們可以得知，transaction 就是交易那麼 交易 本身需要有什麼樣的特性呢？">
+    <meta itemprop="datePublished" content="2022-09-28T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-01-23T20:46:49+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/database/database-transaction/" class="u-url" itemprop="url">資料庫 - Transaction 與 Isolation
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2022-09-28">2022-09-28</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-transaction/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-transaction/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-transaction/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li>
+<a href="#transaction">Transaction</a><ul>
+<li><a href="#need-to-use-transaction-for-single-query">Need to Use Transaction for Single Query?</a></li>
+<li><a href="#can-transaction-prevent-data-race">Can Transaction Prevent Data Race?</a></li>
+</ul>
+</li>
+<li>
+<a href="#acid">ACID</a><ul>
+<li><a href="#atomicity">Atomicity</a></li>
+<li><a href="#consistency">Consistency</a></li>
+<li><a href="#isolation">Isolation</a></li>
+<li><a href="#durability">Durability</a></li>
+</ul>
+</li>
+<li>
+<a href="#base">BASE</a><ul>
+<li><a href="#basically-available">Basically Available</a></li>
+<li><a href="#soft-state">Soft State</a></li>
+<li><a href="#eventually-consistent">Eventually Consistent</a></li>
+</ul>
+</li>
+<li>
+<a href="#database-read-write-phenomena">Database Read Write Phenomena</a><ul>
+<li><a href="#dirty-read">Dirty Read</a></li>
+<li><a href="#non-repeatable-readread-skew">Non-repeatable Read(Read Skew)</a></li>
+<li><a href="#phantom-read">Phantom Read</a></li>
+<li><a href="#write-skew">Write Skew</a></li>
+<li>
+<a href="#lost-update">Lost Update</a><ul>
+<li><a href="#last-modified-date">Last-modified Date</a></li>
+<li><a href="#atomic-write">Atomic write</a></li>
+<li><a href="#locking">Locking</a></li>
+<li><a href="#conflict-resolution-and-replication">Conflict Resolution and Replication</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#database-lock">Database Lock</a><ul>
+<li><a href="#shared-lockread-lock">Shared Lock(Read Lock)</a></li>
+<li><a href="#exclusive-lockwrite-lock">Exclusive Lock(Write Lock)</a></li>
+<li><a href="#predicate-lock">Predicate Lock</a></li>
+<li><a href="#index-range-lock">Index Range Lock</a></li>
+</ul>
+</li>
+<li>
+<a href="#database-locking-mechanism">Database Locking Mechanism</a><ul>
+<li><a href="#optimistic-locking">Optimistic Locking</a></li>
+<li><a href="#pessimistic-locking">Pessimistic Locking</a></li>
+</ul>
+</li>
+<li>
+<a href="#issues-with-database-lock">Issues with Database Lock</a><ul>
+<li><a href="#lock-contention">Lock Contention</a></li>
+<li><a href="#deadlock">Deadlock</a></li>
+<li><a href="#lock-promotion">Lock Promotion</a></li>
+</ul>
+</li>
+<li>
+<a href="#isolation-level">Isolation Level</a><ul>
+<li>
+<a href="#serializable">Serializable</a><ul>
+<li><a href="#single-thread-approach">Single Thread Approach</a></li>
+<li><a href="#two-phase-locking2pl">Two-Phase Locking(2PL)</a></li>
+</ul>
+</li>
+<li><a href="#snapshot">Snapshot</a></li>
+<li><a href="#serializable-snapshot-isolationssi">Serializable Snapshot Isolation(SSI)</a></li>
+<li><a href="#repeatable-reads">Repeatable Reads</a></li>
+<li><a href="#read-committed">Read Committed</a></li>
+<li><a href="#read-uncommitted">Read Uncommitted</a></li>
+</ul>
+</li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="transaction">Transaction</h1>
+<p><img src="https://i.imgur.com/B3oYvZh.png" alt=""><br>
+根據 google translate 的結果我們可以得知，transaction 就是交易<br>
+那麼 <code class="language-plaintext highlighter-rouge">交易</code> 本身需要有什麼樣的特性呢？</p>
+
+<ol>
+  <li>交易不是成功就是失敗</li>
+  <li>交易完成之後不能反悔</li>
+  <li>交易的過程中，交易的物品不該被拿去做別的交易</li>
+</ol>
+
+<p>那麼 <code class="language-plaintext highlighter-rouge">交易</code> 具體來說怎麼做？</p>
+<ol>
+  <li>我付錢</li>
+  <li>你收錢</li>
+  <li>我拿到交易的物品</li>
+</ol>
+
+<p>從上述其實你可以發現<br>
+一筆交易的步驟可能不只一個，而任何步驟都有可能會出錯<br>
+transaction 的概念是，我把一系列複雜的事情抽象化到只剩 <code class="language-plaintext highlighter-rouge">交易</code> 本身<br>
+<strong><em>我不用管中間的步驟哪裡錯掉 我只關心交易本身而已</em></strong></p>
+<ul>
+  <li>交易失敗？ 我的錢要還給我</li>
+  <li>交易成功？ 我要拿到交易的物品</li>
+</ul>
+
+<p>基本上這就是 transaction 的中心思想</p>
+
+<hr>
+
+<p>對應到資料庫本身，為什麼資料庫需要 transaction?<br>
+你可能做了某個操作，需要同時更新 user 資料、permission 資料以及 notification 資料<br>
+你絕對不會希望更新完 user 資料，結果發現 permission, notification 資料都沒被更新到這種事情吧<br>
+透過 transaction 你可以保證，它會全部被更新或全部被丟棄</p>
+
+<blockquote>
+  <p>其實 transaction 不只可以用在資料庫，service 層也可以使用到相同的概念</p>
+</blockquote>
+
+<p>讓我們用比較學術的方式梳理一下目前的概念</p>
+
+<p>transaction 包含了一系列的操作(可以將它視為 unit of work)<br>
+transaction 只會有兩種狀態 - 成功或失敗</p>
+<ul>
+  <li>成功 <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> <strong>commit</strong> 操作</li>
+  <li>失敗 <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> <strong>rollback</strong> 操作(復原我的操作，當作什麼都沒發生過)</li>
+</ul>
+
+<h2 id="need-to-use-transaction-for-single-query">Need to Use Transaction for Single Query?</h2>
+<p>答案是 <strong>不用</strong></p>
+
+<p>根據 <a href="https://dev.mysql.com/doc/refman/8.0/en/commit.html">13.3.1 START TRANSACTION, COMMIT, and ROLLBACK Statements</a></p>
+<blockquote>
+  <p>By default, MySQL runs with autocommit mode enabled. <br>
+This means that, when not otherwise inside a transaction, each statement is atomic, as if it were surrounded by START TRANSACTION and COMMIT. <br>
+You cannot use ROLLBACK to undo the effect; <br>
+however, if an error occurs during statement execution, the statement is rolled back.</p>
+</blockquote>
+
+<p>每個 sql statement 即使你沒有明確地使用 transaction 把它包住<br>
+它也仍然是一個 unit of work<br>
+transaction 多數情況下只用於 2 個以上的 sql statement<br>
+多包一層毫無意義，即使是 <code class="language-plaintext highlighter-rouge">CREATE</code> 或是 <code class="language-plaintext highlighter-rouge">UPDATE</code> 都一樣</p>
+
+<blockquote>
+  <p><a href="https://stackoverflow.com/questions/1171749/what-does-a-transaction-around-a-single-statement-do">What does a transaction around a single statement do?</a></p>
+</blockquote>
+
+<h2 id="can-transaction-prevent-data-race">Can Transaction Prevent Data Race?</h2>
+<p>會不會遇到 data race 取決於 <a href="#isolation-level">Isolation Level</a><br>
+但是 如果設定成 <a href="#serializable">Serializable</a> 就不會有問題了嗎？</p>
+
+<p>我最近在工作上就遇到這個問題了<br>
+我們的 code 有許多的測試進行保護，包含了 unit test 以及 integration test<br>
+其中我們發現，integration test 的部份近期突然開始出現 unique constraint 的錯誤<br>
+而這個很明顯的是，隔離機制沒有做好<br>
+其實我們很早就有發現這個問題，並將測試限制成單執行緒(從 jest 下手)<br>
+當時我們認為已經處理完成了，不過現在問題依然存在</p>
+
+<p>我們使用的是 PostgreSQL<br>
+預設的隔離機制是 <a href="#read-committed">Read Commited</a>(可參考 <a href="https://www.postgresql.org/docs/current/sql-set-transaction.html">SET TRANSACTION</a>)<br>
+提高到 <a href="#serializable">Serializable</a> 不太能解決這個問題，尤其是 PostgreSQL</p>
+
+<p>根據 <a href="https://www.postgresql.org/docs/current/transaction-iso.html#XACT-SERIALIZABLE">13.2.3. Serializable Isolation Level</a> 所述</p>
+<blockquote>
+  <p>However, like the Repeatable Read level, <br>
+applications using this level must be prepared to retry transactions due to serialization failures. <br>
+In fact, this isolation level works exactly the same as Repeatable Read except that <br>
+it also monitors for conditions which could make execution of a concurrent set of serializable transactions behave in a manner inconsistent with all possible serial (one at a time) executions of those transactions.</p>
+</blockquote>
+
+<p>也就是說，如果偵測到類似 unique constraint 這種 inconsistent<br>
+它仍然會失敗，它並不像我們所認知的，它會等到其他 transaction 執行完接著跑<br>
+所以回答這個小節的標題，<code class="language-plaintext highlighter-rouge">使用 transaction 並沒有辦法保證不會出現 data race</code></p>
+
+<blockquote>
+  <p>當然這取決於不同資料庫的實作，有些是真的一個一個跑</p>
+</blockquote>
+
+<hr>
+
+<p>至於我們最後採取了何種作法<br>
+我們選擇在 seed db 的時候，讓他的 id 是隨機產生的<br>
+雖說寫測試的時候，我們希望資料本身是 fixed data 而不是 random 的<br>
+但是對於測試 API 本身，我其實不太關心 id 是多少<br>
+id 本身就是 auto increment 或者是 <a href="https://en.wikipedia.org/wiki/Universally_unique_identifier">UUID</a>, <a href="https://github.com/ulid/spec">ULID</a> … 這種的<br>
+所以他不會對你的測試有任何影響，就算要 trace 也很好追</p>
+
+<h1 id="acid">ACID</h1>
+<p>ACID 是一系列描述 transaction 該滿足的屬性, 他是由 4 個屬性組合而成<br>
+一個提供資料一致、穩定的系統 他的條件必定符合 ACID 原則<br>
+常見的 RDBMS 比如說 MySQL, PostgreSQL, Oracle, SQLite 以及 Microsoft SQL Server</p>
+
+<h2 id="atomicity">Atomicity</h2>
+<p>前面提到，transaction 將一系列操作視為 unit of work<br>
+亦即 transaction 的操作在外人看來是一個整體的</p>
+
+<p>Atomic 保證了這個操作是不能被中斷的(亦即不會有更新到一半的問題)<br>
+唯有這樣才不會造成更大的問題(e.g. <a href="#dirty-read">Dirty Read</a>, <a href="#lost-update">Lost Update</a>)</p>
+
+<h2 id="consistency">Consistency</h2>
+<p>Consistency 是一個第一次有點難理解的東西</p>
+
+<p>它描述的是 transaction 前後的系統狀態要是相同的<br>
+用以保證 <code class="language-plaintext highlighter-rouge">database invariants</code></p>
+
+<p><strong>invariants</strong> 指的是系統不變量<br>
+是一個系統該遵循的規則 什麼規則呢？ 每個系統不一樣<br>
+以 binary search tree 來說，他的 invariants 就是左子樹所有 child 都一定比我還要小，右子樹所有 child 都一定比我還要大<br>
+這就是 binary search tree 的 invariants, 不論你對它進行哪種操作，它都一定會符合這些規則</p>
+
+<p>所以 database 的不變量(或者說規則)是什麼？<br>
+舉幾個例子</p>
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">Entity Integrity</code>
+    <ul>
+      <li>這個規則指的是每個 table 都必須要有 primary key, 而且被指定為 primary key 的欄位值必須是 unique 且不為空</li>
+    </ul>
+  </li>
+  <li>
+<code class="language-plaintext highlighter-rouge">Referential Integrity</code>
+    <ul>
+      <li>這個規則指的是 foreign key value 只能有兩種狀態
+        <ul>
+          <li>foreign-key 有指到資料庫中某些 table 的 primary key 上</li>
+          <li>foreign-key 為空，那就代表目前沒有外鍵的關係或 relation 未知</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<blockquote>
+  <p>八卦是你塞入違反系統的 invariants 它也不會阻止你<br>
+也因此書中是說，consistency 應該要是 application 的責任，而非 database</p>
+</blockquote>
+
+<p>所以回到 consistency<br>
+對資料庫的每一次操作，資料庫的狀態都必須要符合它該有的 invariants<br>
+這就是 consistency 在描述的東西</p>
+
+<p>簡言之，處於 “良好狀態”</p>
+
+<h2 id="isolation">Isolation</h2>
+<p>若是多個 transaction 同時對同一個資源更新，它仍然會有 data race 的風險<br>
+注意到 transaction 本身並沒有防止多執行緒 data race 這件事情</p>
+
+<p>透過不同程度的 isolation 可以有效的避免這種事情發生，詳細解釋可以參考 <a href="#isolation-level">Isolation Level</a></p>
+
+<h2 id="durability">Durability</h2>
+<p>簡單，一旦 transaction 被寫入，它就會永遠存在在儲存裝置裡(即使遇到系統損壞)</p>
+
+<h1 id="base">BASE</h1>
+<p>跟 <a href="#acid">ACID</a> 相反，符合 BASE 的系統多半願意提供更高可用性，更高的效能(注意到 BASE 原則還是會關心資料一致性)<br>
+多數 NoSQL 資料庫都符合這個特性</p>
+
+<h2 id="basically-available">Basically Available</h2>
+<p>滿足 BASE 條件的 NoSQL 資料庫通常提供水平擴展的功能<br>
+Basically available 指的是當某幾個 node 掛掉的狀態下，系統仍然有一定程度的可用性</p>
+
+<p>這個部份可用性會 work 的原因是因為<br>
+資料庫會將資料複製到不同的 node 上面(database cluster)，用以維持可用性</p>
+
+<h2 id="soft-state">Soft State</h2>
+<p>也因為水平擴展的特性，資料的同步會有延遲<br>
+有些機器還沒同步到最新的資料，所以資料狀態有可能會隨著時間而有不同</p>
+
+<h2 id="eventually-consistent">Eventually Consistent</h2>
+<p>雖然 Soft State 告訴你，不同機器上的資料狀態可能不一樣<br>
+但是它保證系統最終會達到一致性</p>
+
+<p>只是要花多久？ 不知道<br>
+就像臉書按讚數，不同的 replica 上面的讚數量可能不一樣，但最後一定會同步完成
+<img src="https://ithelp.ithome.com.tw/upload/images/20220906/20151137CJmF7xjqpD.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://ithelp.ithome.com.tw/articles/10287859">[Day 4] NoSQL Database 的 BASE 特性</a></p>
+</blockquote>
+
+<h1 id="database-read-write-phenomena">Database Read Write Phenomena</h1>
+<p>以下將會介紹各種可能會遇到的 race condition 狀況</p>
+
+<h2 id="dirty-read">Dirty Read</h2>
+<blockquote>
+  <p>讀到還沒 commit 的資料，稱為 dirty read</p>
+</blockquote>
+
+<p>兩個 transaction 同時對同個 row data 進行讀寫<br>
+其中 <code class="language-plaintext highlighter-rouge">A transaction</code> 更新了資料(尚未 commit)<br>
+另一個 <code class="language-plaintext highlighter-rouge">B transaction</code> 卻讀取到更新後的資料</p>
+
+<p><img src="https://miro.medium.com/max/786/1*ODCTiPWsmDTFdKNGAFM9cg.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c">複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions</a></p>
+</blockquote>
+
+<h2 id="non-repeatable-readread-skew">Non-repeatable Read(Read Skew)</h2>
+<blockquote>
+  <p>query 得到的相同 row, data 卻有不同結果，稱為 non-repeatable read</p>
+</blockquote>
+
+<p>兩個 transaction 同時對同個 row data 進行讀寫<br>
+其中 <code class="language-plaintext highlighter-rouge">A transaction</code> commit 了資料<br>
+另一個 <code class="language-plaintext highlighter-rouge">B transaction</code> 讀取到更新後的資料</p>
+
+<p><img src="https://miro.medium.com/max/786/1*jKDYsZgXp2WapUGf_UYWNQ.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c">複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions</a></p>
+</blockquote>
+
+<h2 id="phantom-read">Phantom Read</h2>
+<blockquote>
+  <p>相同 query 得到不同 row, 稱為 phantom read</p>
+</blockquote>
+
+<p>兩個 transaction<br>
+<code class="language-plaintext highlighter-rouge">A transaction</code> 撈資料<br>
+<code class="language-plaintext highlighter-rouge">B transaction</code> 對同個 table 新增了資料<br>
+<code class="language-plaintext highlighter-rouge">A transaction</code> 再撈一次資料(相同條件) 相比第一次撈 卻多了一筆</p>
+
+<p><img src="https://miro.medium.com/max/786/1*CdcPhIaxK63I13szHM4TMg.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c">複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions</a></p>
+</blockquote>
+
+<h2 id="write-skew">Write Skew</h2>
+<blockquote>
+  <p>兩個 transaction 對不同 data 更新，造成違反某些條件</p>
+</blockquote>
+
+<p>注意到它跟 lost update 是不同的狀況，write skew 是對 <strong>不同</strong> 資料進行更新(而 lost update 是對相同資料做更新)</p>
+
+<p>所以何謂 write skew?<br>
+<img src="https://miro.medium.com/v2/resize:fit:1100/format:webp/1*dWJ7cx-34ERNUSsKN594ng.jpeg" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/swlh/designing-data-intensive-applications-write-operation-race-conditions-726ca7e35028">Designing Data Intensive Applications: Write Operation Race Conditions</a></p>
+</blockquote>
+
+<p>醫生 on call 班表，其中 Alice, Bob 皆為醫師<br>
+on call 班表有個限制，必須要有至少有一個人值班<br>
+Alice 以及 Bob 都不想值班，看到 on call 班表還有人<br>
+於是都更新了 <code class="language-plaintext highlighter-rouge">各自的 on call 班表</code> <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> 結果造成沒人值班</p>
+
+<h2 id="lost-update">Lost Update</h2>
+<blockquote>
+  <p>兩個 transaction 對同一筆 data 更新，最後只有其中一個有成功</p>
+</blockquote>
+
+<p>這個 case 其實滿好懂的<br>
+也就是說 <code class="language-plaintext highlighter-rouge">B transaction</code> 在更新的時候，它沒有意識到 <code class="language-plaintext highlighter-rouge">A transaction</code> 的存在(即使它已經 commit changes)<br>
+所以等到 <code class="language-plaintext highlighter-rouge">B transaction</code> 寫入的時候它會把 <code class="language-plaintext highlighter-rouge">A transaction</code> 的 changes 給覆蓋掉</p>
+
+<p>其中 lost update 多半符合 <code class="language-plaintext highlighter-rouge">read-modify-write</code> 的特徵<br>
+也就是說在 application layer，programmer 會先讀取目標資料，再透過 transaction 更新以及 commit</p>
+
+<blockquote>
+  <p>在使用 ORM 的時候，由於不熟其特性即有可能發生此狀況</p>
+</blockquote>
+
+<p><img src="https://miro.medium.com/max/786/1*SGa1A9vBHetIm53WFjKjlA.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c">複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions</a></p>
+</blockquote>
+
+<p>常見的 lost update 解決辦法包含</p>
+<h3 id="last-modified-date">Last-modified Date</h3>
+<p>透過使用 last-modified date 當時間搓記，可以去判斷說寫入的資料是不是當前 transaction 所為</p>
+
+<blockquote>
+  <p>但這通常不是很好的方法，因為小數點只到第二位，存在精度問題</p>
+</blockquote>
+
+<h3 id="atomic-write">Atomic write</h3>
+<p>看了這麼多系列文章，想必你各位對 atomic operation 已經有一定的認知了<br>
+可以參考 <a href="../../random/python-gil#atomic-operation">關於 Python 你該知道的那些事 - GIL(Global Interpreter Lock) | Shawn Hsu</a></p>
+
+<p>那麼為什麼 atomic write 可以避免 lost update?<br>
+read-modify-write 其實可以簡化成一段 sql statement, 沒有必要分成兩段以上撰寫</p>
+
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">UPDATE</span> <span class="k">user</span> <span class="k">SET</span> <span class="n">first_name</span> <span class="o">=</span> <span class="s1">'ambersun'</span> <span class="k">WHERE</span> <span class="n">id</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p>當然某些情況下沒辦法這樣寫就是，複雜的商業邏輯處理必須要採用其他種方式</p>
+</blockquote>
+
+<h3 id="locking">Locking</h3>
+<p>最直覺的方法之一，既然同步讀寫這麼有問題，那我就強制加一個 lock<br>
+強迫所有操作必須等待其他 transaction</p>
+
+<blockquote>
+  <p>詳細的討論可以參考 <a href="#database-lock">Database Lock</a></p>
+</blockquote>
+
+<h3 id="conflict-resolution-and-replication">Conflict Resolution and Replication</h3>
+<p>在 cluster mode 下的資料庫系統來說，會遇到多個 node 試圖去更新同一個 row data 要怎麼辦？<br>
+hmmm 那就要自己定規則去處理囉</p>
+
+<p>他的衝突規則大約有以下這些種類</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Resolution Rule</th>
+      <th style="text-align: left">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Ignore</td>
+      <td style="text-align: left">忽略</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Timestamp</td>
+      <td style="text-align: left">apply 最新更新的資料</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SPL routine</td>
+      <td style="text-align: left">提供最客製化的設定，透過 <code class="language-plaintext highlighter-rouge">Store Procedure Language</code> 自己制定規則</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Timestamp with SPL routine</td>
+      <td style="text-align: left">如果時間搓記一樣，使用 SPL</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Delete wins</td>
+      <td style="text-align: left">delete 以及 insert 的優先權高於 update, 否則依照時間 apply 最新的資料</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Always apply</td>
+      <td style="text-align: left">忽略</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>以上出自 <a href="https://www.ibm.com/docs/en/informix-servers/14.10?topic=resolution-conflict-rule">Conflict resolution rule</a></p>
+</blockquote>
+
+<hr>
+
+<h1 id="database-lock">Database Lock</h1>
+<h2 id="shared-lockread-lock">Shared Lock(Read Lock)</h2>
+<p>shared lock 可以被多個 transaction 持有，因為 shared lock 的特性是依舊可以讓你讀取資料<br>
+多個 transaction 讀取資料並不會改變資料本身 所以是安全的(前題是隔離機制設置正確)</p>
+
+<p>那也因為 shared lock 只能讀取的特性，所以任何嘗試更新資料的行為是不被允許的</p>
+
+<p>MySQL shared lock 的指令</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="p">...</span> <span class="k">FOR</span> <span class="k">SHARE</span>
+<span class="o">#</span> <span class="err">舊版的指令</span> <span class="k">SELECT</span> <span class="p">...</span> <span class="k">LOCK</span> <span class="k">IN</span> <span class="k">SHARE</span> <span class="k">MODE</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html">15.7.2.4 Locking Reads</a></p>
+</blockquote>
+
+<h2 id="exclusive-lockwrite-lock">Exclusive Lock(Write Lock)</h2>
+<p>exclusive lock 可以讓持有的 transaction 進行更新資料的操作<br>
+不同的是，為了保證 data integrity, exclusive lock 同一時間只能有 <code class="language-plaintext highlighter-rouge">一個 transaction 持有</code><br>
+剩下的 transaction 只能排隊等待 exclusive lock</p>
+
+<p>exclusive lock 不能與 shared lock 並存<br>
+因為它不能保證資料正確性</p>
+
+<p>MySQL exclusive lock 的指令</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="p">...</span> <span class="k">FOR</span> <span class="k">UPDATE</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking-reads.html">15.7.2.4 Locking Reads</a></p>
+</blockquote>
+
+<h2 id="predicate-lock">Predicate Lock</h2>
+<p>有別於 <a href="#shared-lockread-lock">Shared Lock</a> 與 <a href="#exclusive-lockwrite-lock">Exclusive Lock</a><br>
+predicate lock 並不屬於某個特定物件，他是屬於匹配某些條件的物件的 lock</p>
+
+<p>比如說</p>
+<div class="language-sql highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="k">SELECT</span> <span class="o">*</span> <span class="k">FROM</span> <span class="k">user</span> <span class="k">WHERE</span> <span class="n">created_at</span> <span class="o">&gt;</span> <span class="s1">'2023-10-01'</span> <span class="k">AND</span> <span class="n">created_at</span> <span class="o">&lt;</span> <span class="s1">'2023-10-31'</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>這些查詢出來的 rows 都擁有著 predicate lock</p>
+
+<blockquote>
+  <p>predicate: 一系列的表示式，用於 filter data row</p>
+</blockquote>
+
+<h2 id="index-range-lock">Index Range Lock</h2>
+<p>一個區間內的 lock?<br>
+那不就是 <a href="#predicate-lock">Predicate Lock</a>？ 顯然不是的</p>
+
+<p>不一樣的地方在於，Range Lock 是建立在 index 之上的<br>
+所以速度上會快於 <a href="#predicate-lock">Predicate Lock</a></p>
+
+<h1 id="database-locking-mechanism">Database Locking Mechanism</h1>
+<h2 id="optimistic-locking">Optimistic Locking</h2>
+<p>與其讓 transaction 一個一個等待，Optimistic Locking 的機制採用 <code class="language-plaintext highlighter-rouge">先 commit 先贏</code> 的方法<br>
+這樣的好處是讓所有人都有 commit 的機會，當某個天選 transaction 成功 commit 之後<br>
+其他的 transaction 就必須得 rollback 重來</p>
+
+<blockquote>
+  <p>其他 transaction 在 “交易後” 會檢查(e.g. version number, timestamp) 確保還沒有被其他人改過</p>
+</blockquote>
+
+<p>Optimistic Locking 常用於不常更新的資料或是 locking overhead 很重的地方</p>
+
+<h2 id="pessimistic-locking">Pessimistic Locking</h2>
+<p>我假設我要更新的資料會被弄髒，所以先使用 <a href="#exclusive-lockwrite-lock">Exclusive Lock</a> 鎖住<br>
+待我完成更新，釋放 lock 之前，沒有人可以進行更新</p>
+
+<p>相對的，這樣的 lock 機制會造成資源的競爭，以及 overhead 的增加</p>
+
+<h1 id="issues-with-database-lock">Issues with Database Lock</h1>
+<p>lock 好用歸好用，但是過度的使用不僅會造成 overhead 還有其他問題</p>
+
+<h2 id="lock-contention">Lock Contention</h2>
+<p>過度的使用 lock 會導致資源的競爭<br>
+若干個 transaction 嘗試讀取更改資料，會因為前面排隊的 transaction 還很多進而拖累執行速度</p>
+
+<p>而且不同的 transaction 可能由不同核心下去跑<br>
+而頻繁的存取改寫，會導致不同 core 的 cache line 資料過期(invalid)<br>
+也就是說 A transaction 改了數值，B transaction 的 cache line 也必須要同步更新(write broadcasting)<br>
+這就是所謂的 <a href="https://en.wikipedia.org/wiki/Cache_coherency_protocols_(examples)">Cache Coherency Protocol</a></p>
+
+<h2 id="deadlock">Deadlock</h2>
+<p>複習一下 deadlock 的四個條件</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: left"> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Non-preemption</td>
+      <td style="text-align: left">process 不能被 swap out</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Mutual Exclusion</td>
+      <td style="text-align: left">資源一次只能一個人用</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Hold and Wait</td>
+      <td style="text-align: left">吃碗裡看碗外</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Circular Wait</td>
+      <td style="text-align: left">A 等 B, B 等 C, C 等 A</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>所以資料庫有可能會發生 deadlock, 它可能一次更新很多 row data</p>
+
+<h2 id="lock-promotion">Lock Promotion</h2>
+<p>MySQL 8.0 InnoDB 預設 shared lock 以及 exclusive lock 都是以 row-level lock 為主</p>
+
+<blockquote>
+  <p>A <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_shared_lock">shared (S) lock</a> permits the transaction that holds the lock to read a row.<br>
+An <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_exclusive_lock">exclusive (X) lock</a> permits the transaction that holds the lock to update or delete a row.</p>
+</blockquote>
+
+<p>當 row-level lock 太多的時候，因為佔用的記憶體空間變大，有可能 DBMS 選擇採用 table-level lock 以降低記憶體使用率<br>
+不過這部份文獻偏少，目前僅看到 <a href="https://www.sap.com/products/technology-platform/sybase-ase.html">SYBASE ASE</a> 有支援相關功能</p>
+
+<blockquote>
+  <p>Once table scan accumulates more page or row locks than allowed by the lock promotion threshold,<br>
+SAP ASE tries to issue a partition or table lock,<br>
+depending on corresponding lock promotion thresholds.<br>
+If it succeeds, the page or row locks are no longer necessary and are released.</p>
+</blockquote>
+
+<h1 id="isolation-level">Isolation Level</h1>
+<h2 id="serializable">Serializable</h2>
+<p>序列化隔離機制，有以下 2 幾種作法</p>
+
+<h3 id="single-thread-approach">Single Thread Approach</h3>
+<p>最安全的隔離機制之一，完全犧牲掉 concurrency 帶來的好處<br>
+換來的是最完美，不會有任何 read/write phenomena 的發生<br>
+也因為他是使用單執行緒進行操作，因此如果有一個特別慢的卡住，會讓後面的堵住</p>
+
+<p>像是 <a href="https://redis.io/">Redis</a> 底層就是使用單執行緒處理的<br>
+詳細可以參考 <a href="../../database/database-cache">資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu</a></p>
+
+<h3 id="two-phase-locking2pl">Two-Phase Locking(2PL)</h3>
+<p>就是 <a href="#pessimistic-locking">Pessimistic Locking</a><br>
+那 2 phase 是哪兩個階段？<br>
+<code class="language-plaintext highlighter-rouge">拿取(acquire)</code> 跟 <code class="language-plaintext highlighter-rouge">釋放(release)</code> 的兩個時段</p>
+
+<p>而正如上述提到的，<a href="#pessimistic-locking">悲觀鎖</a> 只能讓擁有 <a href="#exclusive-lockwrite-lock">Exclusive Lock</a> 的人更改資料<br>
+與此同時，其他擁有 <a href="#shared-lockread-lock">Shared Lock</a> 的只能等待<br>
+至於要等多久？ 沒有人知道</p>
+
+<p>缺點的話<br>
+由於 acquire/release lock 的過程是很耗費時間的<br>
+再加上若是並發寫入，<code class="language-plaintext highlighter-rouge">n - 1</code> 個 tx 都要等待，所以他的效能很差</p>
+
+<blockquote>
+  <p>可以用 <a href="#predicate-lock">Predicate Lock</a> 或 <a href="#index-range-lock">Index Range Lock</a> 實作<br>
+多數因為效能問題而普遍採用 <a href="#index-range-lock">Index Range Lock</a></p>
+</blockquote>
+
+<h2 id="snapshot">Snapshot</h2>
+<p>snapshot 就是對資料庫進行快照<br>
+對於正在執行中的 transaction 不予理會</p>
+
+<p>具體來說他是怎麼做的呢？<br>
+維護 <strong>一個物件的多版本</strong>(Multi-Version Concurrency Control, MVCC)</p>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*Tje55--GvuNvVLf5IM7unQ.png" alt=""></p>
+<blockquote>
+  <p><a href="https://rahulpradeep.medium.com/the-i-in-acid-weak-isolation-levels-7e2dbbadd45e">The “I” in ACID — Weak Isolation Levels</a></p>
+</blockquote>
+
+<p>也就是說我把 <code class="language-plaintext highlighter-rouge">UPDATE</code> 轉換成 <code class="language-plaintext highlighter-rouge">新增</code> 以及 <code class="language-plaintext highlighter-rouge">刪除</code><br>
+如此一來我就會擁有多個版本的歷史紀錄<br>
+當需要存取的時候，我只要撈特定版本資訊就可以了(created by current transaction)</p>
+
+<p>而要注意的是, snapshot <strong>仍然需要 <a href="#exclusive-lockwrite-lock">Exclusive Lock(Write Lock)</a></strong><br>
+因為他有可能是 concurrent 在執行<br>
+read 的時候不需要用 lock, 因為他是從 snapshot 中讀取的</p>
+
+<blockquote>
+  <p>即: read 不會 block write, 而 write 不會 block read</p>
+</blockquote>
+
+<p>但是對於 <a href="#write-skew">Write Skew</a> 的狀況用 snapshot 也沒辦法避免<br>
+因為 write skew 是更新兩個不同的 row data, 而有可能會違反特定的 condition<br>
+snapshot 的機制下，它也不會知道 condition 的存在(他是在 application layer 客製化的)</p>
+
+<p>因此，snapshot 機制下，<a href="#write-skew">Write Skew</a> 依然會發生</p>
+
+<h2 id="serializable-snapshot-isolationssi">Serializable Snapshot Isolation(SSI)</h2>
+<p>一樣使用 snapshot 但是 <strong>不使用 locking</strong><br>
+也就是 <a href="#optimistic-lockingoptimistic-concurrency-control">Optimistic Locking</a> 的機制</p>
+
+<blockquote>
+  <p>早期的 OCC(Optimistic Concurrency Control) 不使用 snapshot, 這是它跟 SSI 主要的區別</p>
+</blockquote>
+
+<p>一樣是對當前資料庫進行快照<br>
+但是讓若干個 transaction <strong>同步執行</strong><br>
+唯一不同的是，在 commit 的時候，它會將快照跟資料庫做一次比對，確保更新的部份沒有被其他人更新過<br>
+萬一更新的部份發生衝突了呢？ 那就是必須 rollback</p>
+
+<blockquote>
+  <p>這就是不需要用 lock 的原因，一次只會有一個 transaction 成功 commit</p>
+</blockquote>
+
+<p>也因為我不使用 lock, 所有的 acquire/release overhead 都沒有<br>
+因此，他的效能是比 <a href="#snapshot">Snapshot</a> 還要來的高的</p>
+
+<h2 id="repeatable-reads">Repeatable Reads</h2>
+<p>transaction 在交易期間會拿住 read lock 以及 write lock</p>
+
+<p>也因為這樣，所以在 repeatable reads level 的隔離機制下<br>
+<a href="#phantom-read">Phantom Read</a>, <a href="#write-skew">Write Skew</a> 也有可能會出現</p>
+
+<blockquote>
+  <p>由於 SQL standard 並未定義 <a href="#snapshot">Snapshot</a><br>
+後來的實作有的稱之為 <a href="#repeatable-reads">Repeatable Reads</a>，但它可能代表 Snapshot 或 Serializable</p>
+</blockquote>
+
+<h2 id="read-committed">Read Committed</h2>
+<p>其餘 transaction 只能看到已經被 commit 過得資料(transaction 在交易期間會拿住 write lock)<br>
+所以任何 intermediate 的資料是沒辦法被讀取到的</p>
+
+<p>read committed level 的隔離機制沒辦法防止 <a href="#non-repeatable-readread-skew">Non-repeatable Read(Read Skew)</a></p>
+
+<h2 id="read-uncommitted">Read Uncommitted</h2>
+<p>如他的名字所述，transaction 可以看到其他 “還沒被 commit 的 changes”</p>
+
+<p>也就是說這個 level 的隔離，是 <strong>沒辦法防止</strong> 任何 read/write phenomena 的</p>
+
+<h1 id="conclusion">Conclusion</h1>
+<p>總結一下</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">isolation level</th>
+      <th style="text-align: center">read lock</th>
+      <th style="text-align: center">write lock</th>
+      <th style="text-align: center">range lock</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">serializable</td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">snapshot</td>
+      <td style="text-align: center">-</td>
+      <td style="text-align: center">-</td>
+      <td style="text-align: center">-</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">repeatable reads</td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">read committed</td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">read uncommitted</td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">isolation level</th>
+      <th style="text-align: center">dirty read</th>
+      <th style="text-align: center">non-repeatable reads</th>
+      <th style="text-align: center">phantom read</th>
+      <th style="text-align: center">write skew</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">serializable</td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">snapshot</td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">repeatable reads</td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">read committed</td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">read uncommitted</td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"> 表示會發生</p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>資料密集型應用系統設計(ISBN: 978-986-502-835-0)</li>
+  <li>內行人才知道的系統設計面試指南(ISBN: 978-986-502-885-5)</li>
+  <li><a href="https://stackoverflow.com/questions/974596/what-is-a-database-transaction">What is a database transaction?</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/ACID#Consistency_(Correctness)">ACID</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Consistency_(database_systems)">Consistency (database systems)</a></li>
+  <li><a href="https://medium.com/@chester.yw.chu/%E8%A4%87%E7%BF%92%E8%B3%87%E6%96%99%E5%BA%AB%E7%9A%84-isolation-level-%E8%88%87%E5%B8%B8%E8%A6%8B%E7%9A%84%E4%BA%94%E5%80%8B-race-conditions-%E5%9C%96%E8%A7%A3-16e8d472a25c">複習資料庫的 Isolation Level 與圖解五個常見的 Race Conditions</a></li>
+  <li><a href="https://ithelp.ithome.com.tw/articles/10247034">[Day 17] Database Transaction &amp; ACID - (2)</a></li>
+  <li><a href="https://ithelp.ithome.com.tw/articles/10259236">Transactions (1) - ACID</a></li>
+  <li><a href="https://stackoverflow.com/questions/112064/what-is-an-invariant">What is an invariant?</a></li>
+  <li><a href="https://phoenixnap.com/kb/acid-vs-base">ACID vs. BASE: Comparison of Database Transaction Models</a></li>
+  <li><a href="https://stackoverflow.com/questions/11043712/what-is-the-difference-between-non-repeatable-read-and-phantom-read">What is the difference between Non-Repeatable Read and Phantom Read?</a></li>
+  <li><a href="https://ithelp.ithome.com.tw/articles/10260430?sc=iThelpR">Transactions (4) - Concurrent Write</a></li>
+  <li><a href="https://ambitious.systems/write-skew">Write Skew</a></li>
+  <li><a href="https://ambitious.systems/lost-updates">Lost Updates</a></li>
+  <li><a href="https://www.up-2date.com/post/lost-update">Lost Update Problem</a></li>
+  <li><a href="https://www.ibm.com/docs/en/informix-servers/14.10?topic=resolution-conflict-rule">Conflict resolution rule</a></li>
+  <li><a href="https://medium.com/inspiredbrilliance/what-are-database-locks-1aff9117c290">Locking in Databases and Isolation Mechanisms</a></li>
+  <li><a href="https://www.ibm.com/docs/en/rational-clearquest/7.1.0?topic=clearquest-optimistic-pessimistic-record-locking">Optimistic and pessimistic record locking</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Preemption_(computing)">Preemption (computing)</a></li>
+  <li><a href="https://help.sap.com/docs/SAP_ASE/a08646e0736e4b4b968705079db4c5f5/a8e79ce0bc2b1014ba93c05b94d49657.html?version=16.0.3.4&amp;locale=en-US">Types of Locks in SAP ASE</a></li>
+  <li><a href="https://stackoverflow.com/questions/1970345/what-is-thread-contention">What is thread contention?</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Snapshot_isolation">Snapshot isolation</a></li>
+  <li><a href="https://stackoverflow.com/questions/12179130/what-are-range-locks">what are range-locks?</a></li>
+  <li><a href="https://stackoverflow.com/questions/6477574/do-database-transactions-prevent-race-conditions">Do database transactions prevent race conditions?</a></li>
+  <li><a href="https://stackoverflow.com/questions/129329/optimistic-vs-pessimistic-locking">Optimistic vs. Pessimistic locking</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#atomicity" class="page__taxonomy-item p-category" rel="tag">atomicity</a><span class="sep">, </span>
+    
+      <a href="/tags/#base" class="page__taxonomy-item p-category" rel="tag">base</a><span class="sep">, </span>
+    
+      <a href="/tags/#basically-available" class="page__taxonomy-item p-category" rel="tag">basically available</a><span class="sep">, </span>
+    
+      <a href="/tags/#consistency" class="page__taxonomy-item p-category" rel="tag">consistency</a><span class="sep">, </span>
+    
+      <a href="/tags/#database" class="page__taxonomy-item p-category" rel="tag">database</a><span class="sep">, </span>
+    
+      <a href="/tags/#dirty-read" class="page__taxonomy-item p-category" rel="tag">dirty read</a><span class="sep">, </span>
+    
+      <a href="/tags/#durability" class="page__taxonomy-item p-category" rel="tag">durability</a><span class="sep">, </span>
+    
+      <a href="/tags/#eventually-consistent" class="page__taxonomy-item p-category" rel="tag">eventually consistent</a><span class="sep">, </span>
+    
+      <a href="/tags/#index-range-lock" class="page__taxonomy-item p-category" rel="tag">index range lock</a><span class="sep">, </span>
+    
+      <a href="/tags/#isolation" class="page__taxonomy-item p-category" rel="tag">isolation</a><span class="sep">, </span>
+    
+      <a href="/tags/#isolation-level" class="page__taxonomy-item p-category" rel="tag">isolation level</a><span class="sep">, </span>
+    
+      <a href="/tags/#lock-promotion" class="page__taxonomy-item p-category" rel="tag">lock promotion</a><span class="sep">, </span>
+    
+      <a href="/tags/#lost-update" class="page__taxonomy-item p-category" rel="tag">lost update</a><span class="sep">, </span>
+    
+      <a href="/tags/#mvcc" class="page__taxonomy-item p-category" rel="tag">mvcc</a><span class="sep">, </span>
+    
+      <a href="/tags/#non-repeatable-read" class="page__taxonomy-item p-category" rel="tag">non-repeatable read</a><span class="sep">, </span>
+    
+      <a href="/tags/#optimistic-locking" class="page__taxonomy-item p-category" rel="tag">optimistic locking</a><span class="sep">, </span>
+    
+      <a href="/tags/#pessimistic-locking" class="page__taxonomy-item p-category" rel="tag">pessimistic locking</a><span class="sep">, </span>
+    
+      <a href="/tags/#phantom-read" class="page__taxonomy-item p-category" rel="tag">phantom read</a><span class="sep">, </span>
+    
+      <a href="/tags/#predicate-lock" class="page__taxonomy-item p-category" rel="tag">predicate lock</a><span class="sep">, </span>
+    
+      <a href="/tags/#read-committed" class="page__taxonomy-item p-category" rel="tag">read committed</a><span class="sep">, </span>
+    
+      <a href="/tags/#read-uncommitted" class="page__taxonomy-item p-category" rel="tag">read uncommitted</a><span class="sep">, </span>
+    
+      <a href="/tags/#read-modify-write" class="page__taxonomy-item p-category" rel="tag">read-modify-write</a><span class="sep">, </span>
+    
+      <a href="/tags/#repeatable-reads" class="page__taxonomy-item p-category" rel="tag">repeatable reads</a><span class="sep">, </span>
+    
+      <a href="/tags/#serializable" class="page__taxonomy-item p-category" rel="tag">serializable</a><span class="sep">, </span>
+    
+      <a href="/tags/#serializable-snapshot-isolation" class="page__taxonomy-item p-category" rel="tag">serializable snapshot isolation</a><span class="sep">, </span>
+    
+      <a href="/tags/#snapshot" class="page__taxonomy-item p-category" rel="tag">snapshot</a><span class="sep">, </span>
+    
+      <a href="/tags/#soft-state" class="page__taxonomy-item p-category" rel="tag">soft state</a><span class="sep">, </span>
+    
+      <a href="/tags/#ssi" class="page__taxonomy-item p-category" rel="tag">ssi</a><span class="sep">, </span>
+    
+      <a href="/tags/#transaction" class="page__taxonomy-item p-category" rel="tag">transaction</a><span class="sep">, </span>
+    
+      <a href="/tags/#two-phase-locking" class="page__taxonomy-item p-category" rel="tag">two-phase locking</a><span class="sep">, </span>
+    
+      <a href="/tags/#unit-of-work" class="page__taxonomy-item p-category" rel="tag">unit of work</a><span class="sep">, </span>
+    
+      <a href="/tags/#write-skew" class="page__taxonomy-item p-category" rel="tag">write skew</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#database" class="page__taxonomy-item p-category" rel="tag">database</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E8%B3%87%E6%96%99%E5%BA%AB+-+Transaction+%E8%88%87+Isolation%20https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-transaction%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-transaction%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-transaction%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/database/database-cache/" class="pagination--pager" title="資料庫 - Cache Strategies 與常見的 Solutions
+">Previous</a>
+    
+    
+      <a href="/container/container-minimized-image/" class="pagination--pager" title="Container 技術 - 最小化 Docker Image
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-01-23">
+            2026-01-23
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/database/database-transaction/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/database/database-transaction"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

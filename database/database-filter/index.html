@@ -1,0 +1,1729 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用 | Shawn Hsu</title>
+<meta name="description" content="我們常用空間換時間，但很多時候這樣還是不夠的。透過機率型資料結構，犧牲些微準確性，獲取極大的性能提昇在某些場景下是非常必要的，本文會介紹機率型資料結構的基本概念，以及在 Redis 中的實作方式">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用">
+<meta property="og:url" content="https://ambersuncreates.com/database/database-filter/">
+
+
+  <meta property="og:description" content="我們常用空間換時間，但很多時候這樣還是不夠的。透過機率型資料結構，犧牲些微準確性，獲取極大的性能提昇在某些場景下是非常必要的，本文會介紹機率型資料結構的基本概念，以及在 Redis 中的實作方式">
+
+
+<meta property="og:image" content="/assets/img/og/database-filter.png">
+
+
+
+
+  <meta property="article:published_time" content="2026-01-19T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-02-06T01:19:17+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/database/database-filter/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#database" itemprop="item"><span itemprop="name">Database</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用">
+    <meta itemprop="description" content="Cache Issues就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆所以其實在這種狀況底下，直接讓請求到 database 是不好的選項">
+    <meta itemprop="datePublished" content="2026-01-19T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-02-06T01:19:17+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/database/database-filter/" class="u-url" itemprop="url">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-06">
+            2026-02-06
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li><a href="#cache-issues">Cache Issues</a></li>
+<li>
+<a href="#probabilistic-data-structure">Probabilistic Data Structure</a><ul>
+<li><a href="#hash-function">Hash Function</a></li>
+<li><a href="#why-not-hash-table-only">Why not Hash Table only?</a></li>
+</ul>
+</li>
+<li>
+<a href="#different-types-of-probabilistic-data-structure">Different Types of Probabilistic Data Structure</a><ul>
+<li>
+<a href="#bloom-filter">Bloom Filter</a><ul>
+<li><a href="#better-bloom-filter">Better Bloom Filter</a></li>
+<li><a href="#scalablestackable-bloom-filter">Scalable(Stackable) Bloom Filter</a></li>
+</ul>
+</li>
+<li><a href="#cuckoo-filter">Cuckoo Filter</a></li>
+<li>
+<a href="#xor-filter">XOR Filter</a><ul><li><a href="#binary-fuse-filter">Binary Fuse Filter</a></li></ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#redis-example">Redis Example</a><ul>
+<li><a href="#bloom-filter-1">Bloom Filter</a></li>
+<li><a href="#cuckoo-filter-1">Cuckoo Filter</a></li>
+</ul>
+</li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="cache-issues">Cache Issues</h1>
+<p>就像我們在 <a href="../../database/database-cache">資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu</a> 當中提到的<br>
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆<br>
+所以其實在這種狀況底下，直接讓請求到 database 是不好的選項</p>
+
+<p>當然除了你對它設計 rate limit，阻擋某個 IP 過來的請求<br>
+可是這樣也不是一個太好的選項，雖然會動</p>
+
+<p>是不是用一個可以快速查詢的方式，就可以將所有不在 cache 也不在 database 裡面的請求，直接快速返回呢？<br>
+顯而易見的，使用 <a href="#hash-function">Hash Function</a> 來實作是一個很好的選項</p>
+
+<h1 id="probabilistic-data-structure">Probabilistic Data Structure</h1>
+<p>這種要求就會需要用到機率型資料結構<br>
+這些資料結構能夠提供 “概略的” 統計資料，比方說</p>
+<ul>
+  <li>這個資料存不存在</li>
+  <li>某某資料的數量是多少</li>
+</ul>
+
+<p>等等的</p>
+
+<p>相比於傳統的資料結構，雖然能夠統計出最完整的資料，不過效率上會慢非常多<br>
+這也是為什麼機率型資料結構受到歡迎的原因，犧牲一點的準確性，換取極高的效率</p>
+
+<h2 id="hash-function">Hash Function</h2>
+<p>要怎麼快速的，比如說查詢資料存不存在<br>
+最直覺的作法肯定是將資料本身做個 hash<br>
+查詢的時候，就做一樣過 hash function 得出結果，然後看看有沒有這個資料就可以了</p>
+
+<p>所以其實機率型資料結構的實作，就是依靠 hash function 來達成的</p>
+
+<h2 id="why-not-hash-table-only">Why not Hash Table only?</h2>
+<p>碰撞問題在算 hash 的時候是很常會遇到的問題<br>
+以下的實作方法雖然本質上都是使用 <a href="#hash-function">Hash Function</a> 來實作<br>
+但是為什麼不單純只算一次，而是比如說</p>
+
+<ul>
+  <li>
+<a href="#bloom-filter">Bloom Filter</a>: 採用 <strong>多次 hash</strong> 的作法</li>
+  <li>
+<a href="#cuckoo-filter">Cuckoo Filter</a>: 採用 <strong>雙 hash</strong> 的作法</li>
+</ul>
+
+<p>等多次的算法，目的為何？<br>
+其實說白了就是要降低碰撞的概率，降低誤判的機率<br>
+機率型結構同時滿足，”空間換時間” 以及 “準確率換時間” 的特性</p>
+
+<p>所以單純的一次 hash 實務上是不太會使用的</p>
+
+<h1 id="different-types-of-probabilistic-data-structure">Different Types of Probabilistic Data Structure</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Probabilistic Data Structure</th>
+      <th style="text-align: left">Insertion</th>
+      <th style="text-align: left">Query</th>
+      <th style="text-align: left">Deletion</th>
+      <th style="text-align: left">Modification</th>
+      <th style="text-align: left">Space Utilization</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><a href="#bloom-filter">Bloom Filter</a></td>
+      <td style="text-align: left">$O(K)$</td>
+      <td style="text-align: left">$O(K)$</td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: left"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: left">Very Low</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#scalable-bloom-filter">Scalable Bloom Filter</a></td>
+      <td style="text-align: left">$O(K)$</td>
+      <td style="text-align: left">$O(K * L)$</td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: left"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: left">Low</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#cuckoo-filter">Cuckoo Filter</a></td>
+      <td style="text-align: left">$O(1)$</td>
+      <td style="text-align: left">$O(1)$</td>
+      <td style="text-align: left"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: left"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: left">Medium</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#xor-filter">XOR Filter</a></td>
+      <td style="text-align: left">$O(1)$</td>
+      <td style="text-align: left">$O(1)$</td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: left">High</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><a href="#binary-fuse-filter">Binary Fuse Filter</a></td>
+      <td style="text-align: left">$O(1)$</td>
+      <td style="text-align: left">$O(1)$</td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: left"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+      <td style="text-align: left">Very High</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>每筆資料所需空間: <a href="#bloom-filter">Bloom Filter</a> &gt; <a href="#scalable-bloom-filter">Scalable Bloom Filter</a> &gt; <a href="#cuckoo-filter">Cuckoo Filter</a> &gt; <a href="#xor-filter">XOR Filter</a> &gt; <a href="#binary-fuse-filter">Binary Fuse Filter</a></p>
+</blockquote>
+
+<h2 id="bloom-filter">Bloom Filter</h2>
+<p><a href="https://en.wikipedia.org/wiki/Bloom_filter">Bloom Filter</a> 是一種機率型資料結構，可以快速判斷資料是否存在<br>
+當資料不存在時，可以快速返回結果，避免無謂的查詢</p>
+
+<p>基本的概念是，透過一個巨大的 bit array，將同一筆資料做 <strong>多次 hash</strong>，然後將結果存到 array 裡面<br>
+以下圖來說就是三次 hash</p>
+
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Bloom_filter.svg/960px-Bloom_filter.svg.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://en.wikipedia.org/wiki/Bloom_filter">Bloom Filter</a></p>
+</blockquote>
+
+<p>假設你做了三次 hash，那麼 hash 出來的結果會被寫入三個不同的位置，不是 0 就是 1<br>
+那他要怎麼做查詢呢？<br>
+將輸入也做同樣的三次 hash，如果相對位置上的資料都是 <code class="language-plaintext highlighter-rouge">1</code>，那這筆資料 <strong>“應該”</strong> 是存在的</p>
+
+<p>為什麼是應該呢？<br>
+因為，hash function 會有碰撞的問題嘛<br>
+有可能不同的輸入，hash 出來的結果是相同的<br>
+而採用 <strong>多次 hash</strong> 的作法，可以降低碰撞的機率<br>
+但並不是完全可以避免</p>
+
+<p>只有算出來的東西 <code class="language-plaintext highlighter-rouge">全部都是 1</code>，那這筆資料可能是存在的(i.e. <code class="language-plaintext highlighter-rouge">false positive</code>，因為同一個位置有可能有其他資料 map 到這裡)<br>
+那如果有一個位置是 <code class="language-plaintext highlighter-rouge">0</code>，那這筆資料就絕對不存在(比如說上圖的 <em>w</em>)</p>
+
+<hr>
+
+<p>那會不會有一種狀況是，Bloom Filter 的資料滿了呢？<br>
+會的吧？ 那到時候是不是整條 bit array 的內容都幾乎是 1 了呢？</p>
+
+<p>在這樣的情況下，Bloom Filter 的準確性就會下降，就是你丟啥進去它都是 true 了<br>
+那能不能考慮將資料刪除呢？ 不行，因為有可能同一個位置有多筆資料 map 到同一個位置<br>
+強制把它清 0 會讓其他原本準確的資料也一起被清掉<br>
+所以 <a href="#bloom-filter">Bloom Filter</a> <strong><em>不支援刪除</em></strong></p>
+
+<h3 id="better-bloom-filter">Better Bloom Filter</h3>
+<p>不過，多次 hash 實務上也是有缺點的，就是慢<br>
+所以 <a href="https://www.eecs.harvard.edu/~michaelm/postscripts/tr-02-05.pdf">Building a Better Bloom Filter</a> 這篇論文提出了一些改進的方式<br>
+簡單講就是透過計算兩次的 hash 結果之後，利用以上結果把剩下的全部推論出來</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td>
+<td class="rouge-code"><pre><span class="n">bit_vector</span><span class="p">[</span><span class="n">hash1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">bit_vector</span><span class="p">[</span><span class="n">hash2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">bit_vector</span><span class="p">[</span><span class="n">hash1</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">hash2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>而這牽扯到一個數學問題，如果你的 bit_vector 的長度與 hash2 的結果有公因數<br>
+那你可能會很快的將 Bloom Filter 全部塞滿</p>
+
+<p>就是說，假設陣列大小是 <code class="language-plaintext highlighter-rouge">10</code><br>
+hash2 的結果是 <code class="language-plaintext highlighter-rouge">2</code><br>
+那你之後步進的結果就是 <code class="language-plaintext highlighter-rouge">2, 4, 6, 8, 0, 2, 4, 6, 8, ...</code><br>
+等於說你有很大的機率會重複，這樣誤判率上升，對吧</p>
+
+<p>與其去限制 hash2 不如控制陣列的大小<br>
+既然重點是 <strong>互質</strong>，將陣列大小設定為質數不就好了？<br>
+這也是為什麼工程上通常會設定 <code class="language-plaintext highlighter-rouge">100003</code> 而不是 <code class="language-plaintext highlighter-rouge">100000</code></p>
+
+<h3 id="scalablestackable-bloom-filter">Scalable(Stackable) Bloom Filter</h3>
+<p><a href="#bloom-filter">Bloom Filter</a> 是沒辦法做刪除的，而且也沒有辦法擴展<br>
+也就是說，在一開始的時候 bit array 的大小就要事先決定好<br>
+但是這樣就不好用了阿？ 所以一個變種 Scalable Bloom Filter 就出現了</p>
+
+<p>既然一個 Filter 不夠，那就再加一個<br>
+而新增的這一層通常會比原本的大一倍，為了不夠然後又繼續加層數</p>
+
+<p>這樣下去，查詢的時間除了原本的 hash 次數，還要再加上層數(L)<br>
+所以是 $O(K \times L)$<br>
+寫入的部份因為只需要寫入最新的那一層(因為舊的那層滿了嘛)，所以是 $O(K)$</p>
+
+<blockquote>
+  <p>如果我重複寫入相同的資料呢？<br>
+會需要先檢查，確定不存在再寫嗎？<br>
+實務上通常不這樣做，因為新的層數會是先前的一倍大，多幾個 bit 的資料影響不大<br>
+而且先查再寫會大幅度的增加 overhead(因為查詢是 $O(K \times L)$)</p>
+</blockquote>
+
+<h2 id="cuckoo-filter">Cuckoo Filter</h2>
+<p><code class="language-plaintext highlighter-rouge">Cuckoo Filter</code> 不同於 <a href="#bloom-filter">Bloom Filter</a>，它採用 <strong>雙 hash</strong> 的作法，計算出資料的 fingerprint<br>
+然後在相對應的位置上標記<br>
+而這種作法，也會出現 false positive 的問題(i.e. 相同 fingerprint)</p>
+
+<p>計算 fingerprint 的好處在於，能夠做到 <strong><em>刪除的功能</em></strong><br>
+因為我儲存的是資料的 fingerprint，而不是資料模糊之後的結果(<a href="#bloom-filter">Bloom Filter</a> 儲存的是去特徵化後的結果映射)<br>
+我能夠定位到唯一的資料，然後刪除它<br>
+不過，hash 的原罪就是會碰撞，有沒有可能 fingerprint 也相同呢？<br>
+所以對於刪除 <strong>你只能刪除某個，你確定有加入過的資料</strong></p>
+
+<p>那我有多個加入過的資料，然後 fingerprint 也相同呢？<br>
+這就要講回到 <strong>雙 hash</strong> 的作法了(i.e. <em>cuckoo hashing</em>)<br>
+兩種 hash function 分別長這樣</p>
+
+<ul>
+  <li>$h_1(x) = \text{hash}(x)$</li>
+  <li>$h_2(x) = h_1(x) \oplus \text{hash}(\text{fingerprint}(x))$</li>
+</ul>
+
+<blockquote>
+  <p>fingerprint 也可以讓整個 filter 的 size 變得更緊湊<br>
+原因在於判斷存在與否僅須看兩個位置，就算旁邊資料是滿的，也不影響判斷<br>
+而 <a href="#bloom-filter">Bloom Filter</a> 資料如果塞太滿，會導致誤判的機率上升(就像課本上畫滿重點，整本都是重點，整本也都不是重點)</p>
+</blockquote>
+
+<p>由於 $\oplus$(xor) 的特性，你只要知道其中一個 hash 值，你就能夠推導出另一個<br>
+那為什麼要算兩個 hash，原因也是要處理碰撞的問題<br>
+如果發現 $h_1$ 已經被佔領了，它就會嘗試將資料放到 $h_2$ 的位置上<br>
+那如果兩個位置都滿了呢？<br>
+cuckoo hashing 的作法會是將舊的資料踢掉，因為你可以算另一個 hash 嘛<br>
+所以就一直找下去，如果一直都是滿的就一直踢，直到有空位<br>
+當然不太會一直無限找下去啦，所以通常會設定個 threshold，超過就放棄<br>
+也就是說 <strong>insert 是有可能會失敗的</strong></p>
+
+<p><img src="https://i0.wp.com/codecapsule.com/wp-content/uploads/2013/07/cuckoo_preview.jpg?w=720&amp;ssl=1" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://codecapsule.com/2013/07/20/cuckoo-hashing/">Cuckoo Hashing</a></p>
+</blockquote>
+
+<h2 id="xor-filter">XOR Filter</h2>
+<p><code class="language-plaintext highlighter-rouge">XOR Filter</code> 的作法則是將儲存的資料變成是 “片段的 fingerprint” 資料<br>
+並且只有固定三個片段，然後將這三個片段進行 XOR 運算<br>
+得出來的結果，再與 fingerprint 進行比對<br>
+如果兩個長的一樣，那這筆資料應該存在</p>
+
+\[h_1(p_1) \oplus h_2(p_2) \oplus h_3(p_3) = \text{fingerprint(input)}\]
+
+<p>本質也還是算 hash，所以片段的 fingerprint 也會有碰撞的問題<br>
+所以 <a href="#xor-filter">XOR Filter</a> 也會有 false positive 的問題</p>
+
+<blockquote>
+  <p>都是算 fingerprint，why not <a href="#cuckoo-filter">Cuckoo Filter</a>?<br>
+就還是回到 <a href="#why-not-hash-table-only">Why not Hash Table only?</a> 的問題<br>
+還是空間最大化利用以及準確率換時間的 trade offs</p>
+</blockquote>
+
+<p>他的出現旨在取代 Bloom Filter，因為以下各種原因</p>
+<ol>
+  <li>
+<a href="#xor-filter">XOR Filter</a> 比 <a href="#bloom-filter">Bloom Filter</a> 更快
+    <ul>
+      <li>3 + 1 次 hash 比 n 次 hash 快</li>
+    </ul>
+  </li>
+  <li>
+<a href="#xor-filter">XOR Filter</a> 所需空間比 <a href="#bloom-filter">Bloom Filter</a> 更小
+    <ul>
+      <li>Bloom Filter 塞太滿，誤判機率會上升</li>
+    </ul>
+  </li>
+</ol>
+
+<p>不過他有一個大缺點<br>
+要先知道所有儲存資料，你才能開始構件 XOR Filter<br>
+因為它本質上是在解方程式，上述的數學式你也看到了<br>
+它需要找到 3 個不同的 hash function，使得所有數值填入之後計算出來的等式是成立的<br>
+換句話說，<a href="#xor-filter">XOR Filter</a> 沒辦法 <strong>動態新增資料</strong></p>
+
+<p>本質上就是先找到 Degree 1 slot 然後一層一層解析<br>
+一個 slot 如果有兩個資料映射到同一個位置，那就不能拆<br>
+就是要找到所謂的突破口</p>
+
+<p>很抽象？</p>
+
+\[x + y = 10 \\
+y + z = 15 \\
+x + z = 11\]
+
+<p>單純看 $x + y = 10$ 你可以很簡單的說出答案，可是這個答案他是與其他等式有相依性的<br>
+部份解不一定等於全局解<br>
+況且它本質上還是 hash function 你更難猜</p>
+
+<blockquote>
+  <p>上述作法稱為 <code class="language-plaintext highlighter-rouge">peeling</code></p>
+</blockquote>
+
+<p>所以它就沒用了嗎？<br>
+其實有些系統是 read heavy 的，將 <a href="#xor-filter">XOR Filter</a> 應用在此種狀況可以獲得很好的效果</p>
+
+<h3 id="binary-fuse-filter">Binary Fuse Filter</h3>
+<p>你會發現 <a href="#xor-filter">XOR Filter</a> 的 peeling 過程其實挺容易失敗的<br>
+找到共同解沒有這麼簡單，尤其資料量大的時候，萬一失敗它就要重新設定 hash</p>
+
+<p>那既然問題是資料量大的時候，容易失敗<br>
+那麼把資料分組不就解決了，所以現在是 <em>分組 也 分片段</em></p>
+<ul>
+  <li>分組: 將整個 array 切成多個大小相同的小 array 且互不重疊，稱為 <strong><em>segment</em></strong>
+</li>
+  <li>分片段: 將輸入資料切成 3 個片段(3 次 hash)</li>
+</ul>
+
+<p>而目的是</p>
+
+<ul>
+  <li>分組: 為了解決 peeling 失敗</li>
+  <li>分片段: 犧牲部份準確率換取時間</li>
+</ul>
+
+<blockquote>
+  <p>如果你不分組，那基本等於 <a href="#xor-filter">XOR Filter</a></p>
+</blockquote>
+
+<p>為了要讓 <a href="#binary-fuse-filter">Binary Fuse Filter</a> 跑得又快又好<br>
+其中一個特殊要求是，3 組 hash function 的結果，<strong><em>必須座落於相鄰的 segment 中</em></strong><br>
+也就是說</p>
+
+<ol>
+  <li>當你算出第一個 hash 結果，找到它應該放在哪個 segment 之後，假設位置 <code class="language-plaintext highlighter-rouge">i</code>
+</li>
+  <li>第二個 hash 結果必須放在 <code class="language-plaintext highlighter-rouge">i + 1</code> 的 segment 中</li>
+  <li>第三個 hash 結果必須放在 <code class="language-plaintext highlighter-rouge">i + 2</code> 的 segment 中</li>
+</ol>
+
+<blockquote>
+  <p>如果都放在同一個 segment，那就是小號的 <a href="#xor-filter">XOR Filter</a></p>
+</blockquote>
+
+<p>這樣的好處是</p>
+<ul>
+  <li>解決了資料量大可能會出現的 peeling 失敗問題</li>
+  <li>查詢時間更快速，因為 3 次 hash 結果在記憶體中是相鄰的，可以提高 cache hit rate</li>
+  <li>peeling 建構過程更順利，只要找到 degree 1 slot 就能夠大幅度提昇找到全局解的機率(因為相鄰，所以找到一個，就可以往後繼續找(燒)，所以才叫 <code class="language-plaintext highlighter-rouge">fuse</code>)</li>
+</ul>
+
+<blockquote>
+  <p>有關 cache 可以參考 <a href="../../database/database-cache">資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="redis-example">Redis Example</h1>
+<p>那就來試一下</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>docker run <span class="nt">-itd</span> <span class="nt">-p</span> 6379:6379 <span class="nt">-p</span> 8001:8001 <span class="nt">--name</span> redis redis/redis-stack
+<span class="nv">$ </span>docker <span class="nb">exec</span> <span class="nt">-it</span> redis sh
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<blockquote>
+  <p>你可以造訪 <code class="language-plaintext highlighter-rouge">localhost:8001</code>，這個是 Redis Insight 的 GUI</p>
+</blockquote>
+
+<h2 id="bloom-filter-1">Bloom Filter</h2>
+<p>那其實我想試試它撞到會發生什麼事情<br>
+所以 <a href="#bloom-filter">Bloom Filter</a> 的錯誤率我會設定成 0.5<br>
+然後大小開 10 筆，這樣就比較容易撞到</p>
+
+<p><img src="/assets/img/posts/bf.png" alt=""></p>
+
+<p>可看到說，我沒有新增 <code class="language-plaintext highlighter-rouge">dog</code> 這筆資料，但它卻說存在<br>
+這就是 false positive 的問題(當然也是因為我錯誤率設定很高，所以很容易復現)</p>
+
+<blockquote>
+  <p>有關 Bloom Filter 的指令可以參考 <a href="https://redis.io/docs/latest/commands/bf.add/">BF</a></p>
+</blockquote>
+
+<h2 id="cuckoo-filter-1">Cuckoo Filter</h2>
+<p>而 <a href="#cuckoo-filter">Cuckoo Filter</a> 的操作也類似</p>
+
+<p><img src="/assets/img/posts/cf.png" alt=""></p>
+
+<p>注意到，拿這個範例去跟 <a href="#bloom-filter-1">Bloom Filter</a> 做比較是沒有意義的<br>
+因為他們的錯誤率設定不同，大小也不同，所以不能這樣看</p>
+
+<blockquote>
+  <p>有關 Cuckoo Filter 的指令可以參考 <a href="https://redis.io/docs/latest/commands/cf.add/">CF</a></p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://redis.io/docs/latest/develop/data-types/probabilistic/">Probabilistic</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Bloom_filter">Bloom filter</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Cuckoo_filter">Cuckoo filter</a></li>
+  <li><a href="https://redis.io/docs/latest/develop/data-types/probabilistic/bloom-filter/">Bloom filter</a></li>
+  <li><a href="https://redis.io/docs/latest/develop/data-types/probabilistic/cuckoo-filter/">Cuckoo filter</a></li>
+  <li><a href="https://redis.io/blog/bloom-filter/">Bloom Filter Datatype for Redis</a></li>
+  <li><a href="https://medium.com/@Kadai/%E8%B3%87%E6%96%99%E7%B5%90%E6%A7%8B%E5%A4%A7%E4%BE%BF%E7%95%B6-bloom-filter-58b0320a346d">資料結構大便當：Bloom Filter</a></li>
+  <li><a href="https://arxiv.org/pdf/2201.01174">Binary Fuse Filters: Fast and Smaller Than Xor Filters</a></li>
+  <li><a href="https://stackoverflow.com/questions/73410580/what-is-a-binary-fuse-filter">What is a binary fuse filter?</a></li>
+  <li><a href="https://stackoverflow.com/questions/73410580/what-is-a-binary-fuse-filter">What is an XOR filter?</a></li>
+  <li><a href="https://stackoverflow.com/questions/70963247/bloom-filters-with-the-kirsch-mitzenmacher-optimization">Bloom Filters with the Kirsch Mitzenmacher optimization</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#binary-fuse-filter" class="page__taxonomy-item p-category" rel="tag">binary fuse filter</a><span class="sep">, </span>
+    
+      <a href="/tags/#bloom-filter" class="page__taxonomy-item p-category" rel="tag">bloom filter</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache" class="page__taxonomy-item p-category" rel="tag">cache</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-avalanche" class="page__taxonomy-item p-category" rel="tag">cache avalanche</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-hotspot-invalid" class="page__taxonomy-item p-category" rel="tag">cache hotspot invalid</a><span class="sep">, </span>
+    
+      <a href="/tags/#cache-penetration" class="page__taxonomy-item p-category" rel="tag">cache penetration</a><span class="sep">, </span>
+    
+      <a href="/tags/#cuckoo-filter" class="page__taxonomy-item p-category" rel="tag">cuckoo filter</a><span class="sep">, </span>
+    
+      <a href="/tags/#cuckoo-hashing" class="page__taxonomy-item p-category" rel="tag">cuckoo hashing</a><span class="sep">, </span>
+    
+      <a href="/tags/#data-structure" class="page__taxonomy-item p-category" rel="tag">data structure</a><span class="sep">, </span>
+    
+      <a href="/tags/#false-positive" class="page__taxonomy-item p-category" rel="tag">false positive</a><span class="sep">, </span>
+    
+      <a href="/tags/#hash-function" class="page__taxonomy-item p-category" rel="tag">hash function</a><span class="sep">, </span>
+    
+      <a href="/tags/#peeling" class="page__taxonomy-item p-category" rel="tag">peeling</a><span class="sep">, </span>
+    
+      <a href="/tags/#probabilistic-data-structure" class="page__taxonomy-item p-category" rel="tag">probabilistic data structure</a><span class="sep">, </span>
+    
+      <a href="/tags/#redis" class="page__taxonomy-item p-category" rel="tag">redis</a><span class="sep">, </span>
+    
+      <a href="/tags/#redis-stack" class="page__taxonomy-item p-category" rel="tag">redis-stack</a><span class="sep">, </span>
+    
+      <a href="/tags/#scalable-bloom-filter" class="page__taxonomy-item p-category" rel="tag">scalable bloom filter</a><span class="sep">, </span>
+    
+      <a href="/tags/#xor-filter" class="page__taxonomy-item p-category" rel="tag">xor filter</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#database" class="page__taxonomy-item p-category" rel="tag">database</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E8%B3%87%E6%96%99%E5%BA%AB+-+%E6%A9%9F%E7%8E%87%E5%9E%8B%E8%B3%87%E6%96%99%E7%B5%90%E6%A7%8B+Bloom+Filter+%E5%9C%A8+Cache+%E4%B8%AD%E7%9A%84%E6%87%89%E7%94%A8%20https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-filter%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-filter%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-filter%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/random/golang-gc/" class="pagination--pager" title="多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-06">
+            2026-02-06
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-06">
+            2026-02-06
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-06">
+            2026-02-06
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-traffic/" rel="permalink">Kubernetes 從零開始 - 在分散式的世界實現 Zero Downtime 路由管理
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          16 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-10-16">2025-10-16</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-02-06">
+            2026-02-06
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-traffic/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-traffic/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-traffic/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Proxy
+Proxy 是一個中間人，負責處理 client 與 server 之間的溝通請求
+相比於 client 直接與 server 溝通，Proxy 的優勢在於可以進行流量控制、負載平衡、安全性控制等
+他可以分為兩類 Forward Proxy 以及 Reverse Proxy
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/database/database-filter/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/database/database-filter"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

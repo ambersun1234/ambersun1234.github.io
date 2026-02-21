@@ -1,0 +1,1929 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 | Shawn Hsu</title>
+<meta name="description" content="分散式系統是如今系統架構中最重要的一個概念之一，由於其複雜程度高，因此也衍生出了許多需要考慮的事情。本文將透過學習 Netflix Tudum 系統架構，並一一列舉這些問題，並且更深入的理解分散式系統的設計">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題">
+<meta property="og:url" content="https://ambersuncreates.com/database/database-distributed-issue/">
+
+
+  <meta property="og:description" content="分散式系統是如今系統架構中最重要的一個概念之一，由於其複雜程度高，因此也衍生出了許多需要考慮的事情。本文將透過學習 Netflix Tudum 系統架構，並一一列舉這些問題，並且更深入的理解分散式系統的設計">
+
+
+<meta property="og:image" content="/assets/img/og/database-distributed-issue.png">
+
+
+
+
+  <meta property="article:published_time" content="2024-07-05T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2025-11-30T20:26:02+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/database/database-distributed-issue/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#database" itemprop="item"><span itemprop="name">Database</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題">
+    <meta itemprop="description" content="Data ConsistencyEventually Consistent在分散式系統中，根據 CAP Theorem 我們知道AP 系統，沒辦法保證所有節點在收到相同的資料的時候維持一致(因為還沒同步完成)所以這類系統提供的保證通常都是 Eventually Consistent也就是他最終會趨於一致，只是時間不好說">
+    <meta itemprop="datePublished" content="2024-07-05T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2025-11-30T20:26:02+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/database/database-distributed-issue/" class="u-url" itemprop="url">資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2024-07-05">2024-07-05</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-11-30">
+            2025-11-30
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-distributed-issue/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-distributed-issue/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-distributed-issue/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li>
+<a href="#data-consistency">Data Consistency</a><ul>
+<li>
+<a href="#eventually-consistent">Eventually Consistent</a><ul>
+<li><a href="#read-after-write-consistency">Read-after-Write Consistency</a></li>
+<li><a href="#monotonic-read">Monotonic Read</a></li>
+<li><a href="#sequential-consistency">Sequential Consistency</a></li>
+<li><a href="#same-prefix-read">Same Prefix Read</a></li>
+</ul>
+</li>
+<li>
+<a href="#netflix-raw-hollow-system-for-tudum">Netflix Raw Hollow System for Tudum</a><ul>
+<li>
+<a href="#raw-hollow-system">Raw Hollow System</a><ul>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#writer-self-healing">Writer Self Healing</a></li>
+<li><a href="#constantly-up-to-date">Constantly up-to-date</a></li>
+<li><a href="#hollow-system">Hollow System</a></li>
+</ul>
+</li>
+<li><a href="#adoption-of-raw-hollow-system">Adoption of Raw Hollow System</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#readwrite-phenomena">Read/Write Phenomena</a><ul>
+<li>
+<a href="#causality-and-ordering">Causality and Ordering</a><ul>
+<li><a href="#lamport-timestamp">Lamport Timestamp</a></li>
+<li><a href="#version-vector">Version Vector</a></li>
+</ul>
+</li>
+<li>
+<a href="#conflict-resolutions-and-prevention">Conflict Resolutions and Prevention</a><ul>
+<li><a href="#last-write-wins">Last Write Wins</a></li>
+<li><a href="#mvccmulti-version-concurrency-control">MVCC(Multi-Version Concurrency Control)</a></li>
+<li><a href="#atomic-broadcast">Atomic Broadcast</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#transaction">Transaction</a><ul>
+<li>
+<a href="#two-phase-commit2pc">Two-phase Commit(2PC)</a><ul><li><a href="#issue">Issue</a></li></ul>
+</li>
+<li><a href="#three-phase-commit3pc">Three-phase Commit(3PC)</a></li>
+</ul>
+</li>
+<li><a href="#unstable-network">Unstable Network</a></li>
+<li><a href="#unreliable-clock">Unreliable Clock</a></li>
+<li><a href="#split-brain">Split Brain</a></li>
+<li><a href="#byzantine-fault">Byzantine Fault</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="data-consistency">Data Consistency</h1>
+<h2 id="eventually-consistent">Eventually Consistent</h2>
+<p>在分散式系統中，根據 <a href="../../database/database-distributed-database#cap-theorem">CAP Theorem</a> 我們知道<br>
+AP 系統，沒辦法保證所有節點在收到相同的資料的時候維持一致(因為還沒同步完成)<br>
+所以這類系統提供的保證通常都是 <strong>Eventually Consistent</strong><br>
+也就是他最終會趨於一致，只是時間不好說</p>
+
+<p>也因此這個保證是非常弱的<br>
+那最強的保證是什麼？ 是 <strong>Strong Consistency</strong><br>
+強一致性的系統(又稱 可線性化的系統)，<code class="language-plaintext highlighter-rouge">在高階角度看下來就好像只有一個資料副本，並且所有的操作都是 Atomic 的</code><br>
+也就是說他並不會出現一些奇奇怪怪的狀況，例如說寫進去的資料過一段時間才出來之類的(近新保證)</p>
+
+<blockquote>
+  <p>一個可線性化的系統(i.e. 強一致性)，本身就會提供近新保證<br>
+單台資料庫並不一定可以線性化，要看隔離機制<br>
+比如說 snapshot isolation 不能保證 linearizability，因為 snapshot 不能讀到比他新的資料</p>
+</blockquote>
+
+<blockquote>
+  <p>有關 isolation 的介紹，可以參考 <a href="../../database/database-transaction">資料庫 - Transaction 與 Isolation | Shawn Hsu</a></p>
+</blockquote>
+
+<p>但是，最終一致性與強一致性，跨距太遠了<br>
+我們需要有一些介於兩者之間的保證，如 <a href="#read-after-write-consistency">Read-after-Write</a>, <a href="#monotonic-read">Monotonic Read</a>, <a href="#sequential-consistency">Sequential Consistency</a>, <a href="#same-prefix-read">Same Prefix Read</a><br>
+這些都在一定程度上保證了資料的一致性</p>
+
+<h3 id="read-after-write-consistency">Read-after-Write Consistency</h3>
+<p>一個常見的問題是，我寫入的資料，我馬上讀取，卻讀不到<br>
+而原因在於你寫入與讀取的 replica 可能是不同台機器，資料還沒有同步這麼快<br>
+對於使用者來說這無疑是很奇怪的，我應該要能夠看到我剛剛做的改變</p>
+
+<p><code class="language-plaintext highlighter-rouge">Read-after-Write</code> 保證了，你寫入的資料，你馬上讀取，就會讀到<br>
+但是對於別人的資料，就無法保證</p>
+
+<p>解法可以針對自己的資料，讓他讀取 leader 的 replica，這樣就保證不會有未同步的問題<br>
+缺點是當讀取自己的資料量大的時候，速度就會變慢了</p>
+
+<h3 id="monotonic-read">Monotonic Read</h3>
+<p>更糟糕的是，如果多次查詢，返回的結果不一致，這可能比查不到還要糟糕<br>
+比如說，你查詢一個商品的庫存，第一次查詢是 10，第二次查詢是 0，第三次又是 10<br>
+那他到底是有還是沒有？ 這種 <strong>時間倒流的現象</strong> 是 Monotonic Read 想要避免的問題</p>
+
+<p>問題同樣也在讀取不同的 replica 資料同步問題<br>
+解決的辦法也滿簡單的，你只要確保，該 user 的所有 request 都是由同一個 replica 處理就好了<br>
+比如說用 hash function 將特定的使用者全部導向特定的機器上<br>
+稱之為 <code class="language-plaintext highlighter-rouge">Monotonic read</code></p>
+
+<blockquote>
+  <p>為什麼叫做單調讀取？ 因為當你讀了新的資料，就保證不會讀到舊的</p>
+</blockquote>
+
+<p>問題是出在讀取不同的 replica 資料，那解法很自然就是讀取相同的 replica</p>
+
+<h3 id="sequential-consistency">Sequential Consistency</h3>
+<p>也同樣是順序，不同的是 <a href="#monotonic-read">Monotonic Read</a> 是只保證 <strong>你</strong> 不會讀到舊的資料<br>
+而 Sequential Consistency 是保證全部的節點的資料都會有相同的順序</p>
+
+<h3 id="same-prefix-read">Same Prefix Read</h3>
+<p>假設資料有順序性或者說因果關係<br>
+讀取不同 replica 的資料，也同樣是遇到同步問題，導致使用者會看到牛頭不對馬尾的資料<br>
+比如說留言板，留言的順序是有因果關係/時間關係的<br>
+<code class="language-plaintext highlighter-rouge">資料時間</code> 與 <code class="language-plaintext highlighter-rouge">資料寫入時間</code> 的順序不一定是一樣的</p>
+
+<p>一樣是因為讀取不同 replica 資料造成的<br>
+解法可以讀取相同的 replica, 或者是依靠時間戳記，但時間並不可靠，可參考 <a href="#unreliable-clock">Unreliable Clock</a></p>
+
+<h2 id="netflix-raw-hollow-system-for-tudum">Netflix Raw Hollow System for Tudum</h2>
+<p>Netflix 的 Tudum 網站提供了一些獨家專訪，花絮以及特別收錄的內容<br>
+讓使用者可以更深層的探索他們最喜歡的影視作品<br>
+這個系統主要的角色就是 內容編輯者 以及 檢視者(使用者)</p>
+
+<p><img src="https://miro.medium.com/v2/resize:fit:2000/format:webp/1*i_LBGZ4i7QWeiDLES88HoA.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://netflixtechblog.com/netflix-tudum-architecture-from-cqrs-with-kafka-to-cqrs-with-raw-hollow-86d141b72e52">Netflix Tudum Architecture: from CQRS with Kafka to CQRS with RAW Hollow</a></p>
+</blockquote>
+
+<p>一開始是由編輯者編輯一些有趣的內容比如說花絮照片等等<br>
+透過他發布到 CMS 系統內做儲存，同時也同步到 Ingestion 服務拆解內容並轉換成讀取優化的資料(原因在於這些內容需要根據不同使用者做客製化)，透過 Kafka 發布進一步處理，並儲存在一個獨立的高可用性的資料庫內<br>
+每當使用者查看內容的時候，Page Data Service 會讀取這些拆解過後的資料，重組成客製化的資料並呈現給使用者看<br>
+為了更快速的處理資料，internal cache 的方案被採用，為了降低從資料庫讀取的時間</p>
+
+<blockquote>
+  <p>有關 kafka 可以參考 <a href="../../database/database-message-queue">資料庫 - 從 Apache Kafka 認識 Message Queue | Shawn Hsu</a></p>
+</blockquote>
+
+<p>這個系統可以很好的工作，讀寫分離讓他可以很輕鬆的擴展<br>
+非同步的資料處理也可以很好的使系統達到高可用性<br>
+架構上屬於 Event driven</p>
+
+<p>你可以看得出來，非同步的方式意味著這個系統是提供 <strong>Eventual Consistency</strong> 的保證<br>
+而 Netflix 團隊發現到，他們犧牲了能快速預覽內容的方便性，即使該系統提供了足高的可用性<br>
+Page Data Service 為了能夠更快速的取得資料，其內部擁有 near cache 的機制<br>
+這個內部的 near cache 可以在背景執行同步更新，每隔一段 refresh cycle 資料就會從 KVDAL(Key Value Data Abstraction Layer) 同步<br>
+那他造成的問題就會是，當資料量大起來的時候，使用者會看到過期的資料</p>
+
+<p>也就是說目前 Event Driven 的架構是沒有近新保證的</p>
+
+<h3 id="raw-hollow-system">Raw Hollow System</h3>
+<p>為了解決這種近新保證的問題，Netflix 團隊開發了 <a href="https://hollow.how/raw-hollow-sigmod.pdf">Raw Hollow</a>(Read After Write <a href="#hollow-system">Hollow</a>) System</p>
+
+<p><code class="language-plaintext highlighter-rouge">Raw Hollow</code> 加強了 <a href="#hollow-system">Hollow</a> 系統<br>
+系統如其名，他擁有 <a href="#read-after-write">Read-after-Write</a> 的近新保證，並且允許更新 near cache 的資料</p>
+
+<blockquote>
+  <p>Raw Hollow 也自動滿足 Eventual Consistency 的保證(因為它提供了 Read-after-Write 的保證)</p>
+</blockquote>
+
+<h4 id="architecture">Architecture</h4>
+<p><img src="/assets/img/posts/raw-hollow.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://hollow.how/raw-hollow-sigmod.pdf">Introducing RAW Hollow: An In-Memory, Co-Located, Compressed Object Store with Opt-In Strong Consistency</a></p>
+</blockquote>
+
+<p>架構上你可以看到，與 <a href="#hollow-system">Hollow</a> 系統不同的是，<code class="language-plaintext highlighter-rouge">source of truth</code> 不見了<br>
+意味著任何 <code class="language-plaintext highlighter-rouge">local client</code> 都可以透過 <code class="language-plaintext highlighter-rouge">writer</code> 更新 near cache 的資料</p>
+
+<p>整個系統的資料包含了兩個部分</p>
+<ul>
+  <li>base dataset</li>
+  <li>in-flight changes(還沒被正式寫入的資料)</li>
+</ul>
+
+<p>角色的部分</p>
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">writer</code>: 負責處理寫入資料(single leader 可參考 <a href="../../database/database-distributed-database">資料庫 - 初探分散式資料庫 | Shawn Hsu</a>)</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">local client</code>: 負責處理讀取資料</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">producer</code>: 負責推播新的資料(非完整 dataset, 僅包含差異資料)</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">logkeeper</code>: 儲存資料的暫存的地方，1GB 大小的 circular log</li>
+</ul>
+
+<p>整體的操作圍繞在 base dataset 之上<br>
+每個 <code class="language-plaintext highlighter-rouge">local client</code> 都可以更新 base dataset 的資料<br>
+他們需要透過發送 request 到 <code class="language-plaintext highlighter-rouge">writer</code> 來更新</p>
+
+<p><code class="language-plaintext highlighter-rouge">writer</code> 也具備高可用性(使用 <a href="https://zookeeper.apache.org/">ZooKeeper</a> 來協調)，同一時間只有一個 writer 負責寫入<br>
+當他意外下線，其他 hot standby writer 會接手</p>
+
+<p>資料會暫時的儲存在 <code class="language-plaintext highlighter-rouge">logkeeper</code> 內<br>
+<code class="language-plaintext highlighter-rouge">writer</code> 會將資料同步至多個 <code class="language-plaintext highlighter-rouge">logkeeper</code> 內，直到所有 Quorum 內的 <code class="language-plaintext highlighter-rouge">logkeeper</code> 都擁有資料<br>
+才會視為操作成功</p>
+
+<p>後續 <code class="language-plaintext highlighter-rouge">producer</code> 將會從 <code class="language-plaintext highlighter-rouge">logkeeper</code> 取得資料，計算差異化資料並推播至 <code class="language-plaintext highlighter-rouge">local client</code> 身上</p>
+
+<h4 id="writer-self-healing">Writer Self Healing</h4>
+<p><code class="language-plaintext highlighter-rouge">writer</code> 會等待 <strong>所有 Quorum 內的 logkeeper 都擁有資料</strong> 才會視為操作成功<br>
+所以如果寫到一半, 即使 <code class="language-plaintext highlighter-rouge">writer</code> 掛掉，部分 <code class="language-plaintext highlighter-rouge">logkeeper</code> 內還是會有暫存資料對吧<br>
+所以新的 leader 上位，他需要跟所有 Quorum 內的 <code class="language-plaintext highlighter-rouge">logkeeper</code> 取得 in-flight changes 的資料<br>
+最大化的避免 data loss</p>
+
+<p>如果所有 <code class="language-plaintext highlighter-rouge">logkeeper</code> 都掛了呢？<br>
+<code class="language-plaintext highlighter-rouge">producer</code> 每隔 30 秒就會上傳完整的 in-flight changes 至 S3<br>
+即使全掛，資料損失也降到最低，對於 Netflix 來說，這樣的損失是可以接受的</p>
+
+<h4 id="constantly-up-to-date">Constantly up-to-date</h4>
+<p>你說，透過 pub/sub 接收推播資料，這也有延遲不是<br>
+因此，為了能夠極大化的接收到最新 base dataset 的資料<br>
+<code class="language-plaintext highlighter-rouge">local client</code> 其實會偷跑</p>
+
+<p>我們說 Raw Hollow 資料由 base dataset 以及 in-flight changes 組成<br>
+除了 pub/sub 過來的 base dataset 以外<br>
+<code class="language-plaintext highlighter-rouge">local client</code> 會嘗試透過 Long Polling 的機制將處理中的 in-flight changes 同步過來</p>
+
+<blockquote>
+  <p>有關 Long Polling 可以參考 <a href="../../random/real-time-communication">淺談 Polling, Long Polling 以及其他即時通訊方法論</a></p>
+</blockquote>
+
+<p>那如果 <code class="language-plaintext highlighter-rouge">logkeeper</code> Quorum 不滿足怎麼辦<br>
+Quorum 會動態調整，使得 Quorum 內的 <code class="language-plaintext highlighter-rouge">logkeeper</code> <strong>始終 Strongly Consistent</strong></p>
+
+<h4 id="hollow-system">Hollow System</h4>
+<p><code class="language-plaintext highlighter-rouge">Hollow</code> 是一個分散式的 in-memory near cache 的系統，透過將資料壓縮至記憶體內，並允許應用程式快速的讀取<br>
+透過讀取 <code class="language-plaintext highlighter-rouge">source of truth</code> 的資料，透過 pub/sub 的機制同步到不同的節點上<br>
+注意到，<code class="language-plaintext highlighter-rouge">Hollow</code> 系統是一個 read-only 的系統，它只允許讀取資料，不允許寫入(或者說更改)資料</p>
+
+<p><img src="/assets/img/posts/hollow.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://hollow.how/raw-hollow-sigmod.pdf">Introducing RAW Hollow: An In-Memory, Co-Located, Compressed Object Store with Opt-In Strong Consistency</a></p>
+</blockquote>
+
+<h3 id="adoption-of-raw-hollow-system">Adoption of Raw Hollow System</h3>
+<p>乍看之下 <a href="#raw-hollow-system">Raw Hollow</a> 好像跟原本的 near cache 沒什麼兩樣<br>
+但要注意的是 <code class="language-plaintext highlighter-rouge">Raw Hollow</code> 系統內部儲存的是 “完整的資料集”(被壓縮過)<br>
+他本質上是資料庫而非 cache<br>
+而 Raw Hollow 系統帶來了以下的好處</p>
+<ul>
+  <li>每個節點可以儲存高達 <code class="language-plaintext highlighter-rouge">1 億</code> 筆資料，因為壓縮的資料使得整個資料集可以載入記憶體當中</li>
+  <li>快速的存取資料，減少 I/O 的消耗</li>
+  <li>減少了資料傳遞的等待時間</li>
+</ul>
+
+<p>最終的 Tudum 架構如下
+<img src="https://miro.medium.com/v2/resize:fit:2000/format:webp/1*XpvbAvfxMmfUq4oBC_E_BA.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://netflixtechblog.com/netflix-tudum-architecture-from-cqrs-with-kafka-to-cqrs-with-raw-hollow-86d141b72e52">Netflix Tudum Architecture: from CQRS with Kafka to CQRS with RAW Hollow</a></p>
+</blockquote>
+
+<h1 id="readwrite-phenomena">Read/Write Phenomena</h1>
+<p>單一節點的讀寫異常，我們在 <a href="../../database/database-transaction#database-read-write-phenomena">資料庫 - Transaction 與 Isolation | Shawn Hsu</a> 已經看了滿多的<br>
+但在分散式系統中，事情更複雜了，尤其是在 multi-leader 以及 leaderless replication 的情況下</p>
+
+<p>雖然 multi leader 會增加系統的複雜度<br>
+但是在某些情況下，multi leader 會是一個不錯的選擇<br>
+single leader 因為每個 partition 只能有一個 leader，所以所有寫入都必須要經過他<br>
+這顯然在某些情況下會增加延遲，這並不是我們想看到的</p>
+
+<blockquote>
+  <p>可參考 <a href="../../database/database-distributed-database/">資料庫 - 初探分散式資料庫 | Shawn Hsu</a></p>
+</blockquote>
+
+<p>但要怎麼處理 multi leader 帶來的衝突問題？<br>
+以我們熟知的版本控制工具 git 來說，通常是我們要手動處理衝突<br>
+分散式系統下，不是不行啦 但我們有更好的方法</p>
+
+<h2 id="causality-and-ordering">Causality and Ordering</h2>
+<p>要解決衝突的問題，需要先確定資料相互之間的關係</p>
+
+<p><code class="language-plaintext highlighter-rouge">因果關係</code> 與 <code class="language-plaintext highlighter-rouge">事件的順序關係</code> 是不同的概念<br>
+對可線性化的系統而言，兩者是等價的<br>
+不過分散式系統下會變得複雜</p>
+
+<p>每個事件到達節點的速度是不同的<br>
+有可能造成明明是 <em>A <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> B</em>，卻因為網路延遲等問題<br>
+變成 <em>B <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> A</em></p>
+
+<p>這時候，節點收到的順序關係為 <em>B <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> A</em><br>
+但是真正的因果關係為 <em>A <img class="emoji" title=":arrow_right:" alt=":arrow_right:" src="https://github.githubassets.com/images/icons/emoji/unicode/27a1.png" height="20" width="20"> B</em><br>
+很明顯這不對，因此可以利用 <a href="#lamport-timestamp">Lamport Timestamp</a> 或者 <a href="#version-vector">Version Vector</a> 來確定因果關係</p>
+
+<h3 id="lamport-timestamp">Lamport Timestamp</h3>
+<p>既然用絕對時間會有誤差(事件抵達的時間不一定代表因果關係)，我能不能使用類似的方法<br>
+使用一個單調遞增的數字表示事件的先後順序，數字小的先發生，數字大的後發生(i.e. <code class="language-plaintext highlighter-rouge">logical clock</code>)</p>
+
+<p>Lamport Timestamp 是類似的概念<br>
+他由 (node id, counter) 所組成<br>
+counter 就是那個單調遞增的數字，針對每一次對 x 的操作我都 counter++<br>
+這樣一來，藉由排序 counter 我就可以知道事件的先後順序，也知道是誰做的改變(根據 node id)</p>
+
+<p>遇到衝突的時候<br>
+只要找到最小的 counter 就是最早發生的事件，就可以以它為準<br>
+也因為該 timestamp 有 node id 的資訊，你也知道資料該從哪裡拿</p>
+
+<p>看似美好但執行起來會有點小問題<br>
+因為 Lamport Timestamp 是存在在廣大的叢集裡面<br>
+要知道順序，唯一的辦法只有從系統當中收集所有資訊才能判斷<br>
+也因此他所花費的時間很多，況且萬一其中一個節點掛掉，你就很難找到真正最早發生的事件</p>
+
+<p>並且 Lamport Timestamp 無法確認 <code class="language-plaintext highlighter-rouge">並發</code> 的狀況<br>
+因為事件都是用 counter 來表示，是單調遞增的，它只能確定因果關係</p>
+
+<h3 id="version-vector">Version Vector</h3>
+<p><img src="https://miro.medium.com/v2/resize:fit:1400/1*cjgLEXEx9aTEQ7tblwtoeg.png" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://medium.com/theskyisblue/designing-data-intensive-applications-ch-5-replication-4e89f92eb93f">《Designing Data-Intensive Applications》ch 5—Replication</a></p>
+</blockquote>
+
+<p>簡單來說，就是替每個 key 維護一個版本號<br>
+藉由版本號，系統可以知道依賴關係(注意到不是順序關係)<br>
+比對版本號，你可以知道淺在的衝突，但 version vector 本身 <strong>並沒有辦法解決衝突</strong><br>
+他只是會儲存所有已經寫入的資料，並提供一個機制讓你可以知道這些資料的因果關係</p>
+
+<blockquote>
+  <p>注意到他跟 vector clock 不是一個東西<br>
+vector clock 是用於確認事件的先後關係<br>
+version vector 是用於確認資料的因果關係(使用者發文前必須要有帳號)<br>
+也可以使用 logical clock(單調遞增的計數器) 來達到類似的效果</p>
+</blockquote>
+
+<h2 id="conflict-resolutions-and-prevention">Conflict Resolutions and Prevention</h2>
+<h3 id="last-write-wins">Last Write Wins</h3>
+<p>把最後一筆寫入的資料當成是正確的資料是一種做法<br>
+但是分散式系統下，每一台機器的時間可能會有誤差，幾毫秒甚至幾秒，這些誤差會導致你無法判斷誰是最後一個寫入的</p>
+
+<blockquote>
+  <p>時間戳記不一定代表事件的先後順序，可參考 <a href="#causality-and-ordering">Causality and Ordering</a></p>
+</blockquote>
+
+<p>刪除舊的資料這件事情並不會收到任何的通知<br>
+所以在別的節點看來會有部分資料神秘地消失了</p>
+
+<p>除此之外，Last Write Wins 無法判斷事件的先後順序<br>
+<code class="language-plaintext highlighter-rouge">順序寫入</code> 與 <code class="language-plaintext highlighter-rouge">並發(concurrent)</code> 在時間上的表示都是類似的<br>
+所以你會需要額外的機制判斷資料的因果關係(如 <a href="#lamport-timestamp">Lamport Timestamp</a> 或 <a href="#version-vector">Version Vector</a>)</p>
+
+<blockquote>
+  <p>並發是兩個事件是獨立的，互不干擾沒有因果關係</p>
+</blockquote>
+
+<p>為了避免資料被安靜的刪除<br>
+如 <a href="https://cassandra.apache.org/_/index.html">Cassandra</a> 推薦每個寫入 assign 一個 UUID</p>
+
+<h3 id="mvccmulti-version-concurrency-control">MVCC(Multi-Version Concurrency Control)</h3>
+<p>如果要徹底的防範衝突，使用 <a href="#transaction">Transaction</a> 是最佳的選擇<br>
+如果多個交易對相同資料進行改動，最終只有一個會成功</p>
+
+<p>Transaction 底層實現實際上就是依靠 <code class="language-plaintext highlighter-rouge">MVCC</code><br>
+每個 transaction 交易期間需要查看不同時間的的資料狀態<br>
+為了因應這種需求，不同時間點的資料的狀態需要被記錄下來<br>
+而這種技術稱之為 <code class="language-plaintext highlighter-rouge">MVCC</code>(Multi-Version Concurrency Control)</p>
+
+<blockquote>
+  <p>有關 MVCC 的介紹，可以參考 <a href="../../database/database-transaction#mvccmulti-version-concurrency-control">資料庫 - Transaction 與 Isolation | Shawn Hsu</a></p>
+</blockquote>
+
+<p>如果遇到同時寫入相同的資料，只有一個會成功其他失敗(i.e. <code class="language-plaintext highlighter-rouge">optimistic locking</code>)<br>
+如果是多個人讀取相同資料，其實不需要 lock<br>
+這樣可以最大化的提昇系統效能</p>
+
+<blockquote>
+  <p>有關 optimistic locking 的介紹，可以參考 <a href="../../database/database-transaction#optimistic-locking">資料庫 - Transaction 與 Isolation | Shawn Hsu</a></p>
+</blockquote>
+
+<p>所以其實是依靠 <a href="#transaction">Transaction</a> 與 <a href="#mvccmulti-version-concurrency-control">MVCC</a> 共同實現的</p>
+
+<h3 id="atomic-broadcast">Atomic Broadcast</h3>
+<p><a href="#mvccmulti-version-concurrency-control">MVCC</a> 確保在寫入的狀況下可以保證一致性<br>
+這是基於被 snapshot 的資料順序是正確的<br>
+可是 MVCC 本身沒有保證資料順序是正確的阿？ 它只能解決衝突問題</p>
+
+<p>順序的解法如 <a href="#causality-and-ordering">Causality and Ordering</a> 提到的，可以使用 <a href="#lamport-timestamp">Lamport Timestamp</a> 或 <a href="#version-vector">Version Vector</a> 來確定因果關係<br>
+不過那都是事後論的，並且有些仍然自動修復</p>
+
+<p>既然問題在傳遞到各個節點的延遲導致的順序不一致<br>
+那是不是</p>
+<ol>
+  <li>確保每個更新都可以正確的傳遞到每個節點，全部都收到或是全部都沒收到</li>
+  <li>每個更新都嚴格按照順序進行傳遞</li>
+</ol>
+
+<p>就能夠解決 <a href="#causality-and-ordering">Causality and Ordering</a> 提到的問題<br>
+而這就是 <code class="language-plaintext highlighter-rouge">Atomic Broadcast</code> 的概念</p>
+
+<blockquote>
+  <p>如果更新沒收到要怎麼辦？ 那簡單阿重試就好了<br>
+如果收到 4, 但是 5 還沒到就收到 6 的時候，你必須要等 5 收到<br>
+這樣才能保證每個更新傳遞的順序是正確的</p>
+</blockquote>
+
+<h1 id="transaction">Transaction</h1>
+<p><a href="../../database/database-transaction">資料庫 - Transaction 與 Isolation | Shawn Hsu</a> 裡面我們知道了各種 Transaction 的細節<br>
+重點在 unit of work 對吧，我希望全部的操作都是一起成功或是一起失敗<br>
+分散式系統下，你的操作不一定會在同一個資料庫下，那你要怎麼保證 unit of work?</p>
+
+<p>舉例來說，新的使用者註冊服務需要</p>
+<ol>
+  <li>user table 新增一筆資料</li>
+  <li>permission table 也新增一筆資料</li>
+</ol>
+
+<p>我們學過 partition 以及 replication<br>
+所以當上述的 table 不在同一個地方的時候，你要怎麼做 transaction 呢？</p>
+
+<h2 id="two-phase-commit2pc">Two-phase Commit(2PC)</h2>
+<p>核心想法是，他依然是 transaction，只是他的 commit 在不同的機器上完成的<br>
+為了追蹤每一台機器上的 transaction 的狀況，你需要一個 <code class="language-plaintext highlighter-rouge">coordinator</code>(i.e. <code class="language-plaintext highlighter-rouge">transaction manager</code>)<br>
+他會決定要不要執行這個 transaction，具體來說他會這樣做</p>
+
+<p>他會問每一台參與交易的資料庫，你能不能執行這個 transaction<br>
+為什麼會有不能執行的問題？ 可能是因為 unique constraint 這種東西或者是其他外力影響(網路斷線，硬碟滿了 … etc.)導致無法 commit<br>
+如果有一台資料庫回覆說不能執行，那這個 transaction 就會被取消</p>
+
+<blockquote>
+  <p>注意到，2PC 要求 <strong>所有人</strong> 都同意才能 commit</p>
+</blockquote>
+
+<p>反之，如果每一台資料庫都確定可以執行，那 coordinator 會發送 commit 的指令<br>
+然後每個人都個別做 commit</p>
+
+<hr>
+
+<p>所以所謂的 2 phase commit 指的是</p>
+<ol>
+  <li>coordinator 確認每個人都可以 commit(prepare phase)</li>
+  <li>由 coordinator 發送 commit 指令(commit phase)</li>
+</ol>
+
+<blockquote>
+  <p>coordinator 扮演著類似 <code class="language-plaintext highlighter-rouge">transaction manager</code> 的角色<br>
+所有節點的 commit 都會由 coordinator 控制，並 assign 一個全域的 transaction id</p>
+</blockquote>
+
+<h3 id="issue">Issue</h3>
+<p>2PC 有一個問題，就是當 coordinator 掛掉的時候，整個 transaction 就會陷入一個自我懷疑的狀態<br>
+前面提到，2PC 要不要執行交易，是由 coordinator 決定的<br>
+也就是說，只有 coordinator 知道要不要做，參與交易的節點是被動的接收指令的<br>
+節點接收不到指令，他就不知道要不要 commit，這就是 2PC 的問題</p>
+
+<p>那節點這時候會做什麼？<br>
+nothing, 等待 coordinator 的回應 如此而已<br>
+所以變成 single point of failure 對吧</p>
+
+<blockquote>
+  <p>對於有一些節點已經 commit 了的情況，這時候 coordinator 掛掉，這些節點就會一直等待，直到 coordinator 回來<br>
+恢復了之後，因為 coordinator 有保留之前的決策，所以 2PC 可以保證 eventual consistency</p>
+</blockquote>
+
+<h2 id="three-phase-commit3pc">Three-phase Commit(3PC)</h2>
+<p>3PC 為了解決 coordinator 掛掉的問題，與其讓節點等待，而且不知道要等多長時間<br>
+不如讓節點擁有部分選擇的權利</p>
+
+<p>所以 3PC 會多加一個 phase，叫做 <code class="language-plaintext highlighter-rouge">prepare-to-commit</code><br>
+順序是 <code class="language-plaintext highlighter-rouge">prepare phase</code> -&gt; <code class="language-plaintext highlighter-rouge">prepare-to-commit</code> -&gt; <code class="language-plaintext highlighter-rouge">commit phase</code><br>
+在真正 commit 之前，他有一個等待的時間，而 3PC 假設這個時間是有限的<br>
+我跟你說，我已經準備好 commit 了，但是我要等一下，等 coordinator 給我 commit 的指令<br>
+如果 coordinator 一直沒有回應，我就自己 commit(因為 prepare phase 的時候大家都同意可以執行交易)<br>
+這個等待的時間有兩個好處</p>
+<ol>
+  <li>維持原本 2PC 交給 coordinator 判斷的權利</li>
+  <li>避免無限等待的情況(非同步處理)</li>
+</ol>
+
+<p>不過分散式系統中，假設擁有有限的等待時間這件事情是錯誤的<br>
+有時候單純是因為網路斷線，導致 coordinator <strong>暫時無法回應</strong><br>
+這時候 3PC 的缺點就顯現出來了</p>
+
+<p>如果 coordinator 決定 <em>abort</em><br>
+但是因為網路問題，節點 A 沒有收到指令<br>
+根據 prepare-to-commit 的結果是 <em>commit</em>，所以它需要等待一段時間<br>
+但是因為網路斷線，節點 A 收不到指令<br>
+所以就自行 commit</p>
+
+<p>然後你的資料就會出現不一致的問題了</p>
+
+<p>也就是說，前面提到 3PC 假設等待時間是有限的這句是錯誤的<br>
+它就只是突然掉個線，你就說它壞了 不對嘛<br>
+所以這個假設本質上是要求有一個 <strong><em>完美的故障檢測器</em></strong><br>
+能夠區分暫時網路問題或者是節點真的掛了的狀況</p>
+
+<h1 id="unstable-network">Unstable Network</h1>
+<p>在分散式系統中，每個節點多為使用網路互相連接起來的<br>
+然而網路實際上是不可靠的</p>
+
+<blockquote>
+  <p>網路比你我想像的更不可靠</p>
+</blockquote>
+
+<p>想想看以下這些問題</p>
+<ol>
+  <li>請求/回應 丟失，封包在路上掉了</li>
+  <li>節點失效，你不知道你的請求有沒有正確的被處理</li>
+  <li>節點暫時停止回應，可能因為目前 request 太多，處理的速度變慢</li>
+</ol>
+
+<p>對於 client 來說，以上這幾種狀況是沒辦法分別的<br>
+你唯一能確定的只有，我沒收到回應<br>
+那在這種情況下你要怎麼處理？</p>
+
+<p>寫過 web application 的你可能在處理 router 的時候，有寫過類似 timeout 的東西<br>
+他的目的也挺簡單的，就是當我超過多久時間沒回應的時候，我就不等了，直接回一個 error<br>
+對於分散式系統來說，這也是一個可行的方法<br>
+只不過他的 timeout 要怎麼設定？</p>
+<ul>
+  <li>固定 timeout 時間
+    <ul>
+      <li>有可能節點只是太忙所以導致回應時間變慢，如果它已經成功寫入，但卻被你回了一個 error，很明顯這是不對的</li>
+      <li>如果我們認為你一直 timeout 是因為節點已經失效了，把你的請求轉移到其他節點，那不是更糟嗎？</li>
+    </ul>
+  </li>
+  <li>動態 timeout 時間
+    <ul>
+      <li>動態的設定 timeout 時間是不是顯得合理多了？</li>
+      <li>透過實驗或是動態測量網路 round trip 的時間，動態設定，是不是就能夠取得平衡了</li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="unreliable-clock">Unreliable Clock</h1>
+<p>有玩過一些單機遊戲的你，可能有發現一個可以偷吃步的方法<br>
+有一些遊戲不是會有所謂的每日登入獎勵嗎？ 其實你可以透過更改手機或電腦的時間，然後拿到獎勵<br>
+這很明顯的是一個開發商的失誤，不過藉此你也可以發現，用時間來判斷一些東西顯然不是這麼的合適</p>
+
+<blockquote>
+  <p>有關時鐘的介紹，可以搭配 <a href="../../linux/linux-clock">Linux Kernel - Clock | Shawn Hsu</a> 一起參考</p>
+</blockquote>
+
+<p>不同電腦的硬體時鐘可能會有些微的差異(millisecond 之類的)<br>
+但即使是在我們看來是這麼微小，每天的誤差可能越來越大，對於精準度極為要求的環境下仍然是不可忽視的</p>
+
+<blockquote>
+  <p>可以使用 NTP(Network Time Protocol) 來同步時間</p>
+</blockquote>
+
+<p>舉例來說，multi-leader replication 的情況下允許多個節點同時寫入<br>
+那它極大可能會出現衝突的情況，上面我們有提到說可以使用 <a href="#last-write-wins">Last Write Wins</a> 或 <a href="#version-vector">Version Vector</a> 等等的解法去處理衝突</p>
+
+<p>錯誤的時鐘，有可能會導致錯誤的資料被寫入，而這種錯誤是無法被感知到的</p>
+
+<h1 id="split-brain">Split Brain</h1>
+<p>節點的故障有時候是無意的</p>
+
+<p>比如說在 single-leader architecture 下<br>
+leader 可能會因為短暫的不可用(GC 導致 <code class="language-plaintext highlighter-rouge">stop-the-world</code>, 瞬間流量太大導致處理回應時間變長或是網路異常 … etc.)<br>
+而被降級成 follower<br>
+但是 old leader 可能沒有意識到它不再是 leader<br>
+這個時候就會出現 2 個 leader 的情況<br>
+這種情況稱為腦分裂(Split Brain)</p>
+
+<p>有一個解法是這樣子的<br>
+透過簡單的 <code class="language-plaintext highlighter-rouge">fencing token</code>, 判斷你是否為合法的 leader<br>
+其他 follower 會透過這個 token 去尋找合法的 leader<br>
+因此，大家都知道誰是真正的 leader</p>
+
+<blockquote>
+  <p>這個 token 本質上就是一個單調遞增的數字，數字大的擁有者就是 leader</p>
+</blockquote>
+
+<p>問題來了<br>
+old leader 恢復上線，並開始運作<br>
+這時候 follower 會告訴他說，根據 fencing token 你已經不再是 leader<br>
+因為 token 不一樣了，現在的 leader 是別人(token 的擁有者)<br>
+透過這樣的機制就可以避免腦分裂的問題</p>
+
+<h1 id="byzantine-fault">Byzantine Fault</h1>
+<p>節點的故障有時候是無意的
+比如說在太空的環境下<br>
+輻射滿天飛，這時候你的硬體是有可能出現不如預期的情況的<br>
+這時候你要怎麼修正？</p>
+
+<p>這種狀況通常是依靠特殊能抵抗輻射的硬體或者是準備多台硬體來進行故障恢復</p>
+
+<hr>
+
+<p>有時候，節點會故意發送錯誤的訊息，意圖摧毀你的系統<br>
+這種時候，帶有惡意的故障，被稱為 <code class="language-plaintext highlighter-rouge">Byzantine Fault</code></p>
+
+<p>你說有哪些無聊的人要攻擊你的系統？<br>
+以區塊鏈來說，攻擊你的網路，我就可以把別人的錢轉走，這就很有可能了對吧？<br>
+著名的 <code class="language-plaintext highlighter-rouge">51% Attack</code> 就是典型的 <code class="language-plaintext highlighter-rouge">Byzantine General Problem</code></p>
+
+<p>故事大概是這樣子<br>
+不同的將軍想要執行一個作戰計畫<br>
+由於將軍們所在地點並不相同<br>
+訊息的傳遞都是由傳令兵完成的<br>
+如果傳令兵想要叛變，它完全可以發送虛假的消息，欺騙其他人</p>
+
+<blockquote>
+  <p>有關 51% Attack 可以參考 <a href="../../blockchain/blockchain-basics#51-attack">從 0 認識 Blockchain - 區塊鏈基礎 | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="references">References</h1>
+<ul>
+  <li>資料密集型應用系統設計(ISBN: 978-986-502-835-0)</li>
+  <li><a href="https://www.sohu.com/a/195189780_609521">宇航级CPU是如何做到抗辐射的？中美间有多大差距？ </a></li>
+  <li><a href="https://netflixtechblog.com/introducing-netflixs-key-value-data-abstraction-layer-1ea8a0a11b30">Introducing Netflix’s Key-Value Data Abstraction Layer</a></li>
+  <li><a href="https://netflixtechblog.com/netflix-tudum-architecture-from-cqrs-with-kafka-to-cqrs-with-raw-hollow-86d141b72e52">Netflix Tudum Architecture: from CQRS with Kafka to CQRS with RAW Hollow</a></li>
+  <li><a href="https://hollow.how/raw-hollow-sigmod.pdf">Introducing RAW Hollow: An In-Memory, Co-Located, Compressed Object Store with Opt-In Strong Consistency</a></li>
+  <li><a href="https://www.cs.utexas.edu/~lorenzo/corsi/cs380d/papers/Ske81.pdf">NONBLOCKING COMMIT PROTOCOL</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#2pc" class="page__taxonomy-item p-category" rel="tag">2PC</a><span class="sep">, </span>
+    
+      <a href="/tags/#2pc" class="page__taxonomy-item p-category" rel="tag">2pc</a><span class="sep">, </span>
+    
+      <a href="/tags/#3pc" class="page__taxonomy-item p-category" rel="tag">3PC</a><span class="sep">, </span>
+    
+      <a href="/tags/#3pc" class="page__taxonomy-item p-category" rel="tag">3pc</a><span class="sep">, </span>
+    
+      <a href="/tags/#atomic-broadcast" class="page__taxonomy-item p-category" rel="tag">atomic broadcast</a><span class="sep">, </span>
+    
+      <a href="/tags/#atomic-broadcast" class="page__taxonomy-item p-category" rel="tag">atomic broadcast</a><span class="sep">, </span>
+    
+      <a href="/tags/#byzantine-fault" class="page__taxonomy-item p-category" rel="tag">byzantine fault</a><span class="sep">, </span>
+    
+      <a href="/tags/#clock" class="page__taxonomy-item p-category" rel="tag">clock</a><span class="sep">, </span>
+    
+      <a href="/tags/#cluster" class="page__taxonomy-item p-category" rel="tag">cluster</a><span class="sep">, </span>
+    
+      <a href="/tags/#database" class="page__taxonomy-item p-category" rel="tag">database</a><span class="sep">, </span>
+    
+      <a href="/tags/#distributed" class="page__taxonomy-item p-category" rel="tag">distributed</a><span class="sep">, </span>
+    
+      <a href="/tags/#eventually-consistent" class="page__taxonomy-item p-category" rel="tag">eventually consistent</a><span class="sep">, </span>
+    
+      <a href="/tags/#hollow" class="page__taxonomy-item p-category" rel="tag">hollow</a><span class="sep">, </span>
+    
+      <a href="/tags/#lamport-timestamp" class="page__taxonomy-item p-category" rel="tag">lamport timestamp</a><span class="sep">, </span>
+    
+      <a href="/tags/#last-write-wins" class="page__taxonomy-item p-category" rel="tag">last write wins</a><span class="sep">, </span>
+    
+      <a href="/tags/#linearizability" class="page__taxonomy-item p-category" rel="tag">linearizability</a><span class="sep">, </span>
+    
+      <a href="/tags/#monotonic-read" class="page__taxonomy-item p-category" rel="tag">monotonic read</a><span class="sep">, </span>
+    
+      <a href="/tags/#netflix" class="page__taxonomy-item p-category" rel="tag">netflix</a><span class="sep">, </span>
+    
+      <a href="/tags/#network" class="page__taxonomy-item p-category" rel="tag">network</a><span class="sep">, </span>
+    
+      <a href="/tags/#raw-hollow" class="page__taxonomy-item p-category" rel="tag">raw hollow</a><span class="sep">, </span>
+    
+      <a href="/tags/#read-after-write" class="page__taxonomy-item p-category" rel="tag">read after write</a><span class="sep">, </span>
+    
+      <a href="/tags/#same-prefix-read" class="page__taxonomy-item p-category" rel="tag">same prefix read</a><span class="sep">, </span>
+    
+      <a href="/tags/#sequential-consistency" class="page__taxonomy-item p-category" rel="tag">sequential consistency</a><span class="sep">, </span>
+    
+      <a href="/tags/#split-brain" class="page__taxonomy-item p-category" rel="tag">split brain</a><span class="sep">, </span>
+    
+      <a href="/tags/#transaction" class="page__taxonomy-item p-category" rel="tag">transaction</a><span class="sep">, </span>
+    
+      <a href="/tags/#tudum" class="page__taxonomy-item p-category" rel="tag">tudum</a><span class="sep">, </span>
+    
+      <a href="/tags/#vector-clock" class="page__taxonomy-item p-category" rel="tag">vector clock</a><span class="sep">, </span>
+    
+      <a href="/tags/#version-vector" class="page__taxonomy-item p-category" rel="tag">version vector</a><span class="sep">, </span>
+    
+      <a href="/tags/#zookeeper" class="page__taxonomy-item p-category" rel="tag">zookeeper</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#database" class="page__taxonomy-item p-category" rel="tag">database</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E8%B3%87%E6%96%99%E5%BA%AB+-+%E5%BE%9E+Netflix+%E7%9A%84+Tudum+%E7%B3%BB%E7%B5%B1%E7%9C%8B%E5%88%86%E6%95%A3%E5%BC%8F%E7%B3%BB%E7%B5%B1%E4%B8%AD%E9%82%A3%E4%BA%9B+Read%2FWrite+%E5%95%8F%E9%A1%8C%20https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-distributed-issue%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-distributed-issue%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdatabase%2Fdatabase-distributed-issue%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/random/solid/" class="pagination--pager" title="如何寫出好的程式碼架構
+">Previous</a>
+    
+    
+      <a href="/database/database-optimization/" class="pagination--pager" title="資料庫 - 最佳化 Read/Write 設計
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-filter/" rel="permalink">資料庫 - 機率型資料結構 Bloom Filter 在 Cache 中的應用
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          4 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-19">2026-01-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-11-30">
+            2025-11-30
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-filter/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-filter/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-filter/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Cache Issues
+就像我們在 資料庫 - Cache Strategies 與常見的 Solutions | Shawn Hsu 當中提到的
+如果碰到惡意攻擊，查詢不在 cache 也不在 database 裡面的資料，那麼所有的請求都會直接到 database，然後又會直接被打爆
+所以其實在這種狀況底下...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/golang-gc/" rel="permalink">多開 Goroutine 的效能瓶頸以及 Garbage Collection 對其的影響
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          9 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-01-15">2026-01-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-11-30">
+            2025-11-30
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/golang-gc/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/golang-gc/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/golang-gc/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Preface
+Goroutine 作為 Golang 的一大特色
+其輕量且快速的特性，使得其的開銷相比 process 以及 thread 要來的低上許多
+因此人們往往會將 Goroutine 用在非同步的操作上，比如說 I/O 或者是 CPU-bound 的操作
+用以達到併發的效果
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-workloads/" rel="permalink">Kubernetes 從零開始 - Pod 高級抽象 Workload Resources
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-23">2025-11-23</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-11-30">
+            2025-11-30
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-workloads/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-workloads/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-workloads/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">High Level Abstraction
+之前提到 Pod 是 Kubernetes 當中部署的最小單位，因為其設計關係(比如說容易被 reschedule 以及被刪除等等)，是比較不適合直接操作的
+因此 Kubernetes 提供了更高層次的抽象，讓我們可以更方便的管理 Pod
+本文將會走過一遍這些更高階的...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/kubernetes/kubernetes-volume/" rel="permalink">Kubernetes 從零開始 - 你的 Volume 到底 Mount 到哪裡去了？
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          8 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2025-11-13">2025-11-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2025-11-30">
+            2025-11-30
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/kubernetes/kubernetes-volume/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/kubernetes/kubernetes-volume/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/kubernetes/kubernetes-volume/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Introduction to Kubernetes Volume
+從 Docker 的年代開始，掛載 host 的檔案系統不是什麼新鮮事
+而 mount 的方式也很直覺，直接指定 host 的檔案路徑，你就能夠在 container 裡面存取相關的資料
+到了 Kubernetes，也是有一樣的概念，但是 mou...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/database/database-distributed-issue/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/database/database-distributed-issue"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>
