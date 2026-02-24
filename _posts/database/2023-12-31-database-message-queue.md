@@ -465,6 +465,8 @@ KRaft 是 Kafka 2.8 之後的新機制\
 所以現在 Node 自己會跟其他節點同步所謂的 metadata，並且自己進行選舉\
 這樣就更輕量了
 
+> 有關共識機制可以參考 [資料庫 - 初探分散式資料庫 \| Shawn Hsu](../../database/database-distributed-database#consensus-algorithm)
+
 ## Example
 ### Prerequisite
 我們可以使用 docker 將 Kafka 以及其他的資源在 local 跑起來\
