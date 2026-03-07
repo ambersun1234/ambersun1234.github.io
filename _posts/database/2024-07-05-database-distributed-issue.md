@@ -270,10 +270,8 @@ Transaction 底層實現實際上就是依靠 `MVCC`\
 為了因應這種需求，不同時間點的資料的狀態需要被記錄下來\
 而這種技術稱之為 `MVCC`(Multi-Version Concurrency Control)
 
-> 有關 MVCC 的介紹，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction#mvccmulti-version-concurrency-control)
-
 如果遇到同時寫入相同的資料，只有一個會成功其他失敗(i.e. `optimistic locking`)\
-如果是多個人讀取相同資料，其實不需要 lock\
+如果是多個人讀取相同資料，其實不需要 lock(也就是寫入不擋讀取，讀取不擋寫入)\
 這樣可以最大化的提昇系統效能
 
 > 有關 optimistic locking 的介紹，可以參考 [資料庫 - Transaction 與 Isolation \| Shawn Hsu](../../database/database-transaction#optimistic-locking)

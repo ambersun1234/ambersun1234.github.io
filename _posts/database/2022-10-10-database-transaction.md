@@ -418,6 +418,8 @@ snapshot 就是對資料庫進行快照\
 具體來說他是怎麼做的呢？\
 維護 **一個物件的多版本**(Multi-Version Concurrency Control, MVCC)
 
+> 有關 MVCC 的介紹，可以參考 [資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題](../../database/database-distributed-issue#mvccmulti-version-concurrency-control)
+
 ![](https://miro.medium.com/v2/resize:fit:720/format:webp/1*Tje55--GvuNvVLf5IM7unQ.png)
 > [The “I” in ACID — Weak Isolation Levels](https://rahulpradeep.medium.com/the-i-in-acid-weak-isolation-levels-7e2dbbadd45e)
 
