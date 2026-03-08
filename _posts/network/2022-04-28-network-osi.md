@@ -214,9 +214,8 @@ $ echo -n I | od -to2 | head -n1 | cut -f2 -d" " | cut -c6
 
 這裡做個簡單的比較讓你清楚的看懂他們之間的差別
 
-|Big-endian|Little-endian|
-|:--|:--|
-|![](https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Big-Endian.svg/420px-Big-Endian.svg.png)|![](https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Little-Endian.svg/420px-Little-Endian.svg.png)|
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/32bit-Endianess.svg/960px-32bit-Endianess.svg.png)
+> ref: [Endianness](https://en.wikipedia.org/wiki/Endianness)
 
 <hr>
 

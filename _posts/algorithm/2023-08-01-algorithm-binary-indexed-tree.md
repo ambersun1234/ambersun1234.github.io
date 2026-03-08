@@ -26,9 +26,6 @@ map[rate][]string{
 這種作法看似沒問題，但是當資料一多起來，你的程式跑起來將會非常的緩慢\
 線段樹的資料結構可以有效的利用最小空間，紀錄起這些龐大的資料，並且查詢速度相當的快速
 
-![](https://socviz.co/dataviz-pdfl_files/figure-html4/ch-05-bycountry-03-1.png)
-> [5 Graph tables, add labels, make notes](https://socviz.co/workgeoms.html)
-
 ## Introduce to Binary Indexed Tree
 Binary Indexed Tree(簡稱 BIT) 的核心思想就是建立一個表格，透過預先計算的方式，建構出完整的資料\
 BIT 透過將資料進行 **分組** 並紀錄於 **一維陣列** 當中\
