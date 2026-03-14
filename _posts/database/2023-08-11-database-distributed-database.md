@@ -173,8 +173,8 @@ write 只找 leader, 而 read 可以隨便找任意一個都行\
 > 有關 Split Brain 的討論，可以參考 [資料庫 - 從 Netflix 的 Tudum 系統看分散式系統中那些 Read/Write 問題 \| Shawn Hsu](../../database/database-distributed-issue#split-brain)
 
 ### Multi Leader
-![](https://media.licdn.com/dms/image/v2/C5112AQE4giiXdpATXQ/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1578341089996?e=1773273600&v=beta&t=7VIIgfcwzdMy2mPoH4UQ6i46CsIXhHDNZNCq4PUzytk)
-> ref: [Distributed Systems - Multi Leader Replication](https://www.linkedin.com/pulse/distributed-systems-multi-leader-replication-divagar-carlmarx/)
+![](https://it-iron.s3-ap-northeast-1.amazonaws.com/2020/figure_5-6.png)
+> ref: [[Day 23] Replication (3) - Multi-Leader Replication](https://ithelp.ithome.com.tw/articles/10250793)
 
 既然 [Single Leader](#single-leadermaster-slave) 僅解決了讀取的效能問題\
 那麼允許多個節點提供寫入的功能不也行嗎\
