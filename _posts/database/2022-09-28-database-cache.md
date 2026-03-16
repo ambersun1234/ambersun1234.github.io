@@ -3,7 +3,7 @@ title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
 description: 本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情
 categories: [database]
-tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock, bloom filter, cache avalanche, cache hotspot invalid, cache penetration]
+tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock, bloom filter, cache avalanche, cache hotspot invalid, cache penetration, rate limit]
 math: true
 ---
 
@@ -106,6 +106,12 @@ cache 裡的資料通常會設定 expire time, 當時間到了之後，資料會
 如果你有多台 cache server，那麼資料設定的 expire time 不太可能會一樣\
 這樣是不是就可以降低 `同時都過期` 的機率\
 套用到更廣泛的場景，也就是說在 expire time 的設定上面加一點隨機值(**Jitter**)，不要讓它都同時 expire 就可以了
+
+那如果嚴重到你的 cache layer 完全掛掉\
+要考慮的就要到 `Rate Limit` 的範疇了\
+基本上你就是維持系統的基本運作，其他的功能都先把它關掉這樣\
+能保住系統是最重要的\
+或者是全面停機，當然這是最後的作法
 
 ## Cache Hotspot Invalid
 而如果 expire 的是熱門的資料，那麼擊穿的效果會更加嚴重\
