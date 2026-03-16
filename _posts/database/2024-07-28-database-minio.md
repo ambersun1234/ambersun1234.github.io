@@ -285,7 +285,7 @@ minioClient.SetBucketLifecycle(context.Background(), bucketName, &lifecycle.Conf
 比如說你需要在 object 建立/刪除 的時候做一些事情\
 MinIO 提供除了 API webhook 的方式以外，也可以透過 RabbitMQ, Kafka 來做通知(可參考 [Bucket Notifications](https://min.io/docs/minio/linux/administration/monitoring/bucket-notifications.html?ref=blog.min.io) 裡面有完整的列表)
 
-> 可參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue)
+> 可參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue), [資料庫 - 解耦助手 RabbitMQ \| Shawn Hsu](../../database/database-rabbitmq)
 
 ## Webhook Endpoint
 首先你需要啟用 webhook 功能並且設定 webhook URL\
