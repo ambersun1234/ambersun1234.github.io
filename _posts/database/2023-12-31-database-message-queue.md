@@ -608,7 +608,7 @@ group 裡面可以擁有多個 consumer
 
 # Issues to be Aware of When Using Kafka
 ## New Partition Assignment
-如果你手動將 partition 括容\
+如果你手動將 partition 擴容\
 會觸發 **rebalancing** 的機制嘛\
 那有可能你原本設定好的資料會跑掉，因為 hash 出來的值可能會跑到其他 partition 上\
 新的資料在 `P1`, 舊的資料還在 `P2` 上還沒讀完\
