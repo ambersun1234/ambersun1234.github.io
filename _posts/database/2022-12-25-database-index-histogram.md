@@ -3,7 +3,7 @@ title: 資料庫 - Index 與 Histogram 篇
 date: 2022-12-25
 description: 本文會介紹 Index 如何對你的效能產生重大的影響。我們會一一檢視各種 index 的實作方式，並且探討它們的優缺點
 categories: [database]
-tags: [index, histogram, partial index, secondary index, clustered index, non-clustered index, hash index, b-tree index, b+ tree index, index seek, index scan, table scan, full table scan, low cardinality, high cardinality, cardinality, composite index, bitmap index, dense index, sparse index, reverse index, inverted index, full table scan, sstable, lsm tree, avl tree, red-black tree, linear probing, double hashing, fragmentation, external fragmentation, internal fragmentation, locality, predicates, access predicates, filter predicates, index only scan, explain, execution plan, histogram]
+tags: [index, histogram, partial index, secondary index, clustered index, non-clustered index, hash index, b-tree index, b+ tree index, index seek, index scan, table scan, full table scan, low cardinality, high cardinality, cardinality, composite index, bitmap index, dense index, sparse index, reverse index, inverted index, full table scan, sstable, lsm tree, avl tree, red-black tree, linear probing, double hashing, fragmentation, external fragmentation, internal fragmentation, locality, predicates, access predicates, filter predicates, index only scan, explain, execution plan, histogram, json]
 math: true
 ---
 
@@ -419,6 +419,17 @@ wildcard 在中間的情況也不會是 full table scan\
 因此我們必須要盡力避免過多的讀寫操作
 
 資料庫查詢會慢，很大的原因是因為 Full Table Scan 的關係
+
+# Index on JSON
+目前主流的資料庫都允許你儲存 JSON 資料\
+那你能夠對 JSON 的欄位建立 index 嗎？
+
+答案是 `可以的`\
+但你該不該使用他是個好問題
+
+JSON 資料大多是無標準結構的，也就是說有的可能很大很深，有的就一兩層\
+如果將 Index 做在上面，每次更新的時候它都要重新解析一次然後重建 Index\
+對於系統來說是一個負擔
 
 # When will Database do a Full Table Scan
 那麼哪些會造成 Full Table Scan?\
