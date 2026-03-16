@@ -3,7 +3,7 @@ title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
 description: 本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情
 categories: [database]
-tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock, bloom filter, cache avalanche, cache hotspot invalid, cache penetration, rate limit]
+tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock, bloom filter, cache avalanche, cache hotspot invalid, cache penetration, rate limit, redlock]
 math: true
 ---
 
@@ -265,9 +265,30 @@ Redis 提供了一套完整且常見的資料結構，常見的有以下
 使用單純的 key-value 來實作配合 NX 參數來達到 distributed lock 的效果
 
 由於 Redis 本身是單線程的，所以並不會有競爭的問題存在\
-SetNX 如果沒有成功就表示已經有人拿到 lock 了，這樣就可以達到 distributed lock 的效果
-
+`SetNX` 如果沒有成功就表示已經有人拿到 lock 了，這樣就可以達到 distributed lock 的效果\
 另外你也可以設定一個 TTL，這樣即使你的程式掛掉，也不會造成 deadlock
+
+不過對於 release lock 這部份你要特別小心\
+**解鈴還需繫鈴人**，如果你只是單純的 delete key 來 release lock，你會 release 到其他人的 lock 阿！
+
+因為 `DEL` 指令你在執行的時候，其實是任何人都可以執行的\
+所以比較好的作法是刪除的時候順便檢查這是不是你建立的 lock key
+
+```redis
+SET resource_name my_random_value NX PX 30000
+DELEX key IFEQ my_random_value
+```
+
+> `DELEX` 指令實際上是執行 lua script 來實現的\
+> Redis 會將 lua script 當成一個 atomic operation 來執行
+
+這個 `my_random_value` 就是你在建立 lock 的時候隨機生成的值\
+這樣就可以確保只有你才能夠刪除這個 lock
+
+對於單個節點的 Redis 來說，這的確足夠了，不過多節點的來說還是不足夠\
+怎麼樣才能確保你真的拿到 lock 呢？\
+其實就是分散式系統中的 Quorum 概念，足夠多人認同你拿到 lock 就可以證明\
+而這就是 [Redlock](https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/) 的實作原理
 
 ### Sorted Sets vs. Lists
 我想把這個單獨拉出來做一個比較\
@@ -441,3 +462,4 @@ user2: {
 + [比較 Redis OSS 與 Memcached](https://aws.amazon.com/tw/elasticache/redis-vs-memcached/)
 + [Distributed Locks with Redis](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)
 + [redis - 快取雪崩、擊穿、穿透](https://totoroliu.medium.com/redis-%E5%BF%AB%E5%8F%96%E9%9B%AA%E5%B4%A9-%E6%93%8A%E7%A9%BF-%E7%A9%BF%E9%80%8F-8bc02f09fe8f)
++ [Distributed Locks with Redis](https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/)
