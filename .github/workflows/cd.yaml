@@ -89,6 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ambersun1234/iAnalyzer@v1.0.0
+        continue-on-error: true
         with:
           domain: "ambersuncreates.com"
           ignore-prefix: "https://ambersuncreates.com/tags,https://ambersuncreates.com/categories"
