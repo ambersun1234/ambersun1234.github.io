@@ -151,8 +151,9 @@ clustered index 是 unique 的，也因此它永遠可以指到 `一筆資料`
 
 # Prepare Statement and Store Program
 除了對 table 加 index 加快查詢速度之外，cache 也會是一個很好的選擇\
-對於常用的 SQL statements, server 會轉換成 internal structure 進行處理, 我們可以讓伺服器 Cache 住這些 structure(這樣在同一個 session 之內，就不用重新載入了)\
-注意到 cache 僅能供同一個 session 存取，不可以跨 session 存取，並且在 session 結束的時候，cache 會一併刪除
+對於常用的 SQL statements, server 會轉換成 internal structure 進行處理, 我們可以讓伺服器 Cache 住這些 structure(這樣在同一個 session 之內，就不用重新載入了)
+
+> 有的 cache 是可以允許跨 session 存取的
 
 > 另外常見的 cache 手段包含像是 Redis 等等的可以參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
 
@@ -166,44 +167,34 @@ server 會針對所謂的 [Prepare Statement](#prepare-statement) 以及 [Store 
 也就是說 `create`, `drop`, `alter`, `rename`, `truncate`, `analyze`, `optimize` 以及 `repair` 這種 [Data Definition Language - DDL](https://en.wikipedia.org/wiki/Data_definition_language) 的操作都會造成 metadata 的改變\
 前面幾個還滿好理解的，但為什麼 analyze 跟 optimize 會改變 metadata 呢？
 
+## Command Analyze and Optimize
+key distributions 為紀錄該 table 當中 key 的資料\
+主要紀錄的東西可能會是 key 的 cardinality 或者是 key 的 type
 
-> to be continued
+當 table 經過長時間使用(create, update, delete)\
+可能會對 key 的 cardinality 造成影響\
+所以透過 `analyze` 的指令可以重新更新這些資料
 
-<!-- + ### ANALYZE
+你可能會好奇，更新這些資料要幹嘛？\
+對 DBMS 下 query 的時候，DBMS 可以根據這些 metadata 決定要使用的 index\
+(畢竟如果 index 的 cardinality 很爛就沒有用的必要了)
 
-    顧名思義是用來分析，主要目的是分析這兩個
-    + ### key distributions
-        key distributions 為紀錄該 table 當中 key 的資料\
-        主要紀錄的東西可能會是 key 的 cardinality 或者是 key 的 type
+> MySQL uses the stored key distribution to decide the order in which tables should be joined for joins on something other than a constant.\
+> In addition, key distributions can be used when deciding which indexes to use for a specific table within a query.
 
-        當 table 經過長時間使用(create, update, delete)\
-        可能會對 key 的 cardinality 造成影響\
-        所以透過 analyze 的指令可以重新更新這些資料
-
-        你可能會好奇，更新這些資料要幹嘛？\
-        對 DBMS 下 query 的時候，DBMS 可以根據這些 metadata 決定要使用的 index\
-        (畢竟如果 index 的 cardinality 很爛就沒有用的必要了)
-
-        > MySQL uses the stored key distribution to decide the order in which tables should be joined for joins on something other than a constant.\
-        > In addition, key distributions can be used when deciding which indexes to use for a specific table within a query.
-
-        // TODO: experiment
-
-    + ### histogram
-        有關 histogram 的介紹，可參考 [資料庫 - Index 與 Histogram 篇 \| Shawn Hsu](../../database/database-index-histogram)
-
-+ ### OPTIMIZE
-    optimize 的指令會對資料進行重新整理(類似磁碟重組的概念)\
-    由於資料透過 create, update, delete 的操作會導致不定程度的 fragmentation\
-    因此 optimize 可以對其進行資料以及 index 重組，釋放多餘的空間，進而提高效能
-
-> metadata :arrow_right: 描述資料的資料 -->
-
-常見的 store program 包含像是 store procedure, function, triggers 以及 events
+而 `optimize` 指令則是負責重組 table 的資料以及 index\
+簡單講就是回收空間，釋放多餘的空間，進而提高效能
 
 <hr>
 
-store procedure 由於其過時的程式語言，難以管理、部屬以及測試等問題
+以上對應到的其實跟 [資料庫 - Autovacuum 在 PostgreSQL 中的重要性 \| Shawn Hsu](../../database/database-postgresql-vacuum) 中提到的 `VACUUM` 以及 `ANALYZE` 指令是相對應的
+
+## Store Programs
+<!-- 常見的 store program 包含像是 store procedure, function, triggers 以及 events
+
+<hr>
+
+store procedure 由於其過時的程式語言，難以管理、部屬以及測試等問題 -->
 
 # SQL Commands
 ## Regex vs. Like Operator
@@ -240,7 +231,11 @@ multiple query 除了可以被 cache 起來之外\
 至於該選擇哪一種，真的是 case by case\
 你可以透過簡單的估算，搭配現有的財力，選擇出適當的實作方式
 
-# Store Image in Database?
+# Storing Complex Data in Database?
+## Image
+> to be continued
+
+## JSON
 > to be continued
 
 # Database inside Container?
