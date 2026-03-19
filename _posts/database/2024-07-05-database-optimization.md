@@ -238,9 +238,6 @@ multiple query 除了可以被 cache 起來之外\
 ## JSON
 > to be continued
 
-# Database inside Container?
-> to be continued
-
 # References
 + 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
 + 內行人才知道的系統設計面試指南(ISBN: 978-986-502-885-5)
