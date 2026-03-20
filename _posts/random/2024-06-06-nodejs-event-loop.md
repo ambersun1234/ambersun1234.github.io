@@ -88,8 +88,8 @@ JavaScript 最初是用於網頁的腳本語言\
 ![](https://pbs.twimg.com/media/DYsBhtdVwAA1Fak?format=jpg&name=900x900)
 
 ## Libuv
-![](https://docs.libuv.org/en/v1.x/_images/architecture.png)
-> ref: [Design overview](https://docs.libuv.org/en/v1.x/design.html#design-overview)
+![](https://libuv-docs-chinese.readthedocs.io/zh/latest/_images/architecture.png)
+> ref: [设计摘要](https://libuv-docs-chinese.readthedocs.io/zh/latest/design.html)
 
 要把 JavaScript 搬到 server 上執行，對應的非同步 I/O 也需要一個環境\
 Node.js 為此也提供了一個由 [libuv](https://github.com/libuv/libuv) 實現的 non-blocking I/O 的環境\
