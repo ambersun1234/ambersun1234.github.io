@@ -3,7 +3,7 @@ title: 網頁程式設計三兩事 - Logging 最佳實踐
 date: 2024-04-10
 description: Log 可以說是軟體開發當中最重要的一個資訊檔案，它可以紀錄著網頁程式運行的各種狀況。本篇文章將會簡單的介紹如何下 log 以及你該如何處理 log
 categories: [website]
-tags: [logging, contextual logging, slack, sentry, integration, archive, log rotation, logrotate, log4j]
+tags: [logging, contextual logging, slack, sentry, integration, archive, log rotation, logrotate, log4j, docker, syslog, splunk, fluentd, compress]
 math: true
 ---
 
@@ -77,7 +77,8 @@ request body 之類的可以放在 `Debug` level 裡面\
 ![](https://www.shakebugs.com/wp-content/uploads/2023/09/log-level-breakdown.png)
 > ref: [App logging levels: everything you need to know](https://www.shakebugs.com/blog/app-logging-levels/)
 
-# Structured logging
+# Different ways to Log
+## Structured logging
 肉眼看 log 可以說是工程師日常\
 雖然說是日常，但看久了也是挺傷眼睛的
 
@@ -107,7 +108,7 @@ I1112 14:06:35.783549  328441 structured_logging.go:52] "using InfoS with\nthe m
 因此在下 log 的時候，我們不妨就預設使用 JSON 格式之類的 structured logging 機制\
 這樣也方便後續如果要接一些第三方服務的時候可以無痛轉換
 
-# Contextual Logging
+## Contextual Logging
 使用 [Structured Logging](#structured-logging) 可以大幅度的增加 debug 時的效率\
 但是 log 之間的狀態是沒有顯示的，什麼意思
 
@@ -150,6 +151,52 @@ request 的 context 我們已經有帶了(client ip, request url ... etc.)\
 
 透過類似 [Logrotate](https://linux.die.net/man/8/logrotate) 這類工具可以自動做到以上的事情
 
+## Docker Container Log Rotation
+Docker 在預設情況下，是 **不會開啟** Log Rotate 的機制的\
+你需要手動進行設定
+
+log driver預設是 [json-file](https://docs.docker.com/engine/logging/drivers/json-file/)\
+簡單說每一筆 log 會以 JSON 格式寫入\
+其他官方還有提供滿多不同種類的
++ `none`: 不進行任何 log 的寫入，也就是說 `$ docker logs` 指令不會有任何輸出
++ [syslog](https://docs.docker.com/engine/logging/drivers/syslog/)
++ [fluentd](https://docs.docker.com/engine/logging/drivers/fluentd/)
++ [splunk](https://docs.docker.com/engine/logging/drivers/splunk/)
+
+> 有些 log driver 會直接把資訊轉出導致本地 `$ docker logs` 是沒有輸出的
+
+你可以用以下的設定檔寫入 Docker Daemon 當中以啟用 log rotation 機制
+```json
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "100",
+    "compress": "true"
+  }
+}
+```
+
+> `log-opt` 參數會根據每個不同的 log driver 有不同的參數
+
+然後將以上存成暫存檔，然後透過指令寫入\
+重啟並檢查
+```shell
+# 先檢查是不是有語法問題等等
+$ dockerd --validate --config-file=/tmp/valid-config.json
+configuration OK
+$ sudo mv /tmp/valid-config.json /etc/docker/daemon.json
+$ sudo systemctl daemon-reload
+$ sudo systemctl restart docker
+```
+
+> 這些設定只會對新建立的 container 生效，已經建立的 container 需要重新建立
+
+如果只想要針對單次，也可以指定 command line argument
+```shell
+$ docker run -it --log-opt max-size=10m --log-opt max-file=3 alpine ash
+```
+
 # Slack and Sentry Integration
 最後的最後\
 我們可以設定自動化 alert\
@@ -165,3 +212,6 @@ request 的 context 我們已經有帶了(client ip, request url ... etc.)\
 + [Logging Tips for Power Users: Contextual Logging](https://www.loggly.com/blog/logging-tips-for-power-users-contextual-logging/)
 + [Log rotation](https://en.wikipedia.org/wiki/Log_rotation)
 + [Logrotate - 處理log rotation的好用工具](https://sibevin.github.io/posts/2017-03-20-121433-logrotate)
++ [Configure logging drivers](https://docs.docker.com/engine/logging/configure/)
++ [Daemon configuration file](https://docs.docker.com/reference/cli/dockerd/#daemon-configuration-file)
++ [How to Configure Docker Daemon with a Custom daemon.json File](https://oneuptime.com/blog/post/2026-02-08-how-to-configure-docker-daemon-with-a-custom-daemonjson-file/view)
