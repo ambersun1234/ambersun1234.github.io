@@ -431,6 +431,21 @@ JSON 資料大多是無標準結構的，也就是說有的可能很大很深，
 如果將 Index 做在上面，每次更新的時候它都要重新解析一次然後重建 Index\
 對於系統來說是一個負擔
 
+不過 [PostgreSQL](https://www.postgresql.org/docs/current/functions-json.html) 這種可以使用 *GIN* index 來加速 JSON 的查詢\
+有兩種 operator class 可以選擇
+
+1. `jsonb_ops`: 需要比較大的空間
+2. `jsonb_path_ops`: 比較快，比較小，適合拿來搜尋
+
+> jsonb 資料也可以用 **B+ Tree** 跟 **hash** index
+
+拿 `{"foo": {"bar": "baz"}}` 為例子\
+`jsonb_ops` 會建立 **3** 個獨立的 index, 而 `jsonb_path_ops` 只會建立 **1** 個 index\
+對於搜尋的效率來說，`jsonb_ops` 會搜尋到很多符合的資料，就稍微不準\
+`jsonb_path_ops` 因為他的 index 是拿全部的資料下去算 hash，因此它可以很精準的找到精確的資料
+
+> 可參考 [資料庫 - 最佳化 Read/Write 設計 \| Shawn Hsu](../../database/database-optimization#json), [資料庫 - PostgreSQL 使用 Fuzzy Search 的效能測試 \| Shawn Hsu](../../database/database-postgresql-index)
+
 # When will Database do a Full Table Scan
 那麼哪些會造成 Full Table Scan?\
 原因多半有以下
@@ -474,3 +489,5 @@ JSON 資料大多是無標準結構的，也就是說有的可能很大很深，
 + [What are the differences between B trees and B+ trees?](https://stackoverflow.com/questions/870218/what-are-the-differences-between-b-trees-and-b-trees)
 + [Difference between Internal and External fragmentation](https://www.geeksforgeeks.org/difference-between-internal-and-external-fragmentation/)
 + [Partial Indexes](https://www.postgresql.org/docs/current/indexes-partial.html)
++ [8.14. JSON 型別](https://docs.postgresql.tw/the-sql-language/data-types/json-types)
++ [8.14. JSON Types](https://www.postgresql.org/docs/current/datatype-json.html#JSON-INDEXING)

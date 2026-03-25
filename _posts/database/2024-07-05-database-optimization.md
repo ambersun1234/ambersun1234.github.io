@@ -236,7 +236,23 @@ multiple query 除了可以被 cache 起來之外\
 > to be continued
 
 ## JSON
-> to be continued
+資料庫也可以儲存 JSON 資料\
+現今主流的資料庫如 [MySQL](https://dev.mysql.com/doc/refman/8.0/en/json.html), [PostgreSQL](https://www.postgresql.org/docs/current/functions-json.html) 等等都支援 JSON 的儲存
+
+以 PostgreSQL 來說，有兩種資料型別 `json` 以及 `jsonb`\
+差別在於 `json` 是儲存 raw JSON 資料，導致說它在執行複雜操作的時候 **每一次都要重新 parse**\
+而 `jsonb` 則是會先預處理過，雖然在一開始寫入的時候會稍微慢，但後續的操作都會比較快，且支援 index
+
+> 覺大多數情況下請用 `jsonb`，除非你需要例如說 preserve key 的順序之類的
+
+雖然說可以直接存 JSON 資料提供了一定的彈性，不過要記住它並不是萬能的\
+任何寫入都至少會需要 row-level lock，如果 JSON 資料本身很大，上鎖的時間會更長，進而影響到效能層面\
+因此，在設計的時候，需要考慮將它控制在最小的範圍內，並且資料本身應該要有 "某種" 結構
+
+> 可參考 [資料庫 - Index 與 Histogram 篇 \| Shawn Hsu](../../database/database-index-histogram#index-on-json)
+
+我是覺的不太需要刻意去避免存 JSON 在資料庫\
+只是你要能夠知道哪些情況下適合存 JSON, 哪些情況下不適合
 
 # References
 + 資料密集型應用系統設計(ISBN: 978-986-502-835-0)
