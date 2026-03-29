@@ -157,7 +157,7 @@ clustered index 是 unique 的，也因此它永遠可以指到 `一筆資料`
 
 > 另外常見的 cache 手段包含像是 Redis 等等的可以參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
 
-server 會針對所謂的 [Prepare Statement](#prepare-statement) 以及 [Store Program](#store-program) 進行 cache\
+server 會針對所謂的 [Prepare Statement](#prepare-statement) 以及 `Store Program` 進行 cache\
 但眾所周知，cache 會有所謂的 `過期` 問題, 亦即資料並不新鮮了\
 那麼什麼樣的情況下會造成 invalid 的情況呢？
 
@@ -188,13 +188,6 @@ key distributions 為紀錄該 table 當中 key 的資料\
 <hr>
 
 以上對應到的其實跟 [資料庫 - Autovacuum 在 PostgreSQL 中的重要性 \| Shawn Hsu](../../database/database-postgresql-vacuum) 中提到的 `VACUUM` 以及 `ANALYZE` 指令是相對應的
-
-## Store Programs
-<!-- 常見的 store program 包含像是 store procedure, function, triggers 以及 events
-
-<hr>
-
-store procedure 由於其過時的程式語言，難以管理、部屬以及測試等問題 -->
 
 # SQL Commands
 ## Regex vs. Like Operator
