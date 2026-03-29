@@ -233,7 +233,13 @@ multiple query 除了可以被 cache 起來之外\
 
 # Storing Complex Data in Database?
 ## Image
-> to be continued
+存圖片之類的事情在資料庫通常不太是個好選擇\
+因為圖片通常很大，把它存在資料庫裡面會佔用很多空間，存取的時間也會比較久\
+如果需要做備份等等的操作，也會花費更多的時間
+
+而我們之前有學過，通常資料庫裡面就是存檔案路徑而已\
+面對如今的系統架構，使用 S3 等等的 object storage 通常是不錯的選擇\
+可以參考 [資料庫 - 大型物件儲存系統 MinIO 簡介 \| Shawn Hsu](../../database/database-minio)
 
 ## JSON
 資料庫也可以儲存 JSON 資料\
@@ -264,3 +270,4 @@ multiple query 除了可以被 cache 起來之外\
 + [13.7.3.4 OPTIMIZE TABLE Statement](https://dev.mysql.com/doc/refman/8.0/en/optimize-table.html)
 + [SQL 索引欄位是否該包含 OR 比對項目？](https://blog.darkthread.net/blog/index-key-for-or-condition/)
 + [Indexing Big Data: Global vs. Local Indexes in Distributed Databases](https://dzone.com/articles/faster-indexing-and-query-global-vs-local-indexing)
++ [To BLOB or Not to BLOB: Storing Files in Your Database vs. Dedicated File Storage (with a focus on NFS)](https://master-spring-ter.medium.com/to-blob-or-not-to-blob-storing-files-in-your-database-vs-ff7b8d0cbee1)
