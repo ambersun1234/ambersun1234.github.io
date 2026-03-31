@@ -3,7 +3,7 @@ title: Goroutine 與 Golang Runtime Scheduler
 date: 2023-02-16
 description: Goroutine 是 Golang 中的一個重要概念，Golang Runtime Scheduler 透過 cooperative scheduling 的方式執行不同的 Goroutine 具體來說是怎麼做的？。本文將會介紹 goroutine 的基本概念以及 Golang Runtime Scheduler 的運作方式
 categories: [random]
-tags: [golang, coroutine, thread, scheduler, parallelism, concurrency, gm, gmp, work steal]
+tags: [golang, coroutine, thread, scheduler, parallelism, concurrency, gm, gmp, work steal, waitgroup, errgroup, select]
 math: true
 ---
 
@@ -551,6 +551,42 @@ Hello 5
 ```
 如果你沒有使用 wait group，隨著 main goroutine 的結束，所有的 child 也會一併結束的\
 那這樣的結果就會是輸出會來不及，導致你的 console 會是空的
+
+## ErrorGroup
+另一種是使用 `golang.org/x/sync/errgroup` 來等待多個 goroutine 執行完成\
+與 [WaitGroup](#waitgroup) 不同的是，它可以處理 error 的狀況\
+可以設定說，當其中一個 goroutine 執行失敗的時候，其他 goroutine 就一併停止
+
+而同一時間它也可以用來設定 concurrent 的數量\
+舉例來說
+
+```go
+package main
+
+import (
+    "fmt"
+    "time"
+    "golang.org/x/sync/errgroup"
+)
+
+func main() {
+    var eg errgroup.Group
+    
+    eg.SetLimit(5)
+
+    for i := 0; i < 10; i++ {
+        eg.Go(func() error {
+            fmt.Println("Running task", i)
+            time.Sleep(1 * time.Second)
+            return nil
+        })
+    }
+
+    if err := eg.Wait(); err != nil {
+        fmt.Println(err)
+    }
+}
+```
 
 ## Empty Select
 另一個方法是使用 select\
