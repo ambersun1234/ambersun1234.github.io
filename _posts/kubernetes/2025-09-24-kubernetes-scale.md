@@ -591,14 +591,14 @@ A/B Testing 的目的，是 *藉由部署不同的系統版本，窺探使用者
 當你測試完成之後，再把流量復原然後就可以根據測試結果決定後續
 
 ## Shadow Deployment
-Shadow 類似於 [A/B Testing](#a-b-testing)，只是他不需要分流\
+Shadow 類似於 [A/B Testing](#ab-testing)，只是他不需要分流\
 他也是用於測試，只不過是將 production 流量複製一份出來測試\
 這樣的好處就是你可以很直接的觀察新版本的表現，而 *完全不會影響到舊版本*\
 response 則會全部被丟棄
 
 ## Conclusion
 
-|Strategy|[Recreate](#recreate-and-rolling-update)|[Rolling Update](#recreate-and-rolling-update)|[Blue Green Deployment](#blue-green-deployment)|[Canary Deployment](#canary-deployment)|[A/B Testing](#a-b-testing)|[Shadow Deployment](#shadow-deployment)|
+|Strategy|[Recreate](#recreate-and-rolling-update)|[Rolling Update](#recreate-and-rolling-update)|[Blue Green Deployment](#blue-green-deployment)|[Canary Deployment](#canary-deployment)|[A/B Testing](#ab-testing)|[Shadow Deployment](#shadow-deployment)|
 |:--|--:|--:|--:|--:|--:|--:|
 |Purpose|部署|部署|部署|部署|測試|測試|
 |Downtime|:heavy_check_mark:|:x:|:x:|:x:|||

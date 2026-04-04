@@ -17,9 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash ./scripts/internal-link.sh
+        
+  anchor_link_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash ./scripts/anchor.sh
 
   autogen_og_image:
-    needs: [redirect_path_check, internal_link_check]
+    needs: [redirect_path_check, internal_link_check, anchor_link_check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

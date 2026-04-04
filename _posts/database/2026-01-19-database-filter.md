@@ -57,12 +57,12 @@ redirect_from:
 |Probabilistic Data Structure|Insertion|Query|Deletion|Modification|Space Utilization|
 |:--|:--|:--|:--|:--|:--|
 |[Bloom Filter](#bloom-filter)|$O(K)$|$O(K)$|:x:|:heavy_check_mark:|Very Low|
-|[Scalable Bloom Filter](#scalable-bloom-filter)|$O(K)$|$O(K * L)$|:x:|:heavy_check_mark:|Low|
+|[Scalable(Stackable) Bloom Filter](#scalablestackable-bloom-filter)|$O(K)$|$O(K * L)$|:x:|:heavy_check_mark:|Low|
 |[Cuckoo Filter](#cuckoo-filter)|$O(1)$|$O(1)$|:heavy_check_mark:|:heavy_check_mark:|Medium|
 |[XOR Filter](#xor-filter)|$O(1)$|$O(1)$|:x:|:x:|High|
 |[Binary Fuse Filter](#binary-fuse-filter)|$O(1)$|$O(1)$|:x:|:x:|Very High|
 
-> 每筆資料所需空間: [Bloom Filter](#bloom-filter) > [Scalable Bloom Filter](#scalable-bloom-filter) > [Cuckoo Filter](#cuckoo-filter) > [XOR Filter](#xor-filter) > [Binary Fuse Filter](#binary-fuse-filter)
+> 每筆資料所需空間: [Bloom Filter](#bloom-filter) > [Scalable(Stackable) Bloom Filter](#scalablestackable-bloom-filter) > [Cuckoo Filter](#cuckoo-filter) > [XOR Filter](#xor-filter) > [Binary Fuse Filter](#binary-fuse-filter)
 
 ## Bloom Filter
 [Bloom Filter](https://en.wikipedia.org/wiki/Bloom_filter) 是一種機率型資料結構，可以快速判斷資料是否存在\

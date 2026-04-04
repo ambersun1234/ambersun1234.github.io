@@ -157,7 +157,7 @@ clustered index 是 unique 的，也因此它永遠可以指到 `一筆資料`
 
 > 另外常見的 cache 手段包含像是 Redis 等等的可以參考 [資料庫 - Cache Strategies 與常見的 Solutions \| Shawn Hsu](../../database/database-cache)
 
-server 會針對所謂的 [Prepare Statement](#prepare-statement) 以及 `Store Program` 進行 cache\
+server 會針對所謂的 `Prepare Statement` 以及 `Store Program` 進行 cache\
 但眾所周知，cache 會有所謂的 `過期` 問題, 亦即資料並不新鮮了\
 那麼什麼樣的情況下會造成 invalid 的情況呢？
 

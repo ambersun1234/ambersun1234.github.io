@@ -88,7 +88,7 @@ on:
 比如說我的其中一個 action([Hardhat Test](https://github.com/marketplace/actions/hardhat-test))
 ![](/assets/img/posts/action.jpg)
 
-> 上架到 marketplace 需要設定 branding 相關參數，你可以參考 [action.yaml](#actionyaml)\
+> 上架到 marketplace 需要設定 branding 相關參數，你可以參考 [action.yaml](../../devops/devops-github-action-implementation#actionyaml)\
 > 網路上也有人貼心的準備了一個 cheat sheet, 可參考 [GitHub Actions Branding Cheat Sheet](https://github.com/haya14busa/github-action-brandings)
 
 ## Runner

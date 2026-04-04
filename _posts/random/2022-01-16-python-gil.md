@@ -365,7 +365,7 @@ typedef struct {
 我在做實驗的時候，發現了一個很神奇的現象\
 就是如果我不把 result 這個變數用 `threading.Lock` 鎖起來 好像...也不會錯阿？
 
-稍微想了一下既然 [GIL](#gil-global-interpreter-lock) 的目的是確保同一個時間只有一條 thread 在使用 Python interpreter(或者說 同一時間只有一條 thread 可以存取 Python object)\
+稍微想了一下既然 [GIL](#gil---global-interpreter-lock) 的目的是確保同一個時間只有一條 thread 在使用 Python interpreter(或者說 同一時間只有一條 thread 可以存取 Python object)\
 那 "同一時間" 不就保證它一次只會有一個人存取了......嗎 :question:
 
 如果有仔細看上面的 [Atomic Operation](#atomic-operation) 你就會意識到事情才沒有那麼簡單\

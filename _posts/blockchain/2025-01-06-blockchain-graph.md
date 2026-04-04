@@ -200,7 +200,7 @@ Subgraph 本身是從鏈上 aggregate 資料，所以你需要定義所謂的 `d
 像上述的例子，就是監聽 [sepolia/0x022](https://sepolia.etherscan.io/address/0x0227628f3f023bb0b980b67d528571c95c6dac1c#code) 的 contract\
 然後這裡你可以設定說你要從哪時候開始處理資料(i.e. `startBlock` 以及 `endBlock`)
 
-針對不同的事件，你可以定義不同的 [Handlers](#handlers)\
+針對不同的事件，你可以定義不同的 [Handlers](#assemblyscript-mapping-and-handlers)\
 這邊只有監聽了 `PoolCreated(indexed address,indexed address,indexed uint24,int24,address)` 這個事件\
 然後它會使用 [./src/mapping/factory.ts](https://github.com/Uniswap/v3-subgraph/blob/main/src/mappings/factory.ts#L14) 的 `handlePoolCreated` 來處理這個事件
 

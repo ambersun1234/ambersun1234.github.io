@@ -228,7 +228,7 @@ Local Queue 本身是 per namespace 的設計\
 屬於該 namespace 下的 Job 會提交到 Local Queue
 
 # Run
-要執行 kueue, 你需要將 [Cluster Queue](#Cluster-Queue), [Local Queue](#Local-Queue) 與 [Resource Flavor](#resource-flavor) 部署到你的 cluster 上(缺一不可)\
+要執行 kueue, 你需要將 [Cluster Queue](#cluster-queue), [Local Queue](#local-queue) 與 [Resource Flavor](#resource-flavor) 部署到你的 cluster 上(缺一不可)\
 然後透過以下的範例 Job 觀察排隊的行為
 
 你會需要加兩個設定

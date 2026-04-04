@@ -16,7 +16,7 @@ math: true
 
 本篇文章，將會在你的開發電腦上面，設定一個遠端系統\
 允許你使用其他終端裝置存取，並享受隨時寫 code 的樂趣\
-對於會設定 SSH 相關的人，可以直接跳轉至 [Code Server](#code-server)
+對於會設定 SSH 相關的人，可以直接跳轉至 [Website Code Server](#website-code-server)
 
 # SSH
 

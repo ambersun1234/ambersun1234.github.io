@@ -209,7 +209,7 @@ blockchain 顧名思義是由一堆 block 所構成的 chain\
 > ref: [Blockchain](https://www.code-brew.com/blockchain/)
 
 [Validator](#validators) 準確的來說，是要驗證 block, 也因為 Transaction 包含在其中，所以交易也會被驗證, by default\
-被選為要生成下一個 block 的 validator 會打包近期的 Transaction 並加上一些 header 如 [Merkle Root](#merkle-root) 透過 gossip protocol 傳遞到其他的節點進行驗證\
+被選為要生成下一個 block 的 validator 會打包近期的 Transaction 並加上一些 header 如 [Merkle Root](#merkle-tree) 透過 gossip protocol 傳遞到其他的節點進行驗證\
 驗證通過之後，便會將該 block 寫到自己節點的鏈上
 
 你可以到 [andersbrownworth.com/blockchain/blockchain](https://andersbrownworth.com/blockchain/blockchain) 實際的玩一下
@@ -281,7 +281,7 @@ Merkle Tree 是一個樹狀的資料結構\
 |:--|:--|
 |一般的交易|轉移金錢或 Token|
 |合約的建立|沒有 `recipient`(i.e. `to`)<br>並且 data 欄位包含了 contract bytecode|
-|合約的操作|`to` 指的就是 contract address<br>data 則包含了必要的資料，可參考 [Transaction Attributes](#transaction-attributes)|
+|合約的操作|`to` 指的就是 contract address<br>data 則包含了必要的資料，可參考 [Transaction Receipt Attributes](#transaction-receipt-attributes)|
 
 ## Mempool
 ![](/assets/img/posts/blockchain-tx1.jpg)
@@ -289,7 +289,7 @@ Merkle Tree 是一個樹狀的資料結構\
 待處理的 Transaction 會被放在 node 的 local memory, 稱之為 `memory pool`\
 一旦新的 Transaction 被提交到網路的時候， [Miner](#miners) 或者是 [Validator](#validators) 就會開始進行處理交易\
 完成計算整個 block 之後，會進行廣播，將算好的 block 傳遞到各個 node 進行同步\
-而其他的節點需要負責驗算結果是否合法(驗算 [Merkle Root](#merkle-root))\
+而其他的節點需要負責驗算結果是否合法(驗算 [Merkle Root](#merkle-tree))\
 並且將新的 block 資料儲存於各自的節點硬碟當中
 
 ## Transaction Response Attributes

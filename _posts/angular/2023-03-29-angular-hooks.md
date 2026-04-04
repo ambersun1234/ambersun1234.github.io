@@ -146,7 +146,7 @@ doCheck 有兩種呼叫時機
 非常不建議在專案中大量使用，不然你的 user 會氣死
 
 ## AfterContentInit, AfterContentChecked, AfterViewInit, AfterViewChecked
-參考 [Content vs. View](#content-vs-view) 以及 [Init vs. Checked Hooks](#init-vs-checked-hooks)\
+參考 [Content vs. View](#content-vs-view)\
 其執行時間基本上就是以上的排列組合\
 以個人的經驗來說，是很少會需要使用到
 

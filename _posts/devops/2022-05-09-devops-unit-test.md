@@ -230,7 +230,7 @@ it("should return data if cursor is empty", () => {
 你可能會問，cursor 不是從上一次的 API call 的 response 拿回來的結果嗎\
 這樣就是有依賴關係阿，為什麼還是不推薦這樣寫
 
-原因在於 unit test 中你的資料多半是使用 mock 之類的 [Test Double](#test-double)\
+原因在於 unit test 中你的資料多半是使用 mock 之類的 [Test Double](../../devops/devops-mock/#test-double)\
 理所當然的你會知道他的回傳結果是什麼\
 所以在這個 context 下，拆成兩個部份是合理的
 

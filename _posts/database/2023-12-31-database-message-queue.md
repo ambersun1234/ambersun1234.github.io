@@ -315,7 +315,7 @@ topic 是一個 order sequence of event, 我們剛剛提到，事件是會分先
 並且 topic 本身的資料是 **durably stored** 的，亦即它不會因為斷電等因素而掉資料\
 其中的原因為
 1. 他是儲存在 `硬碟` 裡面
-2. 資料會被拆成多份(partitioned)，並且擁有多個副本(replication), 可參考 [Partition and Replication](#partition-and-replication)
+2. 資料會被拆成多份(partitioned)，並且擁有多個副本(replication), 可參考 [Partition](#partition) 以及 [Replication](#replication)
 
 儲存在硬碟裡，是可以避免掉資料的問題\
 但硬碟不是很慢嗎，Kafka 是如何維持高吞吐量的?\
@@ -463,7 +463,7 @@ Kafka 的設計是這樣的\
 > 裡面直接操作的對象是 `Consumer Group`，你並不會直接控制 Consumer
 
 ## ZooKeeper and KRaft
-我們在 [Partition and Replication](#partition-and-replication) 裡面提到的機制，是最新的 KRaft\
+我們在 [Partition](#partition) 以及 [Replication](#replication) 裡面提到的機制，是最新的 KRaft\
 在早期，Kafka 是使用 ZooKeeper 來做這些事情的
 
 具體來說，分散式系統這種東西它需要舉行選舉，監控節點狀態這些事情\

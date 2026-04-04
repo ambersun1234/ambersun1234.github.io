@@ -183,7 +183,7 @@ Cache Aside 在大多數情況下都是很好的解決辦法\
 
 對！\
 但這步驟是透過 library 或者是第三方的套件完成的\
-而 [Cache Aside](##cache-asideread-aside) 是自己 **手動** 寫回 cache 的\
+而 [Cache Aside](#cache-asideread-aside) 是自己 **手動** 寫回 cache 的\
 所以這是他們的不同
 
 缺點呢，也一樣會有資料 **不一致** 的問題
@@ -235,7 +235,7 @@ write 永遠寫入 database, read 永遠讀 cache\
 
 |Strategy|Pros|Cons|
 |:--|:--|:--|
-|[Cache Aside](##cache-asideread-aside)|容易實作，增加 read 效率|資料可能不一致|
+|[Cache Aside](#cache-asideread-aside)|容易實作，增加 read 效率|資料可能不一致|
 |[Read Through](#read-through)|架構簡單，可增加 read 效率|資料可能不一致|
 |[Write Through](#write-through)|解決資料不一致的問題|速度偏慢|
 |[Write Back](#write-backwrite-behind)|可增加 write 效率|資料可能會遺失|

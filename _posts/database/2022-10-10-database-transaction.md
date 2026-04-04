@@ -441,7 +441,7 @@ snapshot 的機制下，它也不會知道 condition 的存在(他是在 applica
 
 ## Serializable Snapshot Isolation(SSI)
 一樣使用 snapshot 但是 **不使用 locking**\
-也就是 [Optimistic Locking](#optimistic-lockingoptimistic-concurrency-control) 的機制
+也就是 [Optimistic Locking](#optimistic-locking) 的機制
 
 > 早期的 OCC(Optimistic Concurrency Control) 不使用 snapshot, 這是它跟 SSI 主要的區別
 

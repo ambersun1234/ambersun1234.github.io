@@ -181,7 +181,7 @@ mountPath 永遠指向你想要東西在哪裡可以存取到
 > 沒有指定 subPath 的時候(i.e. `subPath: ""`)，會掛載整個 volume root 到 mountPath
 
 # Kubernetes Volume Type
-不同的 [Volume Type](#volume-type) 有不同的特性\
+不同的 Volume Type 有不同的特性\
 [Ephemeral Volume](#ephemeral-volume) 的生命週期與 Pod 本身的生命週期是綁定的\
 缺點在於說如果 Pod 被刪除，volume 也會被刪除\
 針對需要資料持久化的情境，使用 [Persistent Volume](#persistent-volume) 會是比較好的選擇
@@ -285,7 +285,7 @@ spec:
 ### configMap and secret
 另一種很好用的方式是直接將外掛的參數以及資料直接掛載進 container 裡面\
 在未習得這個方法之前，如果有類似的需求我都是傳 environment variable 進去\
-透過 init container 掛載 [emptyDir](#emptyDir) 並寫入檔案然後主 container 掛載相同 [emptyDir](#emptyDir) 存取
+透過 init container 掛載 [emptyDir](#emptydir) 並寫入檔案然後主 container 掛載相同 [emptyDir](#emptydir) 存取
 
 但很顯然的，這種方式是有問題的\
 將資料，尤其是密碼之類的透過 env 傳入是很不安全的行為\
@@ -588,8 +588,8 @@ Control Plane 會根據你的需求，幫你找到適合的 [Persistent Volume](
 可沒說 Pod 跟 [PVC](#persistent-volume-claim) 是一對一\
 事實上，透過以上不同的存取模式，同一個 [PVC](#persistent-volume-claim) 可以被多個 Pod 使用
 
-# Difference Between [hostPath](#hostPath) and [local](#local)
-同樣都是存取節點上的資料，區分 [hostPath](#hostPath) 與 [local](#local) 是有意義的\
+# Difference Between [hostPath](#hostpath) and [local](#local)
+同樣都是存取節點上的資料，區分 [hostPath](#hostpath) 與 [local](#local) 是有意義的\
 不單單只是因為掛載的方式差異，更多的是 scheduler 對於兩者有著不同的處理方式
 
 > 我當然可以用 [hostPath](#hostpath) 指到一個掛載上去的硬碟\

@@ -85,7 +85,7 @@ delayed message 的實作是透過 [TTL](#ttl-time-to-live) 以及 [DLX](#dlx-de
     1. 訊息變成 Queue 的第一個元素的時候(Head of Queue)
     2. policy 設定的改變間接影響
 
-> 無論是 [Quorum Queue](#quorum-queue) 還是 [Classic Queue](#classic-queue)\
+> 無論是 [Quorum Queue](https://www.rabbitmq.com/quorum-queues.html) 還是 [Classic Queue](https://www.rabbitmq.com/classic-queues.html)\
 > 他們都是 FIFO 的 queue
 
 如果 TTL 是設定在 queue 上，那麼訊息就會依照順序被 TTL 掉\
@@ -107,7 +107,7 @@ delayed message 的實作是透過 [TTL](#ttl-time-to-live) 以及 [DLX](#dlx-de
 1. 被 nack 掉(成功收到但是沒有辦法處理)
 2. 超過 TTL 的時間
 3. 因為超過 Queue 的長度導致 message 被丟棄
-4. 在 [Quorum Queue](#quorum-queue) 的情況下，message 被回傳的次數超過 delivery limit
+4. 在 [Quorum Queue](https://www.rabbitmq.com/quorum-queues.html) 的情況下，message 被回傳的次數超過 delivery limit
 
 > 如果是 Queue 本身 expired, 則 messages ***並不會*** 被 dead letter
 
