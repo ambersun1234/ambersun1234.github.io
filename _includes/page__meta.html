@@ -15,7 +15,7 @@
 
     {% if document.read_time %}
       {% assign words_per_minute = document.words_per_minute | default: site.words_per_minute | default: 200 %}
-      {% assign words = document.content | strip_html | number_of_words %}
+      {% assign words = document.content | read_time_effective_word_count: words_per_minute %}
 
       {% if page.collection != "posts" %}
         <span class="page__meta-readtime">
