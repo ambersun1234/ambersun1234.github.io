@@ -1,8 +1,8 @@
 ---
-title: Kubernetes 從零開始 - 部署策略 101
+title: Kubernetes 從零開始 - 細看 Netflix 極限壓榨性能的挑戰學習部署策略
 date: 2025-09-24
 categories: [kubernetes]
-tags: [scaling, scale out, scale up, hpa, vpa, rolling update, recreate, blue green, canary, shadow, deployment, rollout, controller, argo rollouts, keda, keda concepts, horizontal pod autoscaler, vertical pod autoscaler, hpa and vpa, rollout crd, manual scaling, auto scaling, stabilization window, tolerance, scaling policy, metric data, resize container resources, observed generation, ab testing, shadow deployment]
+tags: [scaling, scale out, scale up, hpa, vpa, rolling update, recreate, blue green, canary, shadow, deployment, rollout, controller, argo rollouts, keda, keda concepts, horizontal pod autoscaler, vertical pod autoscaler, hpa and vpa, rollout crd, manual scaling, auto scaling, stabilization window, tolerance, scaling policy, metric data, resize container resources, observed generation, ab testing, shadow deployment, cbr, vbr, nominal bitrate, netflix]
 description: 隨著軟體服務日漸複雜，你需要清楚的了解不同的部署策略會如何影響你的服務，他是否會造成 downtime，他會不會導致錯誤的資料以及發生致命錯誤時，你該如何應對。部署策略需要配合好軟體層級的架構設計，兩者缺一不可。本篇文章將帶你認識不同的部署策略，優缺點以及如何實作。
 math: true
 ---
@@ -410,6 +410,80 @@ KEDA 的 [Cron Scaler](https://keda.sh/docs/2.17/scalers/cron/) 就滿適合的
 
 > Scaler 其實有很多種，包含我有看到 Redis, Kafka, PostgreSQL 等等的\
 > 你甚至可以自己客製化 scaler
+
+# Netflix Smarter Live Streaming at Scale
+我們看過了可以根據流量、資源以及 queue 的資料量大小等等的方式進行擴展\
+不過真實世界並不是那麼的簡單，這種單純的策略在某種情境下可能不適合
+
+Netflix 於 2026 年 1 月，將 live streaming 背後的算法進行了一個更新\
+具體來說是從 `CBR(Constant Bitrate)` 更新到 `VBR(Variable Bitrate)`\
+簡單來說，串流影像會進行適當的編碼進行傳輸\
+傳統 CBR 的策略下，不論場景複雜與否，它都會使用相同的 bitrate 進行傳輸\
+而 VBR 的策略下，會根據場景的複雜程度以及帶寬等等的因素，動態的調整 bitrate
+
+|Simple Scene|Complex Scene|
+|:--:|:--:|
+|![](https://miro.medium.com/v2/resize:fit:786/format:webp/1*huWI8zAfmmwWq5IsxKIL3Q.png)<br> ref: [Smarter Live Streaming at Scale: Rolling Out VBR for All Netflix Live Events](https://netflixtechblog.com/smarter-live-streaming-at-scale-rolling-out-vbr-for-all-netflix-live-events-c8f833b238cc)|![](https://miro.medium.com/v2/resize:fit:786/format:webp/1*jBCcIjhCgSi9kPXLrsd1FA.png)<br> ref: [Smarter Live Streaming at Scale: Rolling Out VBR for All Netflix Live Events](https://netflixtechblog.com/smarter-live-streaming-at-scale-rolling-out-vbr-for-all-netflix-live-events-c8f833b238cc)|
+
+當你的場景是簡單的，比如說開場動畫，它並不複雜，因此你可以減少一些 bits\
+因為更多的 bits 的運算不會讓影像變得更好，反而會浪費資源\
+所以 VBR 的策略下，可以減少 bitrate 的消耗
+
+複雜情況，VBR 就必須要提高，才能達到相同的效果
+
+> 注意到，使用較少的 bits 的成像並不會比較差
+
+## The Change
+使用 CBR，因為它使用的 bitrate 都是固定的，因此他的負載是可以預測的\
+也就是說，它不會因為不同的內容，有太多的變動\
+在部署以及擴展的層面上，他是 **很好預測的**
+
+比方說你的 server 可以穩定的服務 2k requests\
+所以你知道說當超過的時候就應該 scale out\
+事情是非常簡單的
+
+但問題就如同之前提到的\
+CBR 它會浪費一些資源，主要是因為你的內容是不確定的\
+有可能整段都是簡單的場景如談話節目，這時候你的 server 其實是可以 take 更多 loading 的
+
+## The Unpredictable Load
+改成 VBR 之後你可以動態的調整 bitrate\
+但同一時間它會造成更嚴重的後果
+
+因為 VBR 會根據當前影響動態調整，當 server 被發現有點閒，這表示它其實可以接受更多連線(server 空閒不是好事就是)\
+可是可能下一個場景就切換到複雜場景，但是 server 已經接受太多連線，bitrate 又上來，就會導致負載過高\
+導致以前用 CBR 可預測的負載變得 **不可預測了**\
+使用者可能就會遇到卡頓的狀況，很明顯這是不可接受的
+
+## The Scaling Strategy
+與其單純看 loading\
+Netflix 選擇將 ***nominal bitrate*** 納入參考
+
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*_MoqLhu01wArcD1n58SZyg.png)
+> ref: [Smarter Live Streaming at Scale: Rolling Out VBR for All Netflix Live Events](https://netflixtechblog.com/smarter-live-streaming-at-scale-rolling-out-vbr-for-all-netflix-live-events-c8f833b238cc)
+
+針對同一場景，你可以從上述圖表中看到 CBR 與 VBR 的差別\
+以上是設定 `nominal bitrate` 為 `8Mbps` 的結果\
+你可以很輕易的得出這個結論 `相同 nominal bitrate 不代表 average bitrate 相同`(兩條線不同嘛)
+
+`nominal bitrate` 就像一個上界\
+你的影像串流大部分的時間會處於這個界線，上圖的 CBR 結果也證實了這點\
+CBR 跟 VBR 可以套用相同的 `nominal bitrate` 嗎？ 答案是不行的
+
+因為 VBR 可以動態的調整 bitrate，所以它可以適應不同的場景\
+如果它計算出來需要的 bitrate 比 `nominal bitrate` 還要高，它不會超過它，因此畫質會被下降\
+所以 **設定不能直接搬過來用**
+
+所以 Netflix 其實會做個比較\
+分別執行 CBR 與 VBR，當它發現 VBR 的效果不如預期，就提昇 nominal bitrate 直到效果符合預期(雖然提昇，但多數情況下 `nominal bitrate` 仍然比 CBR 來的低)\
+而串流通常不同畫質有不同設定，稱為 `bitrate ladder`\
+這個比較會在每一個不同畫質階梯做測試，讓 VBR 的壓縮仍然保有良好的畫質呈現
+
+> 在少數情況下，VBR 的 nominal bitrate 需要高於 CBR 原本的設定才能達到一樣效果
+
+也就是說，較小的 nominal bitrate 可以讓伺服器承受更多負載\
+同時因為他是上界，所以你可以更放心的進行 scaling 而不必擔心負載過高\
+同時也能得到更好的效能表現
 
 # Different Deployment Strategies
 現在的服務基本上講究一個 zero downtime，要給使用者不間斷的服務\
@@ -1199,3 +1273,5 @@ spec:
 + [Horizontal Pod Autoscaling](https://argoproj.github.io/argo-rollouts/features/hpa-support/#bluegreen-deployments-with-hpa)
 + [BlueGreen Deployment Strategy](https://argoproj.github.io/argo-rollouts/features/bluegreen/)
 + [Canary Deployment Strategy](https://argoproj.github.io/argo-rollouts/features/canary/)
++ [Smarter Live Streaming at Scale: Rolling Out VBR for All Netflix Live Events](https://netflixtechblog.com/smarter-live-streaming-at-scale-rolling-out-vbr-for-all-netflix-live-events-c8f833b238cc)
++ [What is Nominal bit rate?](https://stackoverflow.com/questions/42652836/what-is-nominal-bit-rate)
