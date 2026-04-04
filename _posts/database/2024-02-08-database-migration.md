@@ -22,7 +22,7 @@ math: true
 > 有的時候你只需要進行一種，有時候是多種的組合
 
 ## Schema Migration
-![](https://www.prisma.io/blog/posts/2020-12-migrate-production-workflow.png)
+![](https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b/imgs/2020-12-migrate-development-workflow.png?dpl=dpl_Dtwt4byoecmUHkg9eCexJRZ52bow)
 > ref: [Hassle-Free Database Migrations with Prisma Migrate](https://www.prisma.io/blog/prisma-migrate-ga-b5eno5g08d0b)
 
 有的時候，你可能會需要針對資料庫的某個欄位做些微的更動\
