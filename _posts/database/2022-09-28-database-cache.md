@@ -3,7 +3,7 @@ title: 資料庫 - Cache Strategies 與常見的 Solutions
 date: 2022-09-28
 description: 本文將會探討 cache 的概念，從作業系統層面到應用層面，你為什麼需要 cache 以及 cache 的好處。最後會介紹一些常見的 cache 的工具以及使用 cache 時你應該要注意的事情
 categories: [database]
-tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock, bloom filter, cache avalanche, cache hotspot invalid, cache penetration, rate limit, redlock]
+tags: [cache, redis, transaction, rdp, aof, memory hierarchy, cache warming, cache aside, read through, write through, write back, write around, redis cluster, memcached, distributed lock, bloom filter, cache avalanche, cache hotspot invalid, cache penetration, rate limit, redlock, netflix, ttl, exponential ttl]
 math: true
 ---
 
@@ -241,6 +241,69 @@ write 永遠寫入 database, read 永遠讀 cache\
 |[Write Back](#write-backwrite-behind)|可增加 write 效率|資料可能會遺失|
 |[Write Around](#write-around)|read 效率可以最佳化|資料可能不一致|
 
+# Time-series Database Caching
+讓我們來看看實際的例子
+
+Netflix 內部系統有一個即時的分析系統，負責分析所謂的 insights 並致力於將分析結果用於提昇使用者體驗\
+該系統每秒大約處理 `百萬級` 的事件，並且需要查詢 `兆級` 的資料\
+這個內部的系統，有 dashboard、預警系統以及監控系統等等的服務在執行\
+這些即時的資料，在這麼龐大的規模下，已經造成了一些問題
+
+前面提到內部系統擁有 dashboard 系統\
+當有重大全球性更新，又或者是重要的 live show，內部人員會想要看監控系統確保事情順利\
+這種時候就是會造成 dashboard 壓力大的時候
+
+一個 dashboard 通常有 10 多個 chart，而一個 chart 通常會需要多筆資料庫查詢\
+當同一時間有多個內部人員同時在看相同的圖表\
+這些資料因為是 **即時呈現的**，所以雖然每次的查詢都 `有一點點不一樣`，不過絕大多數都還是相同的\
+這些查詢會被重複做很多次，造成嚴重效能問題
+
+團隊原本想利用底層資料庫([Apache Druid](https://druid.apache.org/))的 caching 手段，不過因為以下而拒絕
++ 因為是查詢一個時間範圍，所以每次查詢都些微不同，但就會造成 query 不同，進而 cache miss
++ Druid 的設計是考量 stable cache result 以及 deterministic，提高 cache hit rate 不在原始設計
+
+簡單來說，還是會造成重複的 query，進而提高系統壓力
+
+所以 Netflix 團隊選擇了不同的作法\
+他們想，既然資料是一點點不一樣，我能不能用組合的方式\
+也就是說，查詢 3 個小時區間的資料，可能前 2 個小時的資料都 "穩定" 了，只要從 db 拿最新的就好
+
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*8bFAtFl8Z5pwEyoOgK54ag.png)
+> ref: [Stop Answering the Same Question Twice: Interval-Aware Caching for Druid at Netflix Scale](https://netflixtechblog.com/stop-answering-the-same-question-twice-interval-aware-caching-for-druid-at-netflix-scale-22fadc9b840e)
+
+具體來說怎麼做呢？\
+肯定是要用 cache，那首先問題是資料怎麼存\
+因為系統內需要的時間顆粒度可能不同，因此最好的方式是分開儲存
+
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*6DL-4Lpu_CqfZBVmF2rNvg.png)
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*QaeamWjRYGEQkW6t-XePJw.png)
+> ref: [Stop Answering the Same Question Twice: Interval-Aware Caching for Druid at Netflix Scale](https://netflixtechblog.com/stop-answering-the-same-question-twice-interval-aware-caching-for-druid-at-netflix-scale-22fadc9b840e)
+
+從外部進來的 query，首先將 query 內某些資料移除，其餘資料整合起來算成一個 hash 當作 cache key\
+這個 cache key 僅保留 **你問了哪些東西**，而不是你要哪個時段的東西\
+把時間拿掉的原因是因為，相同的 query 如果因為不同時間段會造成 cache miss
+
+整體的資料結構會是 map-of-maps\
+最外層就是前面提到的 cache key，裡面一層就是 timestamps bucket\
+為什麼不選一層的資料結構呢？ 如果把 query 跟 interval 壓在同一層裡面，那是不是改變查詢時間就會 cache miss\
+等於這個新的設計跟舊的一樣
+
+最後一個要考慮的問題是 TTL\
+前面說，資料 "穩定" 了是什麼意思？\
+在非同步的設計中，資料抵達的時間 **是不固定的**，順序同樣也是不保證的\
+所以可能在 t+5 的時間，資料 t 才抵達系統進行處理\
+所以 TTL 的設計上是採 ***exponential*** 的設計\
+也就是資料生命小於 2 分鐘的給 TTL `5 秒`，剛好 2 分鐘的給 TTL `10 秒`，之後每隔一分鐘 double TTL 直到 *TTL 一個小時*\
+這樣的設計有助於快速的更新 cache，以解決晚到的或順序混亂的資料
+
+細節大致上底定\
+系統設計的部份，這個 cache 服務是獨立於 [Apache Druid](https://druid.apache.org/) 的\
+Netflix 團隊目前正在想辦法深度整合進系統內部，不過目前這樣做也有好處，也就是客戶端不需要任何改變\
+而這個架構是屬於 [Cache Aside](#cache-asideread-aside) 的變形
+
+![](https://miro.medium.com/v2/resize:fit:1100/format:webp/1*k3uoqCFgzbRZEuiNo_Rlzw.png)
+> ref: [Stop Answering the Same Question Twice: Interval-Aware Caching for Druid at Netflix Scale](https://netflixtechblog.com/stop-answering-the-same-question-twice-interval-aware-caching-for-druid-at-netflix-scale-22fadc9b840e)
+
 # Redis
 REmote DIctionary Server - Redis 是一款 in-memory 的 key-value 系統\
 Redis 可以拿來當作 cache、正規的 database 使用、streaming engine 或 message broker\
@@ -463,3 +526,4 @@ user2: {
 + [Distributed Locks with Redis](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/)
 + [redis - 快取雪崩、擊穿、穿透](https://totoroliu.medium.com/redis-%E5%BF%AB%E5%8F%96%E9%9B%AA%E5%B4%A9-%E6%93%8A%E7%A9%BF-%E7%A9%BF%E9%80%8F-8bc02f09fe8f)
 + [Distributed Locks with Redis](https://redis.io/docs/latest/develop/clients/patterns/distributed-locks/)
+[Stop Answering the Same Question Twice: Interval-Aware Caching for Druid at Netflix Scale](https://netflixtechblog.com/stop-answering-the-same-question-twice-interval-aware-caching-for-druid-at-netflix-scale-22fadc9b840e)
