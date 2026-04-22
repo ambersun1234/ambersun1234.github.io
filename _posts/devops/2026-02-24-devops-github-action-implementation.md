@@ -132,7 +132,7 @@ branding:
             - ${{ inputs.my_name }}
         ```
         {% endraw %}
-        + 那麼他在環境變數的使用上跟上面一樣, 可參考 [Environments Variable](#environment-variables)
+        + 那麼他在環境變數的使用上跟上面一樣, 可參考 [Environments Variable](../../devops/github-action#environment-variables)
 + `outputs`
     + 為了使下一個 step 的 action 能夠取得上一層 action 的輸出，你在 Docker container 裡面的執行檔裡面要這樣寫
     {% raw %}
