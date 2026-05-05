@@ -3,7 +3,7 @@ title: 資料庫 - Index 與 Histogram 篇
 date: 2022-12-25
 description: 本文會介紹 Index 如何對你的效能產生重大的影響。我們會一一檢視各種 index 的實作方式，並且探討它們的優缺點
 categories: [database]
-tags: [index, histogram, partial index, secondary index, clustered index, non-clustered index, hash index, b-tree index, b+ tree index, index seek, index scan, table scan, full table scan, low cardinality, high cardinality, cardinality, composite index, bitmap index, dense index, sparse index, reverse index, inverted index, full table scan, sstable, lsm tree, avl tree, red-black tree, linear probing, double hashing, fragmentation, external fragmentation, internal fragmentation, locality, predicates, access predicates, filter predicates, index only scan, explain, execution plan, histogram, json]
+tags: [index, histogram, partial index, secondary index, clustered index, non-clustered index, hash index, b-tree index, b+ tree index, index seek, index scan, table scan, full table scan, low cardinality, high cardinality, cardinality, composite index, bitmap index, dense index, sparse index, reverse index, inverted index, full table scan, sstable, lsm tree, avl tree, red-black tree, linear probing, double hashing, fragmentation, external fragmentation, internal fragmentation, locality, predicates, access predicates, filter predicates, index only scan, explain, execution plan, histogram, json, leftmost prefix rule, index cardinality]
 math: true
 ---
 
@@ -62,6 +62,7 @@ WHERE b>=12 AND c=15
 
     > ref: [8.3.6 Multiple-Column Indexes](https://dev.mysql.com/doc/refman/8.0/en/multiple-column-indexes.html)
 
+### Leftmost Prefix Rule
 另外，在定義 composite index 的時候\
 遵循著一個原則，**low cardinality 在前，high cardinality 在後**\
 這樣的設計有助於再次提高效能
@@ -75,6 +76,12 @@ WHERE b>=12 AND c=15
 > 注意到如果你使用 composite index 的時候沒有依照建構順序\
 > 在你嘗試使用 explain 去看 execution plan 也不見得會顯現出來差別\
 > 但實務上他的執行速度還是有差別的
+
+### Index Cardinality
+多數情況下，composite index 使用的欄位數量並不會太多\
+通常是 2 ~ 3 個欄位，原因是數量太多，每次更新他都會需要花額外的時間處理 index(c.f. [Index Overhead](#index-overhead))\
+另一個原因是，邊際效應，[Leftmost Prefix Rule](#leftmost-prefix-rule) 提到，越前面的欄位，他會過濾掉越多不符合的資料\
+所以通常經過前幾輪篩選之後，資料就那一點了，你在用 index 去篩他的效果其實也沒到那麼好
 
 ## Partial Index
 既然 index 的使用，跟他的數值有極大的關係(i.e. `cardinality`)\
@@ -187,6 +194,15 @@ non-clustered index 又稱 secondary index
 |Sparse Index|儲存 **部份** record 的 block 起點(每個 block 有若干 record，亦即1 對 多)<br>找到該 block 後 sequential 尋找目標 record|
 |Reverse Index|將 key 反過來存(i.e. `24538` :arrow_right: `83542`)<br>這樣可以減緩 leaf block contention, 因為原本緊鄰的 data, primary key 反轉之後位置會差很多<br>(`24538` :arrow_right: `83542`, `24539` :arrow_right: `93542`)|
 |Inverted Index|多用於搜尋功能，其資料結構為 hashmap, key 為 content, value 為位置<br>比如說 `cat` 一詞出現在 document `1, 4, 22, 103 頁`|
+
+# Index Overhead
+Index 好用歸好用，你不能無節制的一直新增\
+前面提到，index 的建立是仰賴 **空間換時間**\
+每一次資料的更新寫入，同時都會需要更新 index\
+當 index 數量過多，每次的更新時間就會變長
+
+所以你說可以整張表都建 index 嗎？ 答案是不可以\
+因為這樣等於沒用，反而會更慢，因為是兩次 look up 的時間
 
 # Index Implementations
 ## Hash Index
