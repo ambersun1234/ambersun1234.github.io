@@ -1,9 +1,9 @@
 ---
-title: 設計模式 101 - 分散式交易的另一種作法 Saga Pattern
+title: 設計模式 101 - 分散式交易的另一種作法 Saga 與 Transactional Outbox Pattern
 date: 2024-11-02
 categories: [design pattern]
-tags: [saga, transaction, microservices, 2pc, compensating transaction]
-description: 除了 2PC 以外，有沒有一種方法可以做到分散式交易呢？這篇文章介紹 Saga Pattern，一種分散式交易的解決方案
+tags: [saga, transaction, microservices, 2pc, compensating transaction, saga pattern, transactional outbox pattern]
+description: 除了 2PC 以外，有沒有一種方法可以做到分散式交易呢？這篇文章介紹 Saga Pattern，一種分散式交易的解決方案。除此之外，還會介紹 Transactional Outbox Pattern，一種解決分散式交易中，資料一致性問題的解決方案
 math: true
 ---
 
@@ -27,6 +27,8 @@ math: true
 但要是 `整體交易` 失敗該怎麼辦？\
 部份小交易已經 Commit 了，這些交易要怎麼 Rollback 呢？\
 Rollback 是不可能的，已經 Commit 的交易 Revert 也是不可能的(資料庫不支援)
+
+> 就算有些支援 Rollback，但他帶來的 overhead 也會比較高
 
 <hr>
 
@@ -63,7 +65,7 @@ Saga Pattern 有兩種實現方式\
 變成是 `Inventory` 會知道接下來需要進行扣款(`Billing`)的動作\
 因為不同服務之間他們不會直接溝通，所以你需要借助像是 message queue 這樣的工具
 
-> 有關 message queue 可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue/)
+> 有關 message queue 可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue/), [資料庫 - 解耦助手 RabbitMQ \| Shawn Hsu](../../database/database-rabbitmq/)
 
 ||`Choreography-based Saga`|`Orchestration-based Saga`|
 |:--:|:--|:--|
@@ -91,6 +93,38 @@ Saga Pattern 有兩種實現方式\
 
 綜合來看，Saga Pattern 提供了一個分散式交易的解決思路\
 但是仍然有許多的細節需要仔細思考與研究
+
+# Introduction to Transactional Outbox Pattern
+如果不想要 `2PC` 帶來的高昂 overhead 或者 [Saga Pattern](#introduction-to-saga-pattern) 手動處理的麻煩\
+你還有一種選擇是 **Transactional Outbox Pattern**
+
+基本的思想也還是一樣的\
+每個服務依然是做 local transaction\
+問題在於，要怎麼確保 atomicity 這件事情
+
+`2PC` 可以用分散式鎖確保，[Saga Pattern](#introduction-to-saga-pattern) 可以使用 compensating transaction 來確保 atomicity\
+前者的問題在於他有極大的效能隱患，後者的問題會是手動的部分很容易出錯
+
+如果應用程式 crash 掉，即使你在 application layer 做了很多重試，東西也還是會遺失\
+所以重點是在這裡\
+那有沒有一種辦法，你無論如何都能夠 preserve 系統狀態
+
+如果 local transaction 做完了(這邊指的不管是成功或失敗)\
+他是不是一定會寫 **WAL(Write-Ahead Log)**?\
+這個機制就是用於確保資料庫系統不會因為意外重啟而遺失資料的機制
+
++ 如果斷電，WAL 裡面沒東西，那代表東西根本還沒進去資料庫，不需要重試
++ 如果斷電，WAL 裡面有東西，那代表東西已經進去資料庫，需要重試
+
+所以回到 local transaction 的部分\
+只要它做完，你就一定會有記錄，不論斷電與否\
+那 atomicity 就解決了\
+而既然系統本身是分散式的，你需要將目前的進度傳給下一個 local transaction 對吧？\
+這段就相對單純，你只需要將紀錄放到 `outbox` 表裡面，讓下一個 local transaction 的服務取得狀態並進行下一步的動作\
+其實甚至不需要那麼麻煩，你可以利用 message queue 來傳遞訊息或者是直接透過 CDC 的機制傳遞(這邊也就同時保證了 eventually consistency，資料會 at least once 的被處理)
+
+> 有關 message queue 可以參考 [資料庫 - 從 Apache Kafka 認識 Message Queue \| Shawn Hsu](../../database/database-message-queue/), [資料庫 - 解耦助手 RabbitMQ \| Shawn Hsu](../../database/database-rabbitmq/)\
+> 有關 CDC 可以參考 [資料庫 - 新手做 Data Migration 資料遷移 \| Shawn Hsu](../../database/database-migration/#change-data-capturecdc)
 
 # References
 + [Pattern: Saga](https://microservices.io/patterns/data/saga.html)
