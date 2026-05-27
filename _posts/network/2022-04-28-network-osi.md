@@ -146,7 +146,7 @@ LLC(i.e. 邏輯鏈路控制) 子層在做的事情就是提供一個 interface, 
 logical link 的排程處理已經交由 LLC 子層處理了，那萬一我想要連線的對象不一樣呢？\
 假設你的電腦目前透過有線的方式連接了遠端伺服器 server1，以及透過無線的方式連接了你的另一台 server2\
 它會長的像下面這樣子(示意圖)\
-![](https://www.exoscale.com/static/syslog/2016-01-15-secure-your-cloud-computing-architecture-with-a-bastion/bastion-security-groups-example.svg)
+![](https://www.exoscale.com/blog/secure-your-cloud-computing-architecture-with-a-bastion/bastion-security-groups-example.svg)
 > ref: [Secure your Cloud Computing Architecture with a Bastion](https://www.exoscale.com/syslog/secure-your-cloud-computing-architecture-with-a-bastion/)
 
 很明顯你的 server1 以及 server2 的實體連線路徑並不相同\
