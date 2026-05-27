@@ -108,8 +108,10 @@ $ traceroute github.com
 
 ip header 要帶的東西包含 source address, destination address, length, metadate(routing 相關) 以及 [hop limit](https://en.wikipedia.org/wiki/Hop_(networking))\
 hop 這個東西簡單講就是，`經過的中繼站點個數`, 它也可以用來粗略的估計兩台機器間的距離(路由個數)\
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Hop-count-trans.png/600px-Hop-count-trans.png)\
-以上述圖片來說，hop 的數值為 2(因為經過兩台 router)
+以圖片來說，hop 的數值為 2(因為經過兩台 router)
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Hop-count-trans.png/960px-Hop-count-trans.png)
+> ref: [Hop (networking)](https://en.wikipedia.org/wiki/Hop_%28networking%29)
 
 <hr>
 

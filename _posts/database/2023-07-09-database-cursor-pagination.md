@@ -15,7 +15,7 @@ math: true
 實作分頁機制可是有著大學問的\
 一起跟我看看吧
 
-![](https://dds.dell.com/site/stage/9f/e0/Pagination_Anatomy_5c53ee133f.png)
+![](https://dds.dell.com/site/v2/stage/9f/e0/Pagination_Anatomy_5c53ee133f.png)
 > ref: [Pagination](https://www.delldesignsystem.com/components/pagination/)
 
 # Page Number + Page Offset
