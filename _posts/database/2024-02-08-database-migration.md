@@ -472,3 +472,4 @@ full backfill 可以讓下游與上游擁有 `一致且乾淨的 baseline`，因
 + [[資料工程]獲取資料庫所有異動記錄 — Change Data Capture(1)](https://wuyiru.medium.com/%E8%B3%87%E6%96%99%E5%B7%A5%E7%A8%8B-%E7%8D%B2%E5%8F%96%E8%B3%87%E6%96%99%E5%BA%AB%E6%89%80%E6%9C%89%E7%95%B0%E5%8B%95%E8%A8%98%E9%8C%84-change-data-capture-1-c61ce7ec3d27)
 + [Lab 4.2 - A Simple DAG Workflow: apply workflow with generate name](https://forum.linuxfoundation.org/discussion/865639/lab-4-2-a-simple-dag-workflow-apply-workflow-with-generate-name)
 + [Automating RDS Postgres to Aurora Postgres Migration](https://netflixtechblog.com/automating-rds-postgres-to-aurora-postgres-migration-261ca045447f)
++ [The Evolution of Cassandra Data Movement at Netflix](https://netflixtechblog.medium.com/the-evolution-of-cassandra-data-movement-at-netflix-6e13329c80a1)
