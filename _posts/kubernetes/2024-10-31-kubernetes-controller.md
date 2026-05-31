@@ -296,7 +296,7 @@ type Foo struct {
 
 Reconcile 的實作如下\
 基本上為了 demo 用，所以只是簡單的檢查 spec 的 value 欄位是否為特定值\
-注意到，從 [Indexer](#indexer) 取得的資料有可能為空(因為 resource 被手動刪除之類的)\
+注意到，從 [Indexer](../../kubernetes/kubernetes-controller-concept/#indexer) 取得的資料有可能為空(因為 resource 被手動刪除之類的)\
 所以還需要做 `IsNotFound` 的檢查(第 5 行)
 
 ```go
