@@ -681,26 +681,26 @@ non [FQDN(Fully Qualified Domain Name)](#fqdnfully-qualified-domain-name)\
   █ TOTAL RESULTS 
 
     HTTP
-    http_req_blocked...............: avg=61.42ms min=292µs   med=52.97ms max=1.11s    p(90)=108.65ms p(95)=121.34ms
-    http_req_connecting............: avg=31.98ms min=14.37µs med=26.54ms max=1.08s    p(90)=49.58ms  p(95)=78.96ms 
-    http_req_duration..............: avg=39.9ms  min=23µs    med=34.65ms max=251.84ms p(90)=59.32ms  p(95)=88.62ms 
-      { expected_response:true }...: avg=39.9ms  min=23µs    med=34.65ms max=251.84ms p(90)=59.32ms  p(95)=88.62ms 
-    http_req_failed................: 0.00%   0 out of 1381186
-    http_req_receiving.............: avg=4.23ms  min=3.83µs  med=2.88ms  max=161.51ms p(90)=7.56ms   p(95)=10.48ms 
-    http_req_sending...............: avg=4.32ms  min=3.87µs  med=2.85ms  max=168.66ms p(90)=8.6ms    p(95)=12.18ms 
-    http_req_tls_handshaking.......: avg=0s      min=0s      med=0s      max=0s       p(90)=0s       p(95)=0s      
-    http_req_waiting...............: avg=31.33ms min=9.45µs  med=27.54ms max=148.63ms p(90)=45.87ms  p(95)=70.76ms 
-    http_reqs......................: 1381186 45911.581267/s
+    http_req_blocked...............: avg=62.18ms  min=180.71µs med=54.05ms max=238.03ms p(90)=109.52ms p(95)=125.69ms
+    http_req_connecting............: avg=32.5ms   min=14.75µs  med=27.21ms max=201.23ms p(90)=48.99ms  p(95)=81.26ms 
+    http_req_duration..............: avg=42.7ms   min=30.66µs  med=36.03ms max=239.41ms p(90)=70.7ms   p(95)=100.84ms
+      { expected_response:true }...: avg=42.7ms   min=30.66µs  med=36.03ms max=239.41ms p(90)=70.7ms   p(95)=100.84ms
+    http_req_failed................: 0.00%   0 out of 1351004
+    http_req_receiving.............: avg=4.43ms   min=3.75µs   med=2.95ms  max=131.85ms p(90)=8ms      p(95)=11.24ms 
+    http_req_sending...............: avg=4.59ms   min=3.75µs   med=2.91ms  max=159.78ms p(90)=8.82ms   p(95)=12.63ms 
+    http_req_tls_handshaking.......: avg=0s       min=0s       med=0s      max=0s       p(90)=0s       p(95)=0s      
+    http_req_waiting...............: avg=33.67ms  min=13.25µs  med=28.61ms max=136.82ms p(90)=55.2ms   p(95)=83.71ms 
+    http_reqs......................: 1351004 44898.908207/s
 
     EXECUTION
-    iteration_duration.............: avg=105ms   min=10.6ms  med=93.88ms max=1.23s    p(90)=158.46ms p(95)=170.22ms
-    iterations.....................: 1381186 45911.581267/s
+    iteration_duration.............: avg=108.19ms min=11.96ms  med=95.98ms max=316.78ms p(90)=165.78ms p(95)=179.98ms
+    iterations.....................: 1351004 44898.908207/s
     vus............................: 5000    min=5000         max=5000
     vus_max........................: 5000    min=5000         max=5000
 
     NETWORK
-    data_received..................: 1.6 GB  52 MB/s
-    data_sent......................: 152 MB  5.1 MB/s
+    data_received..................: 1.5 GB  51 MB/s
+    data_sent......................: 149 MB  4.9 MB/s
 ```
 
 [FQDN(Fully Qualified Domain Name)](#fqdnfully-qualified-domain-name)
@@ -733,14 +733,14 @@ non [FQDN(Fully Qualified Domain Name)](#fqdnfully-qualified-domain-name)\
 
 ||FQDN with dots|FQDN|non FQDN|
 |:--:|:--:|:--:|:--:|
-|http_req_blocked|61.42ms|65.91ms|66.04ms|
-|iterations|45911.581267/s|44936.117068/s|45674.172595/s|
+|http_req_blocked|62.18ms|65.91ms|66.04ms|
+|iterations|44898.908207/s|44936.117068/s|45674.172595/s|
 
 DNS 的解析是發生在 `http_req_blocked` 這個 metric 中所展現的\
 你可以發現說 [FQDN(Fully Qualified Domain Name)](#fqdnfully-qualified-domain-name) 後綴有 `.` 的這個測項的用時是最短的\
 因為他不完全繞過了 [ndots](#ndots) issue
 
-在這份報表中你也可以看到，在 **p(95)** 的情況下，你所花費的時間大概會多接近一倍(`61.42ms` to `121.34ms`)\
+在這份報表中你也可以看到，在 **p(95)** 的情況下，你所花費的時間大概會多接近一倍(`62.18ms` to `125.69ms`)\
 可以看到說，系統在極端壓力下會有多麽嚴重的效能瓶頸
 
 如果你想要自己測試我當然是贊成的\
