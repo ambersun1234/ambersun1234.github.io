@@ -67,7 +67,7 @@
   <meta property="og:description" content="{{ seo_description }}">
 {% endif %}
 
-<meta property="og:image" content="/assets/img/og/{{ page.slug }}.png">
+<meta property="og:image" content="{{ site.url }}/assets/img/og/{{ page.slug }}.png">
 
 {% if site.twitter.username %}
   <meta name="twitter:site" content="@{{ site.twitter.username | replace: "@", "" }}">
