@@ -1,8 +1,8 @@
 ---
-title: Kubernetes 從零開始 - 資源排隊神器 Kueue
+title: Kubernetes 從零開始 - 資源排隊調度神器 Kueue
 date: 2024-11-12
 categories: [kubernetes]
-tags: [job, queue, kueue, resource, scheduling, taints, toleration, affinity, taskset, kubectl wait, cluster queue, local queue, resource flavor, cohort]
+tags: [job, queue, kueue, resource, scheduling, kubectl wait, cluster queue, local queue, resource flavor, cohort, starvation]
 description: 針對有限的硬體資源，為了避免過度使用造成分配不均以及效能低落，Kueue 這個工具提供了一個排隊機制，所有資源被集中管理並統一分配，使得所有 Job 都能免於 starving 的狀況。本文將會介紹 Kueue 的基本概念以及如何使用它
 math: true
 ---
@@ -34,74 +34,13 @@ $ kubectl apply --server-side -f https://github.com/kubernetes-sigs/kueue/releas
 或者是用 Helm
 ```bash
 $ helm install kueue oci://us-central1-docker.pkg.dev/k8s-staging-images/charts/kueue \
-  --version="v0.9.1" \
+  --version=0.9.1 \
   --create-namespace \
   --namespace=kueue-system
 ```
 
-# Affinity
-`Affinity` 指的是親和力，在計算機裡面通常指 CPU 的親和力\
-由於 CPU 會 context switch, 同一個 process 可能會被排程到不同的 CPU 核心上執行\
-而這對於效能而言是不好的，因為 CPU cache 會被清空，所以 CPU 會重新從記憶體中讀取資料\
-導致效能低落
-
-你可以透過 [taskset](https://man7.org/linux/man-pages/man1/taskset.1.html) 指令將 process 綁定到特定的 CPU 核心上\
-操作起來長這樣
-```bash
-$ taskset 0x1 ./hello_world
-```
-
-> 在做 benchmark 的時候，taskset 很好用\
-> 因為你可以減少變因，使得你的 benchmark 更加準確
-
-在 Kubernetes 裡面，`Affinity` 通常指的是 Pod 與 Node 之間的親和力(i.e. [Node Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity))\
-application 會希望擁有某些特定的資源\
-如節點本身的 cache 抑或是節點的位置等等的\
-你當然可以依據自己的偏好要將你的服務執行在某些節點上\
-比如說，考量到地理位置，你會希望服務運行在美國的節點上(因為它可以有較低的 latency)
-
-<hr>
-
-`Taints` 則是 Node 與 Pod 之間的 ***排斥性***\
-舉例來說，以下的指令會將 `node1` 標記為 `maintain`，並且不允許有任何的 Pod 在上面執行
-
-```bash
-$ kubectl taint nodes node1 maintain=true:NoSchedule
-```
-
-> effect 欄位共有 `NoSchedule`, `PreferNoSchedule`, `NoExecute` 三種
-
-Taints 是由一個類似 map 的結構表示\
-你可以在一個節點上標記上多個 taints，表示這個節點上有多個限制\
-唯有可以 **容忍這些限制** 的 Pod 才能夠在這個節點上執行
-
-> 換言之，只要節點上有任何限制，預設情況下 Pod 都會盡量避開這些節點
-
-<hr>
-
-`Toleration` 則是 Pod 與 Node 之間的 ***容忍性***\
-我可以容忍某些節點上有某些限制的時候，就可以使用 `Toleration`\
-比方說我可以容忍節點正在維護，因此我的 Pod 還是可以被排程到這個節點上，然後執行
-
-下方的 nginx 仍然可以被排程到有 `maintain` taint 的節點上執行
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-  labels:
-    env: test
-spec:
-  containers:
-  - name: nginx
-    image: nginx
-    imagePullPolicy: IfNotPresent
-  tolerations:
-  - key: "maintain"
-    operator: "Exists"
-    effect: "NoSchedule"
-```
+> 注意到如果是用 OCI，你在指定版本的時候記得不能加 prefix `v` 不然會報錯\
+> [Error pulling latest chart from OCI registry if semver version has a v prefix #11107](https://github.com/helm/helm/issues/11107)
 
 # Kueue Architecture
 ![](https://kueue.sigs.k8s.io/images/cluster-queue.svg)
@@ -133,53 +72,24 @@ Workload 可以把它想像成是 "一件事情"，所以最直接的例子就�
 
 ## Resource Flavor
 這裡的 Flavor 就是上面提到的 `偏好`\
-但對於 CPU, Memory 等等的設定並不是在這裡做的\
-所以本質上 Flavor 管理的跟原生 Kubernetes 是一致的(`Taints` 以及 `Toleration`, 可參考 [Affinity](#affinity))
-
+比方說你的任務需要有 GPU，你可以定義一個 `gpu-flavor`\
 為了能夠順利的使用 Kueue, 預設情況下還是要有一個 `default-flavor`(如下所示)
 
 ```yaml
-apiVersion: kueue.x-k8s.io/v1beta1
+apiVersion: kueue.x-k8s.io/v1beta2
 kind: ResourceFlavor
 metadata:
   name: default-flavor
 ```
 
-## Cohort
-你可以透過 label 定義 cohort 的隸屬關係\
-比如說 `john` 以及 `alice` 都是 `research-team` 的一部分
-
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: john
-  labels:
-    research-cohort: research-team
-
----
-
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: alice
-  labels:
-    research-cohort: research-team
-```
-
-那麼，`john` 以及 `alice` 就會共享同一個 Cohort\
-也就可以存取特定 research-team 底下的 [Cluster Queue](#cluster-queue)
-
 ## Cluster Queue
 ```yaml
-apiVersion: kueue.x-k8s.io/v1beta1
+apiVersion: kueue.x-k8s.io/v1beta2
 kind: ClusterQueue
 metadata:
   name: cluster-q
 spec:
-  namespaceSelector:
-    matchLabels:
-        kubernetes.io/metadata.name: research-team
+  cohortName: "research-team"
   resourceGroups:
   - coveredResources: ["jobs"]
     flavors:
@@ -188,15 +98,14 @@ spec:
       - name: "jobs"
         nominalQuota: 5
     - name: "maintain-flavor"
-        resources:
-        - name: "jobs"
-        nominalQuota: 1
-        # borrowingLimit: 1
-        # lendingLimit: 1
+      resources:
+      - name: "jobs"
+      nominalQuota: 1
+      # borrowingLimit: 1
+      # lendingLimit: 1
 ```
 
-> 這個 Cluster Queue 只允許 `research-team` 存取\
-> `namespaceSelector: {}` 代表所有的 namespace 都可以存取
+> 這個 Cluster Queue 屬於 `research-team` cohort 底下
 
 上述定義了一個簡單的 Cluster Queue\
 我可以允許有 1 個 job 可以在 `maintain-flavor` 的資源上執行\
@@ -210,9 +119,50 @@ spec:
 
 > 只有相同 [Cohort](#cohort) 的 Cluster Queue 才能夠互相借用資源
 
+## Cohort
+Cohort 是用來組織你的 Quota 的\
+好處是擁有相同 cohort 的 [Cluster Queue](#cluster-queue) 可以共享 quota
+
+```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: Cohort
+metadata:
+  name: "research-team"
+```
+
+然後你的 [Cluster Queue](#cluster-queue) 定義是這樣子的
+
+```yaml
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: "john-cluster-queue"
+spec:
+  cohortName: "research-team"
+  preemption:
+    reclaimWithinCohort: Any
+
+---
+
+apiVersion: kueue.x-k8s.io/v1beta2
+kind: ClusterQueue
+metadata:
+  name: "alice-cluster-queue"
+spec:
+  cohortName: "research-team"
+  preemption:
+    reclaimWithinCohort: Any
+```
+
+那麼 `john-cluster-queue` 以及 `alice-cluster-queue` 的 quota 就可以進行共享\
+比方說空閒的時候可以把 quota 借給相同 [Cohort](#cohort) 的人\
+當你需要的時候，也可以透過 preemption 的機制把 quota 要回來
+
+好處就是，你的任務受到 starvation 的狀況會減輕很多，並且對於重要任務的 turnaround time 也會縮減(因為 preemption)
+
 ## Local Queue
 ```yaml
-apiVersion: kueue.x-k8s.io/v1beta1
+apiVersion: kueue.x-k8s.io/v1beta2
 kind: LocalQueue
 metadata:
   namespace: default
@@ -226,6 +176,53 @@ Local Queue 會指向一個 [Cluster Queue](#cluster-queue)\
 
 Local Queue 本身是 per namespace 的設計\
 屬於該 namespace 下的 Job 會提交到 Local Queue
+
+# Netflix Batch Compute Migrate to Kueue
+Netflix 內部本身就有需要執行 Batch Compute 的需求\
+早期他們有自己的一套 solution，`Compute Managed Batch(CMB)` 以及 `Titus` 搭配組成
+
+CMB 系統主要是一個調度平台\
+使用者將任務提交到 CMB，系統會根據任務的 priority, capacity 等等的進行指派\
+主要運行任務的是 Titus，他是一個容器化的平台
+
+為了更細微的控制運算平台的高效執行，必須引入一個抽象層的機制\
+任務的指派通常可以被歸類，比如說他是來自哪個團隊、平台亦或者是組織，被稱為 **租戶(tenant)**\
+所以我可以這樣做
+
++ 工程部: 擁有 `1500` 個單位
+    + 雲端大數據部: 使用 quota 是 `100` 個單位
+    + 金流系統部: 使用 quota 是 `1500` 個單位
+
+租戶其實還有分，組織架構一定是多層級，如同上述，工程部底下細分不同部門
++ `internal tenant`: 大型部門，負責發佈指令(e.g. *工程部*)，對應到 [Cohort](#cohort)
++ `leaf tenant`: 實際工作的部門，可以接收指令(e.g. *雲端大數據部*, *金流系統部*)，對應到 [Cluster Queue](#cluster-queue) 以及 [Local Queue](#local-queue)
+
+![](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*MfDuB407Rq81AHZEbhARWA.png)
+> ref: [How Netflix Simplified Batch Compute with Kueue](https://netflixtechblog.com/how-netflix-simplified-batch-compute-with-kueue-87860682629c)
+
+那你說每個團隊會每分每秒都把資源利用到最滿嗎？ 其實並不一定\
+假如我 10:00 ~ 12:00 這個時段比較空閒，我是不是能把算力讓出去給其他團隊使用？\
+同時也可以設定我最少要保留多少給自己
+
+就是對應到 `borrowingLimit` 以及 `lendingLimit`
+
+## Why Migrate to Kueue
+你說他們原本的架構都做得還不錯啊？ 那為什麼要改
+
+1. Kubernetes 社群高度發展，許多早期 CMB 要自幹的事情都被一一實現
+2. CMB 目前有的功能，都能夠在 Kueue 裡頭找到相對應的實作
+3. CMB 未來想要實作的功能如 preemption 已經越加繁瑣
+4. Kueue 支援異質硬體的排程(透過 [Resource Flavor](#resource-flavor))
+5. Kueue 後續的功能開發符合團隊的改進方向
+
+他們也看過其他類似功能的套件，不過最終選擇 Kueue 的原因是他仍然使用原生 kube-scheduler\
+比起 [Apache YuniKorn](https://github.com/apache/yunikorn-core/) 或是 [volcano-sh/volcano](https://github.com/volcano-sh/volcano)\
+這兩個都是擁有自己的 scheduler\
+使得 Netflix 原本的 Titus scheduler profile 不兼容，或者說他會造成排程的不穩定，進而降低效率
+
+執行這種大型遷移的時候首先要考慮的反而是兼容性\
+Kueue 介入的點其實就只是 `queueing` 跟 `scheduling` 的部分而已，而原本的架構下是 CMB 負責的\
+所以只是單純拆開其他都不需要動
 
 # Run
 要執行 kueue, 你需要將 [Cluster Queue](#cluster-queue), [Local Queue](#local-queue) 與 [Resource Flavor](#resource-flavor) 部署到你的 cluster 上(缺一不可)\
@@ -244,7 +241,7 @@ Local Queue 本身是 per namespace 的設計\
 這裡使用 `completions` 紀錄我們要有 10 個 Job 成功的次數\
 而 `parallelism` 則是同時執行的 Job 數量\
 根據上述 [Cluster Queue](#cluster-queue) 的設定，同一時間只能有 1 個 Job 在執行\
-又因為同時可以有 2 個 Job 在執行，所以整個完成預計要 (10 / 2) * 30s = `150s`
+又因為我們設定了 `parallelism: 2`，所以整個完成預計只要 (10 / 2) * 30s = `150s`
 
 ```yaml
 apiVersion: batch/v1
@@ -266,17 +263,7 @@ spec:
       restartPolicy: Never
 ```
 
-## Intercept Specific Resource Instance Only
-目前 Kueue 的實作(`v0.10.1`)它會監聽所有的 Job，這在某種程度上是不合理的\
-理論上它只需要管理，並且監聽特定的 Job
-
-我遇到的狀況是，起 backend 的時候有一些 one-time Job 需要被執行\
-這個 Job 跟 Kueue 是脫勾的，它不應該要被 Kueue 管理\
-但是由於 Kueue 的 [MutatingAdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) 沒有辦法過濾特定的 Job\
-導致這個美麗的錯誤發生
-
-> ref: [Kueue mutating admission webhook should intercept specific resource instance only](https://github.com/kubernetes-sigs/kueue/issues/4141)
-
+# Issues with Kueue
 ## Internal error occurred: failed calling webhook "myresourceflavor.kb.io": failed to call webhook
 如果你在 apply Kueue 的設定檔的時候碰到類似以下的錯誤
 
@@ -300,19 +287,19 @@ service 本身其實是 expose `kueue-controller-manager` 這個 deployment\
 $ kubectl wait \
   -n my-ns \
   --timeout=1h \
-  --for='jsonpath={.status.conditions[?(@.type==\"Available\")].status}=True' \
-  deployments.app/kueue-controller-manager
+  --for='jsonpath={.status.conditions[?(@.type=="Available")].status}=True' \
+  deployments.apps/kueue-controller-manager
 
 $ kubectl wait \
   -n my-ns \
   --timeout=1h \
-  --for='jsonpath={.status.conditions[?(@.type==\"Active\")].status}=True' \
+  --for='jsonpath={.status.conditions[?(@.type=="Active")].status}=True' \
   ClusterQueue/my-cluster-queue
 
 $ kubectl wait \
   -n my-ns \
   --timeout=1h \
-  --for='jsonpath={.status.conditions[?(@.type==\"Active\")].status}=True' \
+  --for='jsonpath={.status.conditions[?(@.type=="Active")].status}=True' \
   LocalQueue/my-local-queue
 ```
 
@@ -320,3 +307,5 @@ $ kubectl wait \
 + [Taints and Tolerations](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
 + [Processor affinity](https://en.wikipedia.org/wiki/Processor_affinity)
 + [Run Plain Pods](https://kueue.sigs.k8s.io/docs/tasks/run/plain_pods/)
++ [How Netflix Simplified Batch Compute with Kueue](https://netflixtechblog.com/how-netflix-simplified-batch-compute-with-kueue-87860682629c)
++ [Preemption](https://kueue.sigs.k8s.io/docs/concepts/cluster_queue/#preemption)
