@@ -267,7 +267,7 @@ JWK 定義於 [RFC 7517](https://www.rfc-editor.org/rfc/rfc7517)\
 2. `alg` header(JWS 為 none, JWE 則有值)
 3. `enc` header 存在與否(JWS 不存在，JWE 存在)
 
-![](https://trustfoundry.net/wp-content/uploads/2017/12/jws-vs-jwe-1024x336.jpg)
+![](https://trustfoundry.net/images/blog/jwt-hacking-101/jws-vs-jwe.jpg)
 > ref: [JWT Hacking 101](https://trustfoundry.net/2017/12/08/jwt-hacking-101/)
 
 ## Nested JWT
