@@ -3,7 +3,7 @@ title: DevOps - 單元測試 Unit Test
 date: 2022-05-09
 description: 測試在軟體開發當中是很重要的一環，它可以確保程式不會因為不當的輸入而產生不如預期的結果。本文將會介紹單元測試的基本觀念，並且提供一些簡單的例子
 categories: [devops]
-tags: [unit test, TDD, dependency injection]
+tags: [unit test, TDD, dependency injection, monkey patch, monkey patching, qa, jest, google test, testify, mockery, gomonkey, interface, jest-expect-message, cursor]
 math: true
 ---
 
@@ -28,9 +28,6 @@ math: true
 RD 自己寫測試同樣會有盲點，手動測試可能可以 cover 到這些, 反之亦然\
 有了程式測試以及手動測試，你就可以很有信心的說，我的這個功能八成不會壞掉！
 
-> 其實 測試程式(unit test, integration test) 若以專業分工的角度來說是 QA 要寫的\
-> 但在國內我看到的要不是沒有不然就是手動
-
 # Unit Test
 單元測試為最基本且最容易實作的測試\
 單元測試的目的在於 ***測試 function 的 logic***
@@ -46,7 +43,7 @@ const addition = (addend, augend) => {
     return addend + augend
 }
 
-const testAddition() => {
+const testAddition = () => {
     expect(addition(1, 1)).toEqual(2)
     expect(addition(2, 3)).toEqual(5)
 }
@@ -196,6 +193,30 @@ dig 會負責幫你把所有需要的元件都注入(依靠 reflection)
 
 相對來說，也因為 DI(Dependency Injection) 相當好實作\
 手動建構依賴關係的也是大有人在，具體依照團隊需求各自決定
+
+# How to Test Against Singleton
+如果你遇到 `Singleton` Pattern 實作的 codebase\
+那的確這會對 unit test 造成很大的影響
+
+比方說我最近接手一個 codebase，我想要開始幫它加測試\
+原本都是依賴於具體實作，改成依賴於 **interface** 不是太難的事情\
+問題在於，所有的呼叫都是 `Singleton`，比方說
+
+```js
+db.getConn().get('SELECT * FROM users')
+```
+
+由於 `getConn()` 這部分是直接寫死在程式碼內部的\
+你沒辦法透過常規替換的方法把它 patch 掉
+
+***Monkey Patching*** 就是為了要解決這種事情而存在的技巧\
+`getConn()` 函式大部分都是有一個 global variable 存在，你可以在 runtime 的時候把那個變數替換成 *測試版本的*\
+這種技巧的出現，不是偶然\
+很多時候，如果你要遵循最正規的方法進行重構，會花費大量的時間，其實倒不如拿來寫功能？\
+***Monkey Patching*** 允許你能夠在不大幅度改動原始實作的情況下，讓 codebase 具備一定可測試性
+
+以我的經驗來說，要針對這樣的 function 撰寫單元測試\
+其實僅需一天左右就可以有個雛形了，不要覺得慢，一開始的基礎建設一但完工，後續的補強就可以大幅度減少工時，何況現在 AI 工具已經可以處理大部分的實作了
 
 # Issues that I have when Writing Tests
 到這裡你已經足夠了解如何撰寫測試了\
