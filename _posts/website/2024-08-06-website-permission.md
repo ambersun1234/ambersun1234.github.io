@@ -43,7 +43,8 @@ ACL 通常是針對特定的資源(文章)，指定特定的權限
 API 回傳的資料也會變得越來越大\
 最後造成效能瓶頸，這很明顯不是一個好的方向
 
-# Role-Based Access Control (RBAC)
+# Access Control Model
+## Role-Based Access Control (RBAC)
 RBAC 相比於 ACL，是一個更為彈性的權限管理方式\
 既然瓶頸是在於使用者數量增加，有沒有一種方法可以不要強制綁定使用者與權限的關係呢？
 
@@ -65,7 +66,7 @@ RBAC 相比於 ACL，是一個更為彈性的權限管理方式\
 
 > 注意到 RBAC 可以擁有多個角色
 
-# Attribute-Based Access Control (ABAC)
+## Attribute-Based Access Control (ABAC)
 以上述學校的例子來說，我可能會身兼多種角色
 + 我可以是 `資工系` 的學生
 + 我可以是 `總務處` 的工讀生
@@ -106,7 +107,7 @@ ABAC 對於 **顆粒度較小的權限**(如特定實驗室的權限) 是比較�
 
 > 有關權限顆粒度的問題，可以參考 [Permission Granularity](#permission-granularity)
 
-# Policy-Based Access Control (PBAC)
+## Policy-Based Access Control (PBAC)
 PBAC 的概念其實跟 [ABAC](#attribute-based-access-control-abac) 差不多\
 只是把 attribute 換成 policy
 
