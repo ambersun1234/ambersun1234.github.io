@@ -353,7 +353,7 @@ Disk Seek 在 HDD 幾乎不可能平行運算，因為機械裝置只有一個
 也因此 scale out 也成為現今的主流選擇之一
 
 ## Summary
-![](https://cdn-fiejl.nitrocdn.com/yNfvfiSxoeXhsQRaJFUuQCCZqugXTTRV/assets/images/optimized/rev-e86d7fb/www.eginnovations.com/blog/wp-content/uploads/2024/07/diagram-02.webp)
+![](https://cdn-fiejl.nitrocdn.com/yNfvfiSxoeXhsQRaJFUuQCCZqugXTTRV/assets/images/optimized/rev-e8df70d/www.eginnovations.com/blog/wp-content/uploads/2024/07/diagram-02.webp)
 > ref: [Understanding Scale Up vs. Scale Out – And Why You Need to Understand Scale Up vs. Scale Out to Be a Nutanix or HCI Guru](https://www.eginnovations.com/blog/understanding-scale-up-vs-scale-out-and-why-you-need-to-understand-scale-up-vs-scale-out-to-be-a-nutanix-or-hci-guru/)
 
 # References
