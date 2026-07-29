@@ -3,101 +3,9 @@ title: 網頁程式設計三兩事 - 不一樣的驗證思維 JWT(JSON Web Token
 date: 2023-03-08
 description: JWT 作為近年來相當流行的驗證方式，本文將會介紹 JWT 的基本概念以及其原理，並且會介紹如何使用 JWT 來進行驗證
 categories: [website]
-tags: [jwt, session, jws, jwe, jwk, golang, oauth, realm, cookie, httponly cookie, authorization]
+tags: [jwt, session, jws, jwe, jwk, golang, realm, cookie, httponly cookie, authorization]
 math: true
 ---
-
-# Authorization
-開發 API 的過程當中，我們提供了很多功能，其中可能包含較為隱私的功能(比如說，修改密碼，查詢個人資料等等的)\
-這個時候，你不會希望別人隨便修改你的密碼對吧？\
-所以就必須要驗證你的身份
-
-現實生活中驗證身份的方式不外乎就是查看你的證件，要求輸入密碼 ... etc.\
-本篇文章將會帶你了解不一樣的驗證方法 - JWT
-
-# Session Authorization
-傳統上，要驗證一個人的身份，我們可能會這麼做
-1. 要求使用者輸入帳號密碼
-2. 將資料送到伺服器中做檢查
-3. 確認無誤後，在伺服器上儲存使用者狀態
-4. 伺服器回傳一的特殊識別字串，讓你在每一次 request 都帶著方便驗證
-
-![](https://miro.medium.com/v2/resize:fit:640/format:webp/1*KdL8ioxUiLvxSMT5JpJwIA.png)
-> ref: [[筆記] HTTP Cookies 和 Session 使用](https://medium.com/%E9%BA%A5%E5%85%8B%E7%9A%84%E5%8D%8A%E8%B7%AF%E5%87%BA%E5%AE%B6%E7%AD%86%E8%A8%98/%E7%AD%86%E8%A8%98-http-cookie-%E5%92%8C-session-%E4%BD%BF%E7%94%A8-19bc740e49b5)
-
-上述的作法是利用了所謂的 session\
-當你驗證完成之後，下一次伺服器就會認得你，`哦！ 你已經登入過了！ 可以放行` 這樣
-
-你不難免會好奇，這樣做安全嗎？\
-理論上，伺服器除非有漏洞，不然其他人是無法看到這些資訊的
-
-# OAuth 2.0 Framework
-OAuth 2.0 定義於 [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)\
-傳統上的 client server 架構下，身份認證會使用 user 的 credential\
-當這個情況衍生至第三方也需要存取 credential 的時候，事情會變得稍微複雜\
-你理所當然不會希望第三方擁有你的 credential 對吧\
-所以 OAuth 的標準立志於解決這種狀況
-
-取而代之的是，OAuth 引入了 access token 的概念\
-token 包含了
-1. **可以存取** 的範圍(e.g. 你的電話號碼，住址 ... etc.)
-2. token 的有效期限
-
-OAuth 人物簡介
-1. Resource Owner :arrow_right: user(i.e. 你)
-2. Client :arrow_right: 欲取得你的授權拿資料的 application
-3. Authorization Server :arrow_right: 驗證身份，並生成授權訪問 token 給 client
-4. Resource Server :arrow_right: 儲存用戶機密資料的伺服器, client 必須帶著 token 才能存取
-
-整個 OAuth 的 flow 大致如下
-![](https://assets.digitalocean.com/articles/oauth/abstract_flow.png)
-> ref: [An Introduction to OAuth 2](https://www.digitalocean.com/community/tutorials/an-introduction-to-oauth-2)
-
-可以看到，client 先從 resource owner 這裡取得 **授權**\
-通常在這個步驟就會明確的指定可以存取的範圍\
-得到使用者的同意之後就會帶著 grant 向 authorization server 進行存取授權\
-拿到 token 之後就可以帶著去 resource server 拿資料了
-
-## Authorization Grant Type
-Authorization grant 是一種 credential, 代表 resource owner 核可的授權\
-與上面講的傳統 client server 的 credential 不同\
-這裡的 credential 不會包含任何密碼什麼的，也就不會有任何洩漏機密資訊的風險
-
-### Authorization Code
-![](https://developers.google.com/static/identity/protocols/oauth2/images/examples/scope-authorization.png?hl=zh-tw)
-> ref: [OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect?hl=zh-tw)
-
-藉由將使用者導向 authorization server 的一種方法\
-當操作完成之後，你的 client 端會拿到一串 authorization code\
-你就可以使用這個 token 對 resource server 進行一系列的存取操作\
-上圖的 [Google OAuth 2.0 API](https://developers.google.com/identity/protocols/oauth2?hl=zh-tw) 就是一個很好的例子
-
-### Implicit
-***已經不推薦使用了***
-
-這個方法，client 會直接取得 access token\
-而且不會經過任何驗證
-
-### Resource Owner Password Credentials
-***已經不推薦使用了***
-
-![](/assets/img/posts/oauth1.png)
-
-顧名思義，使用 resource owner 的 credential(i.e. user id and password)\
-但它並不是把你的 credential 儲存起來\
-而是拿你的 password 跟 authorization server 換一個 access token
-
-> 不推薦的原因是因為 OAuth Framework 是基於第三方存取而考量的\
-> 當然如果要你直接把密碼給第三方做驗證是我也不想
-
-> 實務上，自己的網頁前後端用這種方法是 ok 的\
-> spec 裡面有提到，除非 resource owner 跟 client 之間高度信任，否則不要使用這個方法
-
-### Client Credentials
-![](/assets/img/posts/oauth2.png)
-
-長的跟 [Resource Owner Password Credentials](#resource-owner-password-credentials) 很像\
-但不同的是，它 **不需要** user 的 credential
 
 # JWT(JSON Web Token)
 JWT 定義於 [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519)\
@@ -487,7 +395,7 @@ basic scheme 帶的資料會是 userid 以及 password(兩者都使用 base64 �
 ### Bearer Scheme
 Bearer scheme 定義於 [RFC 6750](https://www.rfc-editor.org/rfc/rfc6750)\
 不同於以往 直接使用使用者本身的 credential，Bearer scheme 是 **使用一個字串代表允許授權訪問**\
-而這個模式正是 [OAuth 2.0 Framework](#oauth-20-framework)
+而這個模式正是 [OAuth 2.0 Framework](../../website/website-keycloak#oauth-20)
 
 bearer scheme 使用的方式就相對簡單
 ```
