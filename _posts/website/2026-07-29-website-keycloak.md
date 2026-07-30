@@ -2,7 +2,7 @@
 title: 網頁程式設計三兩事 - Keycloak 系統，身份認證以及授權框架
 date: 2026-07-29
 categories: [website]
-description: 
+description: 本文解析 OAuth 2.0 與 OIDC 的核心機制與身份認證差異，並透過 Keycloak 實作驗證多租戶 Realm 架構下的 Single Sign-On (SSO) 機制
 tags: [keycloak, oauth 2.0, authentication, authorization, rbac, pbac, abac, rfc 6749, credential, access token, open id, open id connect, oidc, id token, token, pseudo authentication, single sign on, single sign out, sso, identity provider, idp, iam, client, group, role, realm]
 math: true
 ---
