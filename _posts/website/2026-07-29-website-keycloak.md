@@ -3,7 +3,7 @@ title: 網頁程式設計三兩事 - Keycloak 系統，身份認證以及授權�
 date: 2026-07-29
 categories: [website]
 description: 本文解析 OAuth 2.0 與 OIDC 的核心機制與身份認證差異，並透過 Keycloak 實作驗證多租戶 Realm 架構下的 Single Sign-On (SSO) 機制
-tags: [keycloak, oauth 2.0, authentication, authorization, rbac, pbac, abac, rfc 6749, credential, access token, open id, open id connect, oidc, id token, token, pseudo authentication, single sign on, single sign out, sso, identity provider, idp, iam, client, group, role, realm]
+tags: [keycloak, oauth 2.0, authentication, authorization, rbac, pbac, abac, rfc 6749, credential, access token, open id, open id connect, oidc, id token, token, pseudo authentication, single sign on, single sign out, sso, identity provider, idp, iam, client, group, role, realm, federated identity, identity broker, identity federation, user federation]
 math: true
 ---
 
@@ -187,20 +187,6 @@ OIDC 是在 [OAuth 2.0](#oauth-20) 之上的 identity layer\
 在 Authorization Request 內帶入 `openid scope value`, 系統就會知道說，你不只是單純想要進行授權，你還想要做身份認證\
 所以回傳的部分會額外多一個 *ID Token*(以 JWT 的形式)，這個 ID Token 就是身份認證之後的結果
 
-# Single Sign On
-Single Sign On 這個機制現在我們已經很熟了，你平常大概都用過了\
-比方說，假設你是用 Google 全家桶(包含什麼 日曆、雲端硬碟、email 等等)\
-他們全部都是獨立的產品系統，這時候如果每個都要登入，每個產品都要一個帳號顯然是不 user friendly 的
-
-所以 Single Sign On 的機制就是讓你只需要 `登入一次`，便可以在所有相互信任的系統中暢通無阻
-
-這是怎麼做到的？\
-他會有一個獨立的驗證身份並配發通行證的服務，叫做 **身份提供者(Identity Provider, IdP)**\
-每個服務的身份認證授權都會移到 `IdP` 進行處理\
-他給的 token 是全部產品都能夠使用的，所以就能夠達成 SSO(Single Sign On) 以及 SSO(Single Sign Out)
-
-> 不過注意到，系統內部的權限並不是 SSO 關心的
-
 # Identity and Access Management(IAM)
 當企業規模逐漸壯大，如何管理身份與權限是一大問題\
 如果每個部門各做各的系統，那流程肯定是混亂並且不容易維護的
@@ -214,7 +200,7 @@ Single Sign On 這個機制現在我們已經很熟了，你平常大概都用�
 所以市面上就會有像 [Keycloak](https://www.keycloak.org/) 這樣的 IAM 解決方案\
 支援 [OAuth 2.0](#oauth-20), [OIDC](#openid-connectoidc) 以及 [Single Sign On](#single-sign-on) 等等的(甚至還有 social login 呢)
 
-那老實說，我其實最好奇的是他的 Single Sign On 的功能\
+那老實說，我其實最好奇的是他的 [Single Sign On](#single-sign-on) 的功能\
 在開始之前，還是有些東西需要先知道，比如說他的 [授權模型](#authorization-model)
 
 ### Authorization Model
@@ -248,7 +234,39 @@ attributes 可以套用在 user 或者是 group 上面\
 
 不論如何，Keycloak 提供了這些方法，就依照個人的使用情境做選擇
 
-### Single Sign On
+# Single Sign On
+[Single Sign On](#single-sign-on) 這個機制現在我們已經很熟了，你平常大概都用過了\
+比方說，假設你是用 Google 全家桶(包含什麼 日曆、雲端硬碟、email 等等)\
+他們全部都是獨立的產品系統，這時候如果每個都要登入，每個產品都要一個帳號顯然是不 user friendly 的
+
+所以 [Single Sign On](#single-sign-on) 的機制就是讓你只需要 `登入一次`，便可以在所有相互信任的系統中暢通無阻
+
+這是怎麼做到的？\
+最簡單的例如說都在同個網域底下透過 Cookie 之類的進行共享\
+又或者是用 [Identity Federation](#identity-federation) 的方式進行
+
+## Identity Federation
+`Identity Federation` 聯合身份，顧名思義，是透過兩個不同的實體進行身份認證\
+這兩個實體之間互相信任，一邊是 *Identity Provider(IdP)*，一邊是 *Service Provider(SP)*
+
+他會有一個獨立的驗證身份並配發通行證的服務，叫做 **身份提供者(Identity Provider, IdP)**\
+每個服務的身份認證授權都會移到 `IdP` 進行處理
+
+然後 **服務提供者(Service Provider, SP)** 則是你想要登入的系統\
+`SP` 去跟 `IdP` 進行驗證，`IdP` 會給 `SP` 一個 token\
+`SP` 因為信任 `IdP`，所以會用 token 立馬幫你開個 **shadow user** 出來(i.e. JIT provisioning)，讓你直接登入\
+當然，裡面的資料就是從 `IdP` 那邊拿來的
+
+所以就是這樣達成 SSO(Single Sign On) 以及 SSO(Single Sign Out) 的
+
+> 注意到他是可以跨系統的哦
+
+## User Federation
+`User Federation` 聯合使用者也是類似的概念\
+只不過這個是，你的使用者存在其他地方，比方說 LDAP 或是 AD 等等\
+他是一個資料庫，而 [Identity Federation](#identity-federation) 是身份認證的 "服務"
+
+# Keycloak Single Sign On
 那在 Keycloak 裡面 Single Sign On 要怎麼做呢\
 其實就是簡單的利用 `client` 這個概念即可
 
@@ -256,7 +274,7 @@ attributes 可以套用在 user 或者是 group 上面\
 所以假設一家公司底下有多個產品，理論上你就會有多個 `client`\
 這時候離 Single Sign On 還差一個概念 [realm](#realm)
 
-#### realm
+## realm
 `realm` 直翻是領域，這個領域管理著上述提到的 user, groups, roles 以及 credentials\
 使用者是綁定在 realm 之上的，而每個 realm 都是獨立的，換言之是 **不互通** 的\
 也就是說
@@ -273,11 +291,15 @@ attributes 可以套用在 user 或者是 group 上面\
 + `employee` realm 底下的帳號就只能存取 internal company apps
 + `customer` realm 底下的帳號就只能存取 customer-facing apps
 
+> 不同 realm 就不能做 SSO 了嗎？\
+> 你可以利用 [Identity Federation](#identity-federation) 的方式進行\
+> 比方說 `employee` realm 以及 `customer` realm 同時都信任同一個 `IdP`，那就可以做到 SSO 了
+
 誒？ 這樣就可以做到 Single Sign On 了嗎？ 基本上是\
 一個 `realm` 底下的帳號都是互通的，我只要把 `client` 掛到 `realm` 底下\
 開通權限，基本上 `realm` 下的 app 我都能夠存取了
 
-#### client
+## client
 官方文件對於 `realm` 與 `client` 的關係著墨的比較少\
 但如果從 OIDC 規格來看就會清楚許多
 
@@ -304,7 +326,6 @@ Client 收到 Token 之後必須要檢查 `aud` 裡面是不是有包含自己�
 + 不同的登入機制(e.g. 要不要啟用 social login)
 
 # Keycloak Single Sign On Example
-
 ## Prerequisite
 ```shell
 $ docker -v
@@ -502,3 +523,4 @@ http://localhost:8080/realms/employee/protocol/openid-connect/auth?client_id=dev
 + [什麼是 IAM（身分識別和存取管理）？](https://www.fortinet.com/tw/resources/cyberglossary/identity-and-access-management)
 + [Docker](https://www.keycloak.org/getting-started/getting-started-docker)
 + [Server Administration Guide 26.7.0](https://www.keycloak.org/docs/latest/server_admin/index.html)
++ [什麼是聯合身分(Federated Identity)？](https://www.sailpoint.com/zh-hant/identity-library/what-is-federated-identity)
