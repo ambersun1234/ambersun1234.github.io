@@ -300,7 +300,7 @@ Merkle Tree 是一個樹狀的資料結構\
 |from|Transaction 的發起者的錢包地址，只能是外部錢包地址，智能合約無法發送交易請求|
 |recipient|1. 外部錢包地址 :arrow_right: 轉移數值(可能是 ETH 或是 Token)<br>2. 合約地址 :arrow_right: 執行合約程式碼|
 |signature|sender 的簽章，用以證明 Transaction 的發起者(通常以私鑰簽名)|
-|nonce|簡單的計數器，用以紀錄 Transaction 數字(number used only once)<br><img src="https://csct-assets.infura-ipfs.io/ipfs/QmPJ28Vsa1v4WXDcvdBFGKYNMb9STeP96QvHSK2o85nt6R" style="width:300px; height:auto"><br>> ref: [How to customize a transaction nonce](https://support.metamask.io/configure/transactions/how-to-customize-a-transaction-nonce)|
+|nonce|簡單的計數器，用以紀錄 Transaction 數字(number used only once)<br><img src="https://metamask-support.myfilebase.com/ipfs/QmPJ28Vsa1v4WXDcvdBFGKYNMb9STeP96QvHSK2o85nt6R" style="width:300px; height:auto"><br>> ref: [How to customize a transaction nonce](https://support.metamask.io/configure/transactions/how-to-customize-a-transaction-nonce)|
 |value|轉移的數值，單位為 Wei<br>詳細可參考 [Wei GWei ETH](#wei-gwei-eth)|
 |data|任意資料|
 |gasLimit|可參考 [Gas](#gas)|
@@ -535,7 +535,7 @@ nonce 作為 Transaction 的唯一識別數字，可以使用它\
 
 > 早期 Metamask 還是必須用手動提高 gas fee 的作法，不過現在就是一鍵搞定
 
-![](https://csct-assets.infura-ipfs.io/ipfs/QmeaGQUkwivzCg5Bp127hybGWJzh2bQvSCcLzyaoegpfrE)
+<img src="https://metamask-support.myfilebase.com/ipfs/QmeaGQUkwivzCg5Bp127hybGWJzh2bQvSCcLzyaoegpfrE" style="width:300px; height:auto">
 > ref: [How to speed up or cancel a pending transaction](https://support.metamask.io/manage-crypto/transactions/how-to-speed-up-or-cancel-a-pending-transaction)
 
 # Wei GWei ETH
