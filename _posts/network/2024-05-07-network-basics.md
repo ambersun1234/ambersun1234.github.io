@@ -454,8 +454,8 @@ record protocol 主要是用於封裝高階 protocol 的資料\
 + 產生 master secret, premaster secret，交換 random number(避免 [relay attack](https://en.wikipedia.org/wiki/Replay_attack))
 + secure session 建立成功！ 可以開始享受安全的資料傳輸了！
 
-![](https://infocenter.nokia.com/public/7705SAR234R1A/topic/com.nokia.system-mgmt-guide/graphics/sw1394.png)
-> ref: [TLS Handshake](https://infocenter.nokia.com/public/7705SAR234R1A/index.jsp?topic=%2Fcom.nokia.system-mgmt-guide%2Ftls-handshake.html)
+![](https://ecwebsitedata.blob.core.windows.net/encryption-consulting-website-data/2024/04/01_TLS-SSL.png)
+> ref: [Insight Into TLS Handshake For Building Secure Communications Over The Internet](https://www.encryptionconsulting.com/what-is-a-tls-handshake-and-how-does-it-work/)
 
 # TCP/UDP Comparison
 
