@@ -8,6 +8,7 @@ import {
   list as resourceList,
   read as resourceRead,
 } from "./resources/resources";
+import { list as toolsList, call as toolsCall } from "./tools/tools";
 
 export default {
   async fetch(
@@ -74,6 +75,14 @@ export default {
             case "resources/read":
               result = await resourceRead(params, env);
               break;
+
+            case "tools/list":
+              result = toolsList();
+              break;
+            
+              case "tools/call":
+                result = await toolsCall(params, env)
+                break;
 
             default:
               return new Response(

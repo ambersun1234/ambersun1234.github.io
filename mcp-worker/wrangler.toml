@@ -25,3 +25,15 @@ invocation_logs = true
 enabled = false
 persist = true
 head_sampling_rate = 1
+
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "blog-db"
+database_id = "f0d02dd7-e0dc-4d71-b878-8d746859e475"
+
+[[vectorize]]
+binding = "VECTOR_INDEX"
+index_name = "blog-vector-index"
