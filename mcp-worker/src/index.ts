@@ -79,10 +79,10 @@ export default {
             case "tools/list":
               result = toolsList();
               break;
-            
-              case "tools/call":
-                result = await toolsCall(params, env)
-                break;
+
+            case "tools/call":
+              result = await toolsCall(params, env);
+              break;
 
             default:
               return new Response(
