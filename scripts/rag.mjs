@@ -253,7 +253,7 @@ async function processPost(file) {
   if (existingIds.length > 0) {
     for (const batch of chunk(existingIds, DELETE_BATCH_SIZE)) {
       const deleteVectorData = await fetchJson(
-        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/vectorize/v2/indexes/${VECTORIZE_INDEX_NAME}/delete-by-ids`,
+        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/vectorize/v2/indexes/${VECTORIZE_INDEX_NAME}/delete_by_ids`,
         {
           method: "POST",
           headers: {
