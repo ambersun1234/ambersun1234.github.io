@@ -5,6 +5,8 @@ const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 const D1_DATABASE_ID = process.env.D1_DATABASE_ID;
 const VECTORIZE_INDEX_NAME = "blog-vector-index";
+const VECTORIZE_DIMENSIONS = 768;
+const VECTORIZE_METRIC = process.env.VECTORIZE_METRIC || "cosine";
 
 const postsDir = "./_posts/";
 
@@ -36,12 +38,54 @@ async function init() {
     process.exit(1);
   }
   console.log("✅ D1 ready");
+
+  console.log("🛠️ checking vectorize index...");
+  const getIndexRes = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/vectorize/v2/indexes/${VECTORIZE_INDEX_NAME}`,
+    { headers: { Authorization: `Bearer ${CF_API_TOKEN}` } },
+  );
+
+  if (getIndexRes.status === 200) {
+    console.log("✅ vectorize index ready");
+    return;
+  }
+
+  if (getIndexRes.status !== 404 && getIndexRes.status !== 410) {
+    const errData = await getIndexRes.json().catch(() => ({}));
+    console.error(
+      "❌ Failed to check vectorize index:",
+      errData.errors || getIndexRes.statusText,
+    );
+    process.exit(1);
+  }
+
+  console.log(`🛠️ vectorize index not found, creating [${VECTORIZE_INDEX_NAME}]...`);
+  const createIndexRes = await fetch(
+    `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/vectorize/v2/indexes`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${CF_API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: VECTORIZE_INDEX_NAME,
+        config: { dimensions: VECTORIZE_DIMENSIONS, metric: VECTORIZE_METRIC },
+      }),
+    },
+  );
+  const createIndexData = await createIndexRes.json();
+  if (!createIndexData.success) {
+    console.error(
+      "❌ Failed to create vectorize index:",
+      createIndexData.errors,
+    );
+    process.exit(1);
+  }
+  console.log("✅ vectorize index ready");
 }
 
 async function main() {
-  console.log(CF_ACCOUNT_ID.length)
-  console.log(CF_API_TOKEN.length)
-  console.log(D1_DATABASE_ID.length)
   if (!CF_ACCOUNT_ID) {
     console.error("❌ CF_ACCOUNT_ID not set");
     process.exit(1);
@@ -91,7 +135,7 @@ async function main() {
     }
     const vector = embeddingData.result.data[0];
 
-    const d1Res = await fetch(
+    const lookupRes = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${D1_DATABASE_ID}/query`,
       {
         method: "POST",
@@ -100,17 +144,70 @@ async function main() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          sql: "INSERT INTO posts (title, content) VALUES (?, ?)",
-          params: [title, content],
+          sql: "SELECT id FROM posts WHERE title = ?",
+          params: [title],
         }),
       },
     );
-    const d1Data = await d1Res.json();
-    if (!d1Data.success) {
-      console.error(`❌ Failed to write into d1 of [${title}]:`, d1Data.errors);
+    const lookupData = await lookupRes.json();
+    if (!lookupData.success) {
+      console.error(
+        `❌ Failed to look up existing post [${title}]:`,
+        lookupData.errors,
+      );
       continue;
     }
-    const postId = d1Data.result[0].meta.last_row_id.toString();
+    const existing = lookupData.result?.[0]?.results?.[0];
+
+    let postId;
+    if (existing) {
+      postId = existing.id.toString();
+      const updateRes = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${D1_DATABASE_ID}/query`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${CF_API_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sql: "UPDATE posts SET content = ? WHERE id = ?",
+            params: [content, existing.id],
+          }),
+        },
+      );
+      const updateData = await updateRes.json();
+      if (!updateData.success) {
+        console.error(
+          `❌ Failed to update d1 of [${title}]:`,
+          updateData.errors,
+        );
+        continue;
+      }
+      console.log(`⚠️ Successfully updated d1: ${title} (ID: ${postId})`);
+    } else {
+      const d1Res = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/d1/database/${D1_DATABASE_ID}/query`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${CF_API_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sql: "INSERT INTO posts (title, content) VALUES (?, ?)",
+            params: [title, content],
+          }),
+        },
+      );
+      const d1Data = await d1Res.json();
+      if (!d1Data.success) {
+        console.error(`❌ Failed to write into d1 of [${title}]:`, d1Data.errors);
+        continue;
+      }
+      postId = d1Data.result[0].meta.last_row_id.toString();
+      console.log(`✅ Successfully inserted d1: ${title} (ID: ${postId})`);
+    }
 
     const ndjsonLine =
       JSON.stringify({
@@ -120,7 +217,7 @@ async function main() {
       }) + "\n";
 
     const vectorizeRes = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/vectorize/v2/indexes/${VECTORIZE_INDEX_NAME}/insert`,
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/vectorize/v2/indexes/${VECTORIZE_INDEX_NAME}/upsert`,
       {
         method: "POST",
         headers: {
@@ -139,7 +236,7 @@ async function main() {
       continue;
     }
 
-    console.log(`✅ Successfully synced: ${title} (ID: ${postId})`);
+    console.log(`✅ Successfully synced vectorize: ${title} (ID: ${postId})`);
   }
 }
 
