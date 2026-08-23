@@ -1,7 +1,7 @@
 import { Env } from '../type/type'
 
 async function executeBlogRAG(query: string, env: Env) {
-  const embeddingResponse = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+  const embeddingResponse = await env.AI.run("@cf/baai/bge-m3", {
     text: [query],
   });
   const vector = embeddingResponse.data[0];
