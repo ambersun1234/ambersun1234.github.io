@@ -18,7 +18,7 @@ math: true
 ![](https://dds.dell.com/site/v2/stage/9f/e0/Pagination_Anatomy_5c53ee133f.png)
 > ref: [Pagination](https://www.delldesignsystem.com/components/pagination/)
 
-# Page Number + Page Offset
+## Page Number + Page Offset
 說到分頁機制的實作，最簡單的當屬利用 SQL 的 `LIMIT` 以及 `OFFSET` 囉\
 只要在 query 資料庫的指令中，帶入前端帶的資料，設定好 `LIMIT`, `OFFSET` 就能夠實作
 ```sql
@@ -184,7 +184,44 @@ ORDER BY username, id
 基本上你可以用同一個 cursor 使用它往前往後拿\
 其實沒有必要分成兩個 cursor，不過你應該會需要一個 previous 的 flag 來判斷方向的
 
-## ID, UUID or ULID
+## Benchmark Testing
+起一個 Node.js 的後端系統\
+資料庫裡面包含了 10000 筆使用者資料\
+測試目標為，使用不同的方法對比查詢使用者資料的速度
+
+測試是使用 python3 對 Backend system 進行 API 呼叫\
+取得往返時間差
+
+<hr>
+
+![](https://github.com/ambersun1234/blog-labs/blob/master/cursor-based-pagination/benchmark/cursor/benchmark.png?raw=true)
+
+上圖，是使用 [offset](#page-number--page-offset) 與 [Cursor Based Pagination](#cursor-based-pagination) 的執行速度對比\
+y 軸為執行速度(單位為 nanosecond), x 軸則為資料起始點(i.e. 從第 n 筆資料開始往後拿 m 筆)\
+從上圖可以看到，使用 offset 的方法，它會隨著資料起始點的位置不同，而大幅度的增加查詢時間\
+而另一個方法，則是大約都維持在同一個水平
+
+> 詳細的實驗細節，可以在 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination) 找到
+
+### Offset Based faster than Cursor Based
+![](/assets/img/posts/cursor.jpg)
+
+你不難發現，在 query 前段的時候 offset based 是比較快的\
+這是因為 index lookup 要再看一次 table, 而一開始查詢 offset 的速度勝過 **2 次 table lookup**\
+因此，才有被反超的情況產生
+
+### Arbitrary Ordering Performance
+另外我想測試的一個東西是，如果排序的欄位變多\
+效能影響有多大
+
+![](https://github.com/ambersun1234/blog-labs/blob/master/cursor-based-pagination/benchmark/cursor/benchmark-sort.png?raw=true)
+
+排序的兩個測試，其欄位為 `username` 以及 `created_at`\
+都沒有 index, 而 without sort 則是使用 primary key
+
+可以看到差了大概 $1 \times 10^7$
+
+# ID, UUID or ULID
 為了能夠讓 [Cursor Based Pagination](#cursor-based-pagination) 可以正常運作\
 把一定的資訊透漏給外部是一件重要的事情
 
@@ -197,54 +234,6 @@ uuid, ulid 因為它們不會透漏太多訊息(亦即你看它就像個 random 
 
 > cursor based pagination 裡面如果你選的欄位它能指到 "一筆特定的資料"\
 > 那也不需要使用 id 之類的，只要該 field 有 unique 即可
-
-# Benchmark Testing
-起一個 Node.js 的後端系統\
-資料庫裡面包含了 10000 筆使用者資料\
-測試目標為，使用不同的方法對比查詢使用者資料的速度
-
-測試是使用 python3 對 Backend system 進行 API 呼叫\
-取得往返時間差
-
-<hr>
-
-![](https://github.com/ambersun1234/blog-labs/blob/master/cursor-based-pagination/benchmark.png?raw=true)
-
-上圖，是使用 [offset](#page-number--page-offset) 與 [Cursor Based Pagination](#cursor-based-pagination) 的執行速度對比\
-y 軸為執行速度(單位為 nanosecond), x 軸則為資料起始點(i.e. 從第 n 筆資料開始往後拿 m 筆)\
-從上圖可以看到，使用 offset 的方法，它會隨著資料起始點的位置不同，而大幅度的增加查詢時間\
-而另一個方法，則是大約都維持在同一個水平
-
-> 詳細的實驗細節，可以在 [ambersun1234/blog-labs/cursor-based-pagination](https://github.com/ambersun1234/blog-labs/tree/master/cursor-based-pagination) 找到
-
-## Offset Based faster than Cursor Based
-![](/assets/img/posts/cursor.jpg)
-
-你不難發現，在 query 前段的時候 offset based 是比較快的\
-這是因為 index lookup 要再看一次 table, 而一開始查詢 offset 的速度勝過 **2 次 table lookup**\
-因此，才有被反超的情況產生
-
-## Arbitrary Ordering Performance
-另外我想測試的一個東西是，如果排序的欄位變多\
-效能影響有多大
-
-![](https://github.com/ambersun1234/blog-labs/blob/master/cursor-based-pagination/benchmark-sort.png?raw=true)
-
-排序的兩個測試，其欄位為 `username` 以及 `created_at`\
-都沒有 index, 而 without sort 則是使用 primary key
-
-可以看到差了大概 $1 \times 10^7$
-
-# Pros and Cons
-儘管 [Cursor Based Pagination](#cursor-based-pagination) 可以帶來很好的效能表現\
-但是也有一些事情是它做不到的\
-好比如說它沒辦法跳轉到指定的頁面\
-它只可以根據當前的 cursor 往前或往後
-
-好處除了可以快速的定位資料，讀取之外\
-它不會受到資料新增刪減所影響\
-以往 offset based 的方法，如果新增一筆資料，end user 可能會在下一頁讀到相同的資訊\
-而 cursor based 則不受到影響
 
 # References
 + [求求你别再用 MySQL offset 和 limit 分页了？](https://cloud.tencent.com/developer/article/1701747)
