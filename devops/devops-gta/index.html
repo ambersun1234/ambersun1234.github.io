@@ -1,0 +1,1636 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>DevOps - 利用 gta 加速你的 Integration Test | Shawn Hsu</title>
+<meta name="description" content="測試跑太久總是讓人抓狂？本文以 Kubernetes 專案為例，深入探討測試影響分析（TIA）的概念，並手把手教你如何使用 Go 靜態分析工具 gta 精準鎖定受影響的 Package，告別冗長的 CI 等待時間。">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="DevOps - 利用 gta 加速你的 Integration Test">
+<meta property="og:url" content="https://ambersuncreates.com/devops/devops-gta/">
+
+
+  <meta property="og:description" content="測試跑太久總是讓人抓狂？本文以 Kubernetes 專案為例，深入探討測試影響分析（TIA）的概念，並手把手教你如何使用 Go 靜態分析工具 gta 精準鎖定受影響的 Package，告別冗長的 CI 等待時間。">
+
+
+<meta property="og:image" content="https://ambersuncreates.com/assets/img/og/devops-gta.png">
+
+
+
+
+  <meta property="article:published_time" content="2026-09-19T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-09-19T21:28:43+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/devops/devops-gta/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#devops" itemprop="item"><span itemprop="name">Devops</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">DevOps - 利用 gta 加速你的 Integration Test</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="DevOps - 利用 gta 加速你的 Integration Test">
+    <meta itemprop="description" content="How You Write, How it Runs在我待過的所有公司裡，我都致力於導入自動化測試讓原本不穩定的系統不再那麼常出錯">
+    <meta itemprop="datePublished" content="2026-09-19T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-09-19T21:28:43+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/devops/devops-gta/" class="u-url" itemprop="url">DevOps - 利用 gta 加速你的 Integration Test
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-09-19">2026-09-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-19">
+            2026-09-19
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/devops/devops-gta/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/devops/devops-gta/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/devops/devops-gta/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li><a href="#how-you-write-how-it-runs">How You Write, How it Runs</a></li>
+<li>
+<a href="#different-approach-with-integration-test">Different Approach with Integration Test</a><ul>
+<li><a href="#rollback-transaction">Rollback Transaction</a></li>
+<li><a href="#disposable-container">Disposable Container</a></li>
+</ul>
+</li>
+<li>
+<a href="#run-tests-with-only-changed-code">Run Tests with Only Changed Code</a><ul><li><a href="#transitive-dependents">Transitive Dependents</a></li></ul>
+</li>
+<li>
+<a href="#test-impact-analysis">Test Impact Analysis</a><ul>
+<li><a href="#dynamic-analysis">Dynamic Analysis</a></li>
+<li><a href="#static-analysis">Static Analysis</a></li>
+</ul>
+</li>
+<li>
+<a href="#gta">gta</a><ul><li>
+<a href="#experiment">Experiment</a><ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#code-change">Code Change</a></li>
+</ul>
+</li></ul>
+</li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="how-you-write-how-it-runs">How You Write, How it Runs</h1>
+<p>在我待過的所有公司裡，我都致力於導入自動化測試<br>
+讓原本不穩定的系統不再那麼常出錯</p>
+
+<p>但後來我發現了一件事情<br>
+就是很多人，也對於我來說，我們都很沒有耐心<br>
+<code class="language-plaintext highlighter-rouge">unit test</code> 跑個幾分鐘可能都還可以接受<br>
+但是當 <code class="language-plaintext highlighter-rouge">integration test</code> 隨著 test case 數量的增長，動輒數小時的測試<br>
+真的沒有人可以忍受</p>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">unit test</code> 可以參考 <a href="../../devops/devops-unit-test">DevOps - 單元測試 Unit Test | Shawn Hsu</a><br>
+<code class="language-plaintext highlighter-rouge">integration test</code> 可以參考 <a href="../../devops/devops-integration-test">DevOps - 整合測試 Integration Test | Shawn Hsu</a></p>
+</blockquote>
+
+<p>CI pipeline 通常是確定完新的 code change 通過所有測試才會進行合併<br>
+畢竟你沒跑完就 merge 萬一程式有錯，就喪失了 CI/CD 的意義</p>
+
+<blockquote>
+  <p>如果是合併之後才出現錯誤這當然是另當別論</p>
+</blockquote>
+
+<p>這時候，你怎麼寫測試其實會很大程度的影響他的執行時間<br>
+那既然我們都不想等，是不是可以考慮優化這段？</p>
+
+<blockquote>
+  <p>有關 CI/CD 可以參考 <a href="../../devops/devops-github-action">DevOps - 實作你自己的 GitHub Actions | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="different-approach-with-integration-test">Different Approach with Integration Test</h1>
+<p>怎麼寫測試是啥意思？</p>
+
+<p>當然我這裡指的是跑 <code class="language-plaintext highlighter-rouge">integration test</code><br>
+因為要真正的去跟不同的服務做 <strong>整合</strong><br>
+通常是用 container 的方式去使用</p>
+
+<p>問題很常出現在這段，<a href="#rollback-transaction">Rollback Transaction</a> 與 <a href="#disposable-container">Disposable Container</a><br>
+不同方式造成的差距可大了</p>
+
+<h2 id="rollback-transaction">Rollback Transaction</h2>
+<p>這個方式主要是針對使用資料庫，將操作本身以 <em>Transaction</em> 的方式執行<br>
+要馬全部執行成功，要馬全部失敗</p>
+
+<blockquote>
+  <p>有關 Transaction 可以參考 <a href="../../database/database-transaction">資料庫 - Transaction 與 Isolation | Shawn Hsu</a></p>
+</blockquote>
+
+<p>對於測試來說，你可以在每個測試的結尾都使用 <code class="language-plaintext highlighter-rouge">Rollback</code> 這個方法將 <em>Transaction</em> 把剛剛寫上去的更新都弄回去<br>
+這樣做的好處就是，當測試跑完的時候，你的資料庫 container 還是乾淨的</p>
+
+<p>可是並不是所有東西都能夠這樣弄<br>
+你想嘛，你有可能只跑 <strong>資料庫</strong> 嗎?<br>
+給你個例子好了，目前我司在跑 integration test 的時候<br>
+需要同時啟動</p>
+<ol>
+  <li>資料庫</li>
+  <li>message queue</li>
+  <li>身份認證系統</li>
+  <li>…等等 container</li>
+</ol>
+
+<p>那你說 mq 不用 <code class="language-plaintext highlighter-rouge">Rollback</code>，這當然是正確的<br>
+但身份認證系統勒？ 他可沒有 <code class="language-plaintext highlighter-rouge">Rollback</code> 哦，你需要手動把你剛寫進去的資料刪掉</p>
+
+<p>所以，縱使 <a href="#rollback-transaction">Rollback Transaction</a> 可以以簡單的方式清除資料<br>
+但他的使用場景是非常受限的<br>
+為了快那麼一點點你要手動清除資料，顯然是不太划算的？</p>
+
+<h2 id="disposable-container">Disposable Container</h2>
+<p>所以另一種常見的，是每一個測試你都使用獨立的 container<br>
+這個測試用完就丟，下一個測試再開一個新的 container 來用</p>
+
+<p>省事的代價就是這種方法效率是非常低下的<br>
+每次開關 container 造成的 overhead 會隨著測試數量變多而變多</p>
+
+<h1 id="run-tests-with-only-changed-code">Run Tests with Only Changed Code</h1>
+<p>有時候可能因為 legacy code 的關係你沒辦法用 <a href="#rollback-transaction">Rollback Transaction</a> 的方法<br>
+就是比如說，他可能根本就沒有寫 Transaction 之類的導致架構上你短時間內動不了<br>
+又或者是上述我們提到的，他根本不是資料庫</p>
+
+<p>既然這樣，你只能把眼光放在 <a href="#disposable-container">Disposable Container</a> 上面<br>
+既然我不能減少測試的數量(i.e. container 的數量)<br>
+那我減少測試的數量行不</p>
+
+<p>不是啦我不是說把測試刪掉，但也接近<br>
+就是我 <strong>只跑有被改到的程式碼相關的測試</strong></p>
+
+<h2 id="transitive-dependents">Transitive Dependents</h2>
+<p>但我要怎麼找 <strong>只跑有被改到的程式碼相關的測試</strong> ？</p>
+
+<p>單純的去看 <code class="language-plaintext highlighter-rouge">$ git diff</code> 可不行<br>
+你改到的 function 可能存在於其他 function 很深層的呼叫鏈<br>
+所以單純看 diff 不行，你要有一個工具去看 call stack<br>
+把相依圖畫出來，找出來實際相依，然後再執行那些被影響到的測試</p>
+
+<h1 id="test-impact-analysis">Test Impact Analysis</h1>
+<p>相依圖怎麼畫？</p>
+
+<p>實務上我們會用一個叫做 <code class="language-plaintext highlighter-rouge">Test Impact Analysis</code> 的技巧<br>
+目的就是為了要解決只跑跟這次修改有關的測試而已<br>
+但具體來說要怎麼做？</p>
+
+<p>TIA 的實作方式分為兩種 <a href="#dynamic-analysis">Dynamic Analysis</a> 以及 <a href="#static-analysis">Static Analysis</a></p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center"><a href="#dynamic-analysis">Dynamic Analysis</a></th>
+      <th style="text-align: center"><a href="#static-analysis">Static Analysis</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">準確度</td>
+      <td style="text-align: center">高</td>
+      <td style="text-align: center">低</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">分析速度</td>
+      <td style="text-align: center">慢</td>
+      <td style="text-align: center">快</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">執行程式碼構建相依圖</td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">週期性重建相依圖</td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="dynamic-analysis">Dynamic Analysis</h2>
+<p>動態分析就是把程式碼跑起來，然後把分析圖畫出來</p>
+
+<p>相依圖在 runtime 階段是確定的<br>
+單純看程式碼(i.e. <a href="#static-analysis">Static Analysis</a>)是決定不出來的</p>
+
+<blockquote>
+  <p>或者說還是畫得出來，只是準確率不高</p>
+</blockquote>
+
+<p>動態分析具體的做法就是在各個 function 插入一些程式碼<br>
+就是說，<code class="language-plaintext highlighter-rouge">哦 我現在正在執行 func foo()</code> 這種東西(稱為 <em>instrument</em>)<br>
+然後你把程式執行一遍，把這些相依圖建立起來</p>
+
+<p>等到你要用的時候<br>
+根據你這次的修改，去反查之前做好的相依圖，把影響範圍抓出來<br>
+只針對這部分進行測試</p>
+
+<p>這些相依圖的構建是很費時費力的<br>
+所以一般來說我們並不會每次跑測試的時候才去 build 相依圖<br>
+他可能是每週重建一次，這樣的 trade offs 就是每次跑測試他不一定是準確的<br>
+就是會漏東西啦，不過考慮到執行成本跟換來的速度相比，是可以接受的<br>
+而且他不是不能解決的，你在正式出版之前肯定是需要完整測試過全部的 test case<br>
+so it’s not a big deal</p>
+
+<h2 id="static-analysis">Static Analysis</h2>
+<p>那靜態分析就很簡單了，我單純的去看程式碼本身，推導出相依圖<br>
+但要注意到的是，靜態分析通常準確度會不如 <a href="#dynamic-analysis">Dynamic Analysis</a>
+不準的原因是</p>
+
+<ul>
+  <li>程式動態輸入資訊</li>
+  <li>function callback</li>
+  <li>if else branch 執行期才能確定</li>
+</ul>
+
+<p>那我就好奇了<br>
+為什麼當 Golang 跑出一個 nil pointer exception 的時候 call stack 那麼準確<br>
+為什麼不能直接拿來用?</p>
+
+<p>因為這是 <code class="language-plaintext highlighter-rouge">runtime</code> 的結果，並非靜態分析得出的</p>
+
+<h1 id="gta">gta</h1>
+<p><a href="https://github.com/digitalocean/gta">digitalocean/gta</a> 是一套 Golang 的 <a href="#static-analysis">Static Analysis</a> 工具</p>
+
+<p>它的核心分為兩個部分</p>
+<ol>
+  <li>第一是用 git 抓出更改的檔案</li>
+  <li>然後用 <code class="language-plaintext highlighter-rouge">$ go list</code> 抓出相依的 package</li>
+</ol>
+
+<p>package?<br>
+沒錯，注意到 gta 並不是做 function-level dependents graph<br>
+他是抓 <strong>package-level dependents graph</strong><br>
+所以你雖然可以預期他能夠減少一些 test case 執行的數量，不過 golang package 裡面通常包滿多東西<br>
+跑起來還是比純 <a href="#dynamic-analysis">Dynamic Analysis</a> 還要花時間的(但還是比較快的)</p>
+
+<blockquote>
+  <p>而且 README 裡面也寫得很清楚<br>
+List <code class="language-plaintext highlighter-rouge">packages</code> that should be tested since they have deviated from master.</p>
+</blockquote>
+
+<h2 id="experiment">Experiment</h2>
+<p>使用其實也非常簡單，他本質上就是個 cli 工具<br>
+這邊我就比較隨意的用 <a href="https://github.com/kubernetes/kubernetes">kubernetes/kubernetes</a> 來做演示就好</p>
+
+<h3 id="installation">Installation</h3>
+<p>首先依然是安裝</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>go <span class="nb">install </span>github.com/digitalocean/gta/cmd/gta@latest
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>然後把 k8s repo clone 下來</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>git clone https://github.com/kubernetes/kubernetes.git
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<h3 id="code-change">Code Change</h3>
+<p>接下來來改個東西觀察一下</p>
+
+<p><img src="/assets/img/posts/gta-1.png" alt=""></p>
+
+<p>我挑了一個應該是 share library 的 code 來改<br>
+啊然後記得要把它 commit</p>
+
+<blockquote>
+  <p>要 commit 才會抓得到，目前 gta 不支援還沒 commit 的</p>
+</blockquote>
+
+<hr>
+
+<p>然後 README 上面原本是說要這樣用</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>gta <span class="nt">-include</span> <span class="s2">"</span><span class="si">$(</span>go list <span class="nt">-f</span> <span class="s1">'{{ .Module.Path }}'</span><span class="si">)</span><span class="s2">/"</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>我一直跑不出來，就是會錯
+<img src="/assets/img/posts/gta-3.png" alt=""></p>
+
+<p>我後來看了很久，發現到說，因為在專案根目錄是沒有 Go file 的<br>
+所以他會錯<br>
+那其實 <code class="language-plaintext highlighter-rouge">-include</code> 的目的主要其實就是要過濾掉檔案而已<br>
+以這個例子來說，我們就是只要 <code class="language-plaintext highlighter-rouge">k8s.io/kubernetes/*</code> 這種 prefix 的而已</p>
+
+<p><img src="/assets/img/posts/gta-2.png" alt=""></p>
+
+<p>我後來其實是把指令改成這樣</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>gta <span class="nt">-include</span> <span class="s2">"</span><span class="si">$(</span>go list <span class="nt">-f</span> <span class="s1">'{{ .Module.Path }}'</span> ./... | <span class="nb">head</span> <span class="nt">-n</span> 1<span class="si">)</span><span class="s2">/"</span>
+<span class="nv">$ </span>gta <span class="nt">-include</span> <span class="s2">"k8s.io/kubernetes"</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>這兩個指令在這個情況下是等價的<br>
+所以跑完長這樣</p>
+
+<p><img src="/assets/img/posts/gta-4.png" alt=""></p>
+
+<p>你說，我要怎麼知道他真的有用<br>
+我跑了 package 數量的確認</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>go list ./... | <span class="nb">wc</span> <span class="nt">-l</span>
+1471
+<span class="nv">$ </span>gta <span class="nt">-include</span> <span class="s2">"k8s.io/kubernetes"</span> | <span class="nb">wc</span> <span class="nt">-l</span>
+39
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>那你就可以看到，確實，這邊只列出受影響的 package<br>
+我原本要跑 <em>1471</em> 個 package 的測試，縮減到 <em>39</em> 個 package 測試<br>
+時間上可以預期大幅度的縮減<br>
+接下來你就可以依照這些列出的 package 跑測試了</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>go <span class="nb">test</span> <span class="si">$(</span>gta <span class="nt">-include</span> <span class="s2">"k8s.io/kubernetes"</span><span class="si">)</span>
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://github.com/digitalocean/gta">digitalocean/gta</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#ci" class="page__taxonomy-item p-category" rel="tag">ci</a><span class="sep">, </span>
+    
+      <a href="/tags/#ci-pipeline" class="page__taxonomy-item p-category" rel="tag">ci pipeline</a><span class="sep">, </span>
+    
+      <a href="/tags/#ci-cd" class="page__taxonomy-item p-category" rel="tag">ci/cd</a><span class="sep">, </span>
+    
+      <a href="/tags/#digitalocean" class="page__taxonomy-item p-category" rel="tag">digitalocean</a><span class="sep">, </span>
+    
+      <a href="/tags/#disposable-container" class="page__taxonomy-item p-category" rel="tag">disposable container</a><span class="sep">, </span>
+    
+      <a href="/tags/#dynamic-analysis" class="page__taxonomy-item p-category" rel="tag">dynamic analysis</a><span class="sep">, </span>
+    
+      <a href="/tags/#function-level" class="page__taxonomy-item p-category" rel="tag">function-level</a><span class="sep">, </span>
+    
+      <a href="/tags/#git" class="page__taxonomy-item p-category" rel="tag">git</a><span class="sep">, </span>
+    
+      <a href="/tags/#git-diff" class="page__taxonomy-item p-category" rel="tag">git diff</a><span class="sep">, </span>
+    
+      <a href="/tags/#go-list" class="page__taxonomy-item p-category" rel="tag">go list</a><span class="sep">, </span>
+    
+      <a href="/tags/#gta" class="page__taxonomy-item p-category" rel="tag">gta</a><span class="sep">, </span>
+    
+      <a href="/tags/#integration-test" class="page__taxonomy-item p-category" rel="tag">integration test</a><span class="sep">, </span>
+    
+      <a href="/tags/#kubernetes" class="page__taxonomy-item p-category" rel="tag">kubernetes</a><span class="sep">, </span>
+    
+      <a href="/tags/#only-changed" class="page__taxonomy-item p-category" rel="tag">only changed</a><span class="sep">, </span>
+    
+      <a href="/tags/#package-level" class="page__taxonomy-item p-category" rel="tag">package-level</a><span class="sep">, </span>
+    
+      <a href="/tags/#runtime" class="page__taxonomy-item p-category" rel="tag">runtime</a><span class="sep">, </span>
+    
+      <a href="/tags/#static-analysis" class="page__taxonomy-item p-category" rel="tag">static analysis</a><span class="sep">, </span>
+    
+      <a href="/tags/#test" class="page__taxonomy-item p-category" rel="tag">test</a><span class="sep">, </span>
+    
+      <a href="/tags/#test-impact-analysis" class="page__taxonomy-item p-category" rel="tag">test impact analysis</a><span class="sep">, </span>
+    
+      <a href="/tags/#tia" class="page__taxonomy-item p-category" rel="tag">TIA</a><span class="sep">, </span>
+    
+      <a href="/tags/#transaction-rollback" class="page__taxonomy-item p-category" rel="tag">transaction rollback</a><span class="sep">, </span>
+    
+      <a href="/tags/#unit-test" class="page__taxonomy-item p-category" rel="tag">unit test</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#devops" class="page__taxonomy-item p-category" rel="tag">devops</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=DevOps+-+%E5%88%A9%E7%94%A8+gta+%E5%8A%A0%E9%80%9F%E4%BD%A0%E7%9A%84+Integration+Test%20https%3A%2F%2Fambersuncreates.com%2Fdevops%2Fdevops-gta%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Fdevops%2Fdevops-gta%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Fdevops%2Fdevops-gta%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/random/gpg-subkey/" class="pagination--pager" title="你的 AI Agent 擁有的 SSH 權力太大了！ 趕快收回以免一切都晚了
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/gpg-subkey/" rel="permalink">你的 AI Agent 擁有的 SSH 權力太大了！ 趕快收回以免一切都晚了
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-09-15">2026-09-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-19">
+            2026-09-19
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/gpg-subkey/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/gpg-subkey/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/gpg-subkey/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">What is GPG Subkey?
+在 GPG 與 YubiKey 的相遇之旅 | Shawn Hsu 裡面，我們在產私鑰的時候
+將 ECSA 四種不同用途的 key 分開產生，最後得到一把 Primary Key 以及 兩把 Subkey
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-deferred-join/" rel="permalink">資料庫 - 可以跳頁的分頁機制？ Deferred Join 是你需要的
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-09-13">2026-09-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-19">
+            2026-09-19
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-deferred-join/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-deferred-join/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-deferred-join/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Deferred Join
+儘管 Cursor Based Pagination 可以帶來很好的效能表現
+但是也有一些事情是它做不到的
+好比如說它沒辦法跳轉到指定的頁面
+它只可以根據當前的 cursor 往前或往後
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/claude-code-herdr/" rel="permalink">Herdr 搭配 Moshi 就可以搭起你的行動辦公站！ 有沒有這麼簡單
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-08-17">2026-08-17</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-19">
+            2026-09-19
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/claude-code-herdr/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/claude-code-herdr/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/claude-code-herdr/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Claude Code Impression
+我算是很晚才接觸 AI Agent 這種東西
+使用 Claude Code 不過短短兩週，我就發現說其實他能夠大幅的增加開發速度
+誒這就有趣了老實說
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/git/git-worktree/" rel="permalink">Git 進階使用 - Git Worktree 多工的好朋友
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          less than 1 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-08-16">2026-08-16</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-19">
+            2026-09-19
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/git/git-worktree/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/git/git-worktree/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/git/git-worktree/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Obstacles when Using Git
+我還記得以前雖然已經很熟悉 Git 的操作，但其中一個最大的問題點在於說
+我如果想要對同一份 codebase 進行不同實驗，我沒辦法同時進行，除非說我把資料手動複製出來
+這個問題其實存在滿久的，而我一直沒有嘗試去解決它
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/devops/devops-gta/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/devops/devops-gta"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>

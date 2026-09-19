@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <meta charset="utf-8">
+  <title>Redirecting&hellip;</title>
+  <link id="redirect-link" rel="canonical" href="https://ambersuncreates.com/database/database-filter/">
+  <script>location="https://ambersuncreates.com/database/database-filter/" + window.location.hash</script>
+  <meta id="redirect-meta" http-equiv="refresh" content="0; url=https://ambersuncreates.com/database/database-filter/">
+  <meta id="og" property="og:image" content="">
+  <h1>Redirecting&hellip;</h1>
+  <a id="redirect-a" href="">Click here if you are not redirected.</a>
+</html>
+
+<script>
+  const url = "https://ambersuncreates.com/database/database-filter/"
+  const hashUrl = url + window.location.hash
+
+  const slug = url.split('/')
+  document.getElementById("og").setAttribute("content", "/assets/img/og/" + slug[slug.length - 2] + ".png")
+
+  // dynamically set the redirect link with anchor if exists
+  document.getElementById('redirect-link').setAttribute('href', hashUrl)
+  document.getElementById('redirect-meta').setAttribute('content', '0; url=' + hashUrl)
+  document.getElementById('redirect-a').setAttribute('href', hashUrl)
+</script>
