@@ -72,6 +72,11 @@ $ npx skills add herdrdev/herdr --skill herdr -g
 
 > integration 是看你用哪個，我用 Claude Code
 
+更新也就
+```shell
+$ herdr update
+```
+
 ## From Tmux to Herdr
 我之前是 [tmux](https://tmux.app/) 的長期使用者\
 換到 [Herdr](#herdr) 可以說是完全沒有任何問題
@@ -98,8 +103,32 @@ $ npx skills add herdrdev/herdr --skill herdr -g
 1. 一邊請他針對這個功能的某個部分進行 POC
 2. 一邊跟他討論該架構的設計
 
-## The Problem I have When Using Herdr
-### Agent No Status?
+## The Feature I Like about
+1. 與 tmux 相似的 UX 使得上手速度非常快
+2. 清楚標示的 Agent Status
+3. 彈性的 UI 排版
+4. 電腦重開機 session 仍然會保留，甚至是你單純 terminal 也會保留
+5. client-server 架構允許我同步操作電腦，甚至是遠端操作電腦
+
+前面幾點可能比較好理解，讓我解釋一下 4 與 5\
+我最早開始用 [Herdr](#herdr) 是 `0.8.0`\
+當時重開機你的所有 session 都會掉線，等於你要自己去記 session id 然後手動 resume\
+到 `0.9.3` 他就內建這項功能了\
+以前我會因為怕 session 不見所以很長時間不關機重啟，有了這個功能之後就簡單多了
+
+除了寫 code 用 claude-code 之外，現在驗證的部分我也同樣交給 AI Agent 進行處理\
+具體是讓 AI Agent 直接接管電腦使用權，讓他操作並錄影證明功能的正確性等等\
+這部分會要求你把電腦使用權交出去，那在這個時候你操作不了，client-server 的架構其實就很有幫助\
+server 上面進行螢幕錄影的作業，我用另一台電腦接上 client 去操作其他 session\
+錄影不會被打斷，我也能夠同步操作其他工作
+
+> 也因為權限給的很大，所以衍伸出了我想要限縮 Agent 權限的事情\
+> 可參考 [你的 AI Agent 擁有的 SSH 權力太大了！ 趕快收回以免一切都晚了 \| Shawn Hsu](../../random/gpg-subkey)
+
+而 client-server 的架構正是本文能夠達成行動工作站的重要基石
+
+# Herdr First Use
+## Agent No Status?
 雖然說我覺得很好用，可是我也把壞習慣帶到 [Herdr](#herdr) 上面
 
 前面在 [Herdr UI](#herdr-ui) 有提到，右側基本上就是主要操作區域，那他本質上是 terminal\
@@ -109,7 +138,7 @@ $ npx skills add herdrdev/herdr --skill herdr -g
 
 那也因為 UI 本身就支援多分頁，所以 [tmux](https://tmux.app) 的用處就不太大這樣
 
-### Git Worktree
+## Git Worktree
 我們在 [Git 進階使用 - Git Worktree 多工的好朋友 \| Shawn Hsu](../../git/git-worktree) 裡面有提到\
 現代 AI Agent 搭配上 Git Worktree 好處多多
 
@@ -149,7 +178,7 @@ directory = "~/Documents/gitRepo/worktree"
 所有東西都是在 server 上，而 client 就是單純的 UI 而已
 
 重點是，[Herdr](#herdr) 如果意外被關閉，他其實是會活著的\
-也就是說你不用擔心意外把它關掉之後 session 就找不回來(當然，重開機這種就不算了)
+也就是說你不用擔心意外把它關掉之後 session 就找不回來
 
 ```shell
 $ herdr
@@ -157,6 +186,8 @@ $ herdr
 $ herdr
 # still have your session there!
 ```
+
+> detach session 可以用 prefix+q
 
 如果你真的想要結束，就要使用 `$ herdr server stop`\
 那既然他是 Client-Server，事情就變得很好玩了哦~
