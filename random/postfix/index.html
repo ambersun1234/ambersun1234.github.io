@@ -1,0 +1,1810 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>使用 Postfix 來測試 Email 寄送功能 | Shawn Hsu</title>
+<meta name="description" content="當你需要測試 Email 發信功能，你會使用 Postfix，可是你真的知道他底層怎麼做的嗎？ 本文會帶你認識 SMTP 以及如何手動使用 telnet 發信件">
+
+
+  <meta name="author" content="Shawn Hsu">
+  
+  <meta property="article:author" content="Shawn Hsu">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Shawn Hsu">
+<meta property="og:title" content="使用 Postfix 來測試 Email 寄送功能">
+<meta property="og:url" content="https://ambersuncreates.com/random/postfix/">
+
+
+  <meta property="og:description" content="當你需要測試 Email 發信功能，你會使用 Postfix，可是你真的知道他底層怎麼做的嗎？ 本文會帶你認識 SMTP 以及如何手動使用 telnet 發信件">
+
+
+<meta property="og:image" content="https://ambersuncreates.com/assets/img/og/postfix.png">
+
+
+
+
+  <meta property="article:published_time" content="2026-09-28T00:00:00+08:00">
+
+
+
+  <meta property="article:modified_time" content="2026-09-28T21:08:22+08:00">
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://ambersuncreates.com/random/postfix/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Shawn Hsu",
+      "url": "https://ambersuncreates.com/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Shawn Hsu Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3411784157543420"
+     crossorigin="anonymous"></script>
+
+<!-- google ads -->
+<script async src="https://fundingchoicesmessages.google.com/i/pub-3411784157543420?ers=1" nonce="DTHVC27nOex6L5olJXhYMg"></script><script nonce="DTHVC27nOex6L5olJXhYMg">(function() {function signalGooglefcPresent() {if (!window.frames['googlefcPresent']) {if (document.body) {const iframe = document.createElement('iframe'); iframe.style = 'width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;'; iframe.style.display = 'none'; iframe.name = 'googlefcPresent'; document.body.appendChild(iframe);} else {setTimeout(signalGooglefcPresent, 0);}}}signalGooglefcPresent();})();</script>
+<script>(function(){'use strict';function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+  function ca(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var da=ca(this);function k(a,b){if(b)a:{var c=da;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+  function ea(a){return a.raw=a}function m(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if("number"==typeof a.length)return{next:aa(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}function fa(a){for(var b,c=[];!(b=a.next()).done;)c.push(b.value);return c}var ha="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},n;
+  if("function"==typeof Object.setPrototypeOf)n=Object.setPrototypeOf;else{var q;a:{var ia={a:!0},ja={};try{ja.__proto__=ia;q=ja.a;break a}catch(a){}q=!1}n=q?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var ka=n;
+  function r(a,b){a.prototype=ha(b.prototype);a.prototype.constructor=a;if(ka)ka(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.A=b.prototype}function la(){for(var a=Number(this),b=[],c=a;c<arguments.length;c++)b[c-a]=arguments[c];return b}k("Number.MAX_SAFE_INTEGER",function(){return 9007199254740991});
+  k("Number.isFinite",function(a){return a?a:function(b){return"number"!==typeof b?!1:!isNaN(b)&&Infinity!==b&&-Infinity!==b}});k("Number.isInteger",function(a){return a?a:function(b){return Number.isFinite(b)?b===Math.floor(b):!1}});k("Number.isSafeInteger",function(a){return a?a:function(b){return Number.isInteger(b)&&Math.abs(b)<=Number.MAX_SAFE_INTEGER}});
+  k("Math.trunc",function(a){return a?a:function(b){b=Number(b);if(isNaN(b)||Infinity===b||-Infinity===b||0===b)return b;var c=Math.floor(Math.abs(b));return 0>b?-c:c}});k("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});k("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for(0>c&&(c=Math.max(c+e,0));c<e;c++){var f=d[c];if(f===b||Object.is(f,b))return!0}return!1}});
+  k("String.prototype.includes",function(a){return a?a:function(b,c){if(null==this)throw new TypeError("The 'this' value for String.prototype.includes must not be null or undefined");if(b instanceof RegExp)throw new TypeError("First argument to String.prototype.includes must not be a regular expression");return-1!==this.indexOf(b,c||0)}});/*
+  
+   Copyright The Closure Library Authors.
+   SPDX-License-Identifier: Apache-2.0
+  */
+  var t=this||self;function v(a){return a};var w,x;a:{for(var ma=["CLOSURE_FLAGS"],y=t,z=0;z<ma.length;z++)if(y=y[ma[z]],null==y){x=null;break a}x=y}var na=x&&x[610401301];w=null!=na?na:!1;var A,oa=t.navigator;A=oa?oa.userAgentData||null:null;function B(a){return w?A?A.brands.some(function(b){return(b=b.brand)&&-1!=b.indexOf(a)}):!1:!1}function C(a){var b;a:{if(b=t.navigator)if(b=b.userAgent)break a;b=""}return-1!=b.indexOf(a)};function D(){return w?!!A&&0<A.brands.length:!1}function E(){return D()?B("Chromium"):(C("Chrome")||C("CriOS"))&&!(D()?0:C("Edge"))||C("Silk")};var pa=D()?!1:C("Trident")||C("MSIE");!C("Android")||E();E();C("Safari")&&(E()||(D()?0:C("Coast"))||(D()?0:C("Opera"))||(D()?0:C("Edge"))||(D()?B("Microsoft Edge"):C("Edg/"))||D()&&B("Opera"));var qa={},F=null;var ra="undefined"!==typeof Uint8Array,sa=!pa&&"function"===typeof btoa;function G(){return"function"===typeof BigInt};var H=0,I=0;function ta(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);b&&(c=m(ua(c,a)),b=c.next().value,a=c.next().value,c=b);H=c>>>0;I=a>>>0}function va(a,b){b>>>=0;a>>>=0;if(2097151>=b)var c=""+(4294967296*b+a);else G()?c=""+(BigInt(b)<<BigInt(32)|BigInt(a)):(c=(a>>>24|b<<8)&16777215,b=b>>16&65535,a=(a&16777215)+6777216*c+6710656*b,c+=8147497*b,b*=2,1E7<=a&&(c+=Math.floor(a/1E7),a%=1E7),1E7<=c&&(b+=Math.floor(c/1E7),c%=1E7),c=b+wa(c)+wa(a));return c}
+  function wa(a){a=String(a);return"0000000".slice(a.length)+a}function ua(a,b){b=~b;a?a=~a+1:b+=1;return[a,b]};var J;J="function"===typeof Symbol&&"symbol"===typeof Symbol()?Symbol():void 0;var xa=J?function(a,b){a[J]|=b}:function(a,b){void 0!==a.g?a.g|=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}})},K=J?function(a){return a[J]|0}:function(a){return a.g|0},L=J?function(a){return a[J]}:function(a){return a.g},M=J?function(a,b){a[J]=b;return a}:function(a,b){void 0!==a.g?a.g=b:Object.defineProperties(a,{g:{value:b,configurable:!0,writable:!0,enumerable:!1}});return a};function ya(a,b){M(b,(a|0)&-14591)}function za(a,b){M(b,(a|34)&-14557)}
+  function Aa(a){a=a>>14&1023;return 0===a?536870912:a};var N={},Ba={};function Ca(a){return!(!a||"object"!==typeof a||a.g!==Ba)}function Da(a){return null!==a&&"object"===typeof a&&!Array.isArray(a)&&a.constructor===Object}function P(a,b,c){if(!Array.isArray(a)||a.length)return!1;var d=K(a);if(d&1)return!0;if(!(b&&(Array.isArray(b)?b.includes(c):b.has(c))))return!1;M(a,d|1);return!0}Object.freeze(new function(){});Object.freeze(new function(){});var Ea=/^-?([1-9][0-9]*|0)(\.[0-9]+)?$/;var Q;function Fa(a,b){Q=b;a=new a(b);Q=void 0;return a}
+  function R(a,b,c){null==a&&(a=Q);Q=void 0;if(null==a){var d=96;c?(a=[c],d|=512):a=[];b&&(d=d&-16760833|(b&1023)<<14)}else{if(!Array.isArray(a))throw Error();d=K(a);if(d&64)return a;d|=64;if(c&&(d|=512,c!==a[0]))throw Error();a:{c=a;var e=c.length;if(e){var f=e-1;if(Da(c[f])){d|=256;b=f-(+!!(d&512)-1);if(1024<=b)throw Error();d=d&-16760833|(b&1023)<<14;break a}}if(b){b=Math.max(b,e-(+!!(d&512)-1));if(1024<b)throw Error();d=d&-16760833|(b&1023)<<14}}}M(a,d);return a};function Ga(a){switch(typeof a){case "number":return isFinite(a)?a:String(a);case "boolean":return a?1:0;case "object":if(a)if(Array.isArray(a)){if(P(a,void 0,0))return}else if(ra&&null!=a&&a instanceof Uint8Array){if(sa){for(var b="",c=0,d=a.length-10240;c<d;)b+=String.fromCharCode.apply(null,a.subarray(c,c+=10240));b+=String.fromCharCode.apply(null,c?a.subarray(c):a);a=btoa(b)}else{void 0===b&&(b=0);if(!F){F={};c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");d=["+/=",
+  "+/","-_=","-_.","-_"];for(var e=0;5>e;e++){var f=c.concat(d[e].split(""));qa[e]=f;for(var g=0;g<f.length;g++){var h=f[g];void 0===F[h]&&(F[h]=g)}}}b=qa[b];c=Array(Math.floor(a.length/3));d=b[64]||"";for(e=f=0;f<a.length-2;f+=3){var l=a[f],p=a[f+1];h=a[f+2];g=b[l>>2];l=b[(l&3)<<4|p>>4];p=b[(p&15)<<2|h>>6];h=b[h&63];c[e++]=g+l+p+h}g=0;h=d;switch(a.length-f){case 2:g=a[f+1],h=b[(g&15)<<2]||d;case 1:a=a[f],c[e]=b[a>>2]+b[(a&3)<<4|g>>4]+h+d}a=c.join("")}return a}}return a};function Ha(a,b,c){a=Array.prototype.slice.call(a);var d=a.length,e=b&256?a[d-1]:void 0;d+=e?-1:0;for(b=b&512?1:0;b<d;b++)a[b]=c(a[b]);if(e){b=a[b]={};for(var f in e)Object.prototype.hasOwnProperty.call(e,f)&&(b[f]=c(e[f]))}return a}function Ia(a,b,c,d,e){if(null!=a){if(Array.isArray(a))a=P(a,void 0,0)?void 0:e&&K(a)&2?a:Ja(a,b,c,void 0!==d,e);else if(Da(a)){var f={},g;for(g in a)Object.prototype.hasOwnProperty.call(a,g)&&(f[g]=Ia(a[g],b,c,d,e));a=f}else a=b(a,d);return a}}
+  function Ja(a,b,c,d,e){var f=d||c?K(a):0;d=d?!!(f&32):void 0;a=Array.prototype.slice.call(a);for(var g=0;g<a.length;g++)a[g]=Ia(a[g],b,c,d,e);c&&c(f,a);return a}function Ka(a){return a.s===N?a.toJSON():Ga(a)};function La(a,b,c){c=void 0===c?za:c;if(null!=a){if(ra&&a instanceof Uint8Array)return b?a:new Uint8Array(a);if(Array.isArray(a)){var d=K(a);if(d&2)return a;b&&(b=0===d||!!(d&32)&&!(d&64||!(d&16)));return b?M(a,(d|34)&-12293):Ja(a,La,d&4?za:c,!0,!0)}a.s===N&&(c=a.h,d=L(c),a=d&2?a:Fa(a.constructor,Ma(c,d,!0)));return a}}function Ma(a,b,c){var d=c||b&2?za:ya,e=!!(b&32);a=Ha(a,b,function(f){return La(f,e,d)});xa(a,32|(c?2:0));return a};function Na(a,b){a=a.h;return Oa(a,L(a),b)}function Oa(a,b,c,d){if(-1===c)return null;if(c>=Aa(b)){if(b&256)return a[a.length-1][c]}else{var e=a.length;if(d&&b&256&&(d=a[e-1][c],null!=d))return d;b=c+(+!!(b&512)-1);if(b<e)return a[b]}}function Pa(a,b,c,d,e){var f=Aa(b);if(c>=f||e){var g=b;if(b&256)e=a[a.length-1];else{if(null==d)return;e=a[f+(+!!(b&512)-1)]={};g|=256}e[c]=d;c<f&&(a[c+(+!!(b&512)-1)]=void 0);g!==b&&M(a,g)}else a[c+(+!!(b&512)-1)]=d,b&256&&(a=a[a.length-1],c in a&&delete a[c])}
+  function Qa(a,b){var c=Ra;var d=void 0===d?!1:d;var e=a.h;var f=L(e),g=Oa(e,f,b,d);if(null!=g&&"object"===typeof g&&g.s===N)c=g;else if(Array.isArray(g)){var h=K(g),l=h;0===l&&(l|=f&32);l|=f&2;l!==h&&M(g,l);c=new c(g)}else c=void 0;c!==g&&null!=c&&Pa(e,f,b,c,d);e=c;if(null==e)return e;a=a.h;f=L(a);f&2||(g=e,c=g.h,h=L(c),g=h&2?Fa(g.constructor,Ma(c,h,!1)):g,g!==e&&(e=g,Pa(a,f,b,e,d)));return e}function Sa(a,b){a=Na(a,b);return null==a||"string"===typeof a?a:void 0}
+  function Ta(a,b){var c=void 0===c?0:c;a=Na(a,b);if(null!=a)if(b=typeof a,"number"===b?Number.isFinite(a):"string"!==b?0:Ea.test(a))if("number"===typeof a){if(a=Math.trunc(a),!Number.isSafeInteger(a)){ta(a);b=H;var d=I;if(a=d&2147483648)b=~b+1>>>0,d=~d>>>0,0==b&&(d=d+1>>>0);b=4294967296*d+(b>>>0);a=a?-b:b}}else if(b=Math.trunc(Number(a)),Number.isSafeInteger(b))a=String(b);else{if(b=a.indexOf("."),-1!==b&&(a=a.substring(0,b)),!("-"===a[0]?20>a.length||20===a.length&&-922337<Number(a.substring(0,7)):
+  19>a.length||19===a.length&&922337>Number(a.substring(0,6)))){if(16>a.length)ta(Number(a));else if(G())a=BigInt(a),H=Number(a&BigInt(4294967295))>>>0,I=Number(a>>BigInt(32)&BigInt(4294967295));else{b=+("-"===a[0]);I=H=0;d=a.length;for(var e=b,f=(d-b)%6+b;f<=d;e=f,f+=6)e=Number(a.slice(e,f)),I*=1E6,H=1E6*H+e,4294967296<=H&&(I+=Math.trunc(H/4294967296),I>>>=0,H>>>=0);b&&(b=m(ua(H,I)),a=b.next().value,b=b.next().value,H=a,I=b)}a=H;b=I;b&2147483648?G()?a=""+(BigInt(b|0)<<BigInt(32)|BigInt(a>>>0)):(b=
+  m(ua(a,b)),a=b.next().value,b=b.next().value,a="-"+va(a,b)):a=va(a,b)}}else a=void 0;return null!=a?a:c}function S(a,b){a=Sa(a,b);return null!=a?a:""};function T(a,b,c){this.h=R(a,b,c)}T.prototype.toJSON=function(){return Ua(this,Ja(this.h,Ka,void 0,void 0,!1),!0)};T.prototype.s=N;T.prototype.toString=function(){return Ua(this,this.h,!1).toString()};
+  function Ua(a,b,c){var d=a.constructor.v,e=L(c?a.h:b);a=b.length;if(!a)return b;var f;if(Da(c=b[a-1])){a:{var g=c;var h={},l=!1,p;for(p in g)if(Object.prototype.hasOwnProperty.call(g,p)){var u=g[p];if(Array.isArray(u)){var jb=u;if(P(u,d,+p)||Ca(u)&&0===u.size)u=null;u!=jb&&(l=!0)}null!=u?h[p]=u:l=!0}if(l){for(var O in h){g=h;break a}g=null}}g!=c&&(f=!0);a--}for(p=+!!(e&512)-1;0<a;a--){O=a-1;c=b[O];O-=p;if(!(null==c||P(c,d,O)||Ca(c)&&0===c.size))break;var kb=!0}if(!f&&!kb)return b;b=Array.prototype.slice.call(b,
+  0,a);g&&b.push(g);return b};function Va(a){return function(b){if(null==b||""==b)b=new a;else{b=JSON.parse(b);if(!Array.isArray(b))throw Error(void 0);xa(b,32);b=Fa(a,b)}return b}};function Wa(a){this.h=R(a)}r(Wa,T);var Xa=Va(Wa);var U;function V(a){this.g=a}V.prototype.toString=function(){return this.g+""};var Ya={};function Za(a){if(void 0===U){var b=null;var c=t.trustedTypes;if(c&&c.createPolicy){try{b=c.createPolicy("goog#html",{createHTML:v,createScript:v,createScriptURL:v})}catch(d){t.console&&t.console.error(d.message)}U=b}else U=b}a=(b=U)?b.createScriptURL(a):a;return new V(a,Ya)};function $a(){return Math.floor(2147483648*Math.random()).toString(36)+Math.abs(Math.floor(2147483648*Math.random())^Date.now()).toString(36)};function ab(a,b){b=String(b);"application/xhtml+xml"===a.contentType&&(b=b.toLowerCase());return a.createElement(b)}function bb(a){this.g=a||t.document||document};/*
+  
+   SPDX-License-Identifier: Apache-2.0
+  */
+  function cb(a,b){a.src=b instanceof V&&b.constructor===V?b.g:"type_error:TrustedResourceUrl";var c,d;(c=(b=null==(d=(c=(a.ownerDocument&&a.ownerDocument.defaultView||window).document).querySelector)?void 0:d.call(c,"script[nonce]"))?b.nonce||b.getAttribute("nonce")||"":"")&&a.setAttribute("nonce",c)};function db(a){a=void 0===a?document:a;return a.createElement("script")};function eb(a,b,c,d,e,f){try{var g=a.g,h=db(g);h.async=!0;cb(h,b);g.head.appendChild(h);h.addEventListener("load",function(){e();d&&g.head.removeChild(h)});h.addEventListener("error",function(){0<c?eb(a,b,c-1,d,e,f):(d&&g.head.removeChild(h),f())})}catch(l){f()}};var fb=t.atob("aHR0cHM6Ly93d3cuZ3N0YXRpYy5jb20vaW1hZ2VzL2ljb25zL21hdGVyaWFsL3N5c3RlbS8xeC93YXJuaW5nX2FtYmVyXzI0ZHAucG5n"),gb=t.atob("WW91IGFyZSBzZWVpbmcgdGhpcyBtZXNzYWdlIGJlY2F1c2UgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlIGlzIGludGVyZmVyaW5nIHdpdGggdGhpcyBwYWdlLg=="),hb=t.atob("RGlzYWJsZSBhbnkgYWQgb3Igc2NyaXB0IGJsb2NraW5nIHNvZnR3YXJlLCB0aGVuIHJlbG9hZCB0aGlzIHBhZ2Uu");function ib(a,b,c){this.i=a;this.u=b;this.o=c;this.g=null;this.j=[];this.m=!1;this.l=new bb(this.i)}
+  function lb(a){if(a.i.body&&!a.m){var b=function(){mb(a);t.setTimeout(function(){nb(a,3)},50)};eb(a.l,a.u,2,!0,function(){t[a.o]||b()},b);a.m=!0}}
+  function mb(a){for(var b=W(1,5),c=0;c<b;c++){var d=X(a);a.i.body.appendChild(d);a.j.push(d)}b=X(a);b.style.bottom="0";b.style.left="0";b.style.position="fixed";b.style.width=W(100,110).toString()+"%";b.style.zIndex=W(2147483544,2147483644).toString();b.style.backgroundColor=ob(249,259,242,252,219,229);b.style.boxShadow="0 0 12px #888";b.style.color=ob(0,10,0,10,0,10);b.style.display="flex";b.style.justifyContent="center";b.style.fontFamily="Roboto, Arial";c=X(a);c.style.width=W(80,85).toString()+
+  "%";c.style.maxWidth=W(750,775).toString()+"px";c.style.margin="24px";c.style.display="flex";c.style.alignItems="flex-start";c.style.justifyContent="center";d=ab(a.l.g,"IMG");d.className=$a();d.src=fb;d.alt="Warning icon";d.style.height="24px";d.style.width="24px";d.style.paddingRight="16px";var e=X(a),f=X(a);f.style.fontWeight="bold";f.textContent=gb;var g=X(a);g.textContent=hb;Y(a,e,f);Y(a,e,g);Y(a,c,d);Y(a,c,e);Y(a,b,c);a.g=b;a.i.body.appendChild(a.g);b=W(1,5);for(c=0;c<b;c++)d=X(a),a.i.body.appendChild(d),
+  a.j.push(d)}function Y(a,b,c){for(var d=W(1,5),e=0;e<d;e++){var f=X(a);b.appendChild(f)}b.appendChild(c);c=W(1,5);for(d=0;d<c;d++)e=X(a),b.appendChild(e)}function W(a,b){return Math.floor(a+Math.random()*(b-a))}function ob(a,b,c,d,e,f){return"rgb("+W(Math.max(a,0),Math.min(b,255)).toString()+","+W(Math.max(c,0),Math.min(d,255)).toString()+","+W(Math.max(e,0),Math.min(f,255)).toString()+")"}function X(a){a=ab(a.l.g,"DIV");a.className=$a();return a}
+  function nb(a,b){0>=b||null!=a.g&&0!==a.g.offsetHeight&&0!==a.g.offsetWidth||(pb(a),mb(a),t.setTimeout(function(){nb(a,b-1)},50))}function pb(a){for(var b=m(a.j),c=b.next();!c.done;c=b.next())(c=c.value)&&c.parentNode&&c.parentNode.removeChild(c);a.j=[];(b=a.g)&&b.parentNode&&b.parentNode.removeChild(b);a.g=null};function qb(a,b,c,d,e){function f(l){document.body?g(document.body):0<l?t.setTimeout(function(){f(l-1)},e):b()}function g(l){l.appendChild(h);t.setTimeout(function(){h?(0!==h.offsetHeight&&0!==h.offsetWidth?b():a(),h.parentNode&&h.parentNode.removeChild(h)):a()},d)}var h=rb(c);f(3)}function rb(a){var b=document.createElement("div");b.className=a;b.style.width="1px";b.style.height="1px";b.style.position="absolute";b.style.left="-10000px";b.style.top="-10000px";b.style.zIndex="-10000";return b};function Ra(a){this.h=R(a)}r(Ra,T);function sb(a){this.h=R(a)}r(sb,T);var tb=Va(sb);function ub(a){var b=la.apply(1,arguments);if(0===b.length)return Za(a[0]);for(var c=a[0],d=0;d<b.length;d++)c+=encodeURIComponent(b[d])+a[d+1];return Za(c)};function vb(a){if(!a)return null;a=Sa(a,4);var b;null===a||void 0===a?b=null:b=Za(a);return b};var wb=ea([""]),xb=ea([""]);function yb(a,b){this.m=a;this.o=new bb(a.document);this.g=b;this.j=S(this.g,1);this.u=vb(Qa(this.g,2))||ub(wb);this.i=!1;b=vb(Qa(this.g,13))||ub(xb);this.l=new ib(a.document,b,S(this.g,12))}yb.prototype.start=function(){zb(this)};
+  function zb(a){Ab(a);eb(a.o,a.u,3,!1,function(){a:{var b=a.j;var c=t.btoa(b);if(c=t[c]){try{var d=Xa(t.atob(c))}catch(e){b=!1;break a}b=b===Sa(d,1)}else b=!1}b?Z(a,S(a.g,14)):(Z(a,S(a.g,8)),lb(a.l))},function(){qb(function(){Z(a,S(a.g,7));lb(a.l)},function(){return Z(a,S(a.g,6))},S(a.g,9),Ta(a.g,10),Ta(a.g,11))})}function Z(a,b){a.i||(a.i=!0,a=new a.m.XMLHttpRequest,a.open("GET",b,!0),a.send())}function Ab(a){var b=t.btoa(a.j);a.m[b]&&Z(a,S(a.g,5))};(function(a,b){t[a]=function(){var c=la.apply(0,arguments);t[a]=function(){};b.call.apply(b,[null].concat(c instanceof Array?c:fa(m(c))))}})("__h82AlnkH6D91__",function(a){"function"===typeof window.atob&&(new yb(window,tb(window.atob(a)))).start()});}).call(this);
+  
+  window.__h82AlnkH6D91__("WyJwdWItMzQxMTc4NDE1NzU0MzQyMCIsW251bGwsbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9iL3B1Yi0zNDExNzg0MTU3NTQzNDIwIl0sbnVsbCxudWxsLCJodHRwczovL2Z1bmRpbmdjaG9pY2VzbWVzc2FnZXMuZ29vZ2xlLmNvbS9lbC9BR1NLV3hXcFo2SEZhZ2tXV3BBeDkyVm5FUm1HelA4Sng3NDBjbG82QTd1U1BzMjMtb1J6aTl0R2tJZC0ySTZkbU9kVExldXJ5VU5pdDJmWVl6cVN3ZXFSaHFtT1d3XHUwMDNkXHUwMDNkP3RlXHUwMDNkVE9LRU5fRVhQT1NFRCIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFVub2h4aTRwNDRvRHN5UjNjSzBTTlVWdlhldmoySHp3dHBPMk52dlF4SXpPc1RuT1E4ZXV1Qzc4UExTRzROMFplT28xRWF6MG5hYjVHNElnMGJ5M1RqTkFcdTAwM2RcdTAwM2Q/YWJcdTAwM2QxXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFU0c2VpaDRuem1aQ2VKc0s0OUpFdHNBT3ZIZkNGaE9yMXFDN3N5bzRSaHBmamQzay02OGlaakhUT0UybWlxTEx6SnpZYUFPZHhTYWVRMC1LMGRZc0VabWdcdTAwM2RcdTAwM2Q/YWJcdTAwM2QyXHUwMDI2c2JmXHUwMDNkMSIsImh0dHBzOi8vZnVuZGluZ2Nob2ljZXNtZXNzYWdlcy5nb29nbGUuY29tL2VsL0FHU0tXeFdROU1sNExITHNkMVg0RzJualpOUXBhVE1GVzVTU2RUb0hUVF9oU1F6OVI3cm1RSVZsR3kzOFgyMng0dDZSVHJLdTVRaUlrdkl0ZFd2TFJ1Mnl2SEVaTXdcdTAwM2RcdTAwM2Q/c2JmXHUwMDNkMiIsImRpdi1ncHQtYWQiLDIwLDEwMCwiY0hWaUxUTTBNVEUzT0RReE5UYzFORE0wTWpBXHUwMDNkIixbbnVsbCxudWxsLG51bGwsImh0dHBzOi8vd3d3LmdzdGF0aWMuY29tLzBlbW4vZi9wL3B1Yi0zNDExNzg0MTU3NTQzNDIwLmpzP3VzcXBcdTAwM2RDQkkiXSwiaHR0cHM6Ly9mdW5kaW5nY2hvaWNlc21lc3NhZ2VzLmdvb2dsZS5jb20vZWwvQUdTS1d4V3YwN0dzbGhnVi1oUV85a0wzV0FhN0hmUXo3dXhKTWFBLUtHQ3VMOUhrWmRVWEFneHNmcVdIYUJrZlhBZkF1TUdyM2hFTmVMeVhZZDItS25ublNQODdwZ1x1MDAzZFx1MDAzZCJd");</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Shawn Hsu
+          <span class="site-subtitle">Shawn Hsu's personal study blog | Software Engineer | Backend | Cloud Native | Blockchain</span>
+        </a>
+        <ul class="visible-links">
+<li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li>
+<li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li>
+</ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
+
+          <meta itemprop="position" content="1">
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/#random" itemprop="item"><span itemprop="name">Random</span></a>
+          <meta itemprop="position" content="2">
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">使用 Postfix 來測試 Email 寄送功能</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarNav = document.querySelector("nav.toc");
+    if (!sidebarNav) {
+      return;
+    }
+
+    // Find the actual scrollable container
+    let scrollContainer = null;
+
+    // Check if the nav itself is scrollable
+    if (sidebarNav.scrollHeight > sidebarNav.offsetHeight) {
+      scrollContainer = sidebarNav;
+    } else {
+      // Look for scrollable children
+      const tocMenu = sidebarNav.querySelector(".toc__menu");
+      if (tocMenu && tocMenu.scrollHeight > tocMenu.offsetHeight) {
+        scrollContainer = tocMenu;
+      } else {
+        // Look for any scrollable child
+        const children = sidebarNav.children;
+        for (let child of children) {
+          if (child.scrollHeight > child.offsetHeight) {
+            scrollContainer = child;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    let isUserScrolling = false;
+    let autoScrollEnabled = true;
+    let scrollTimeout;
+    let pageScrollTimeout;
+    let periodicCheckInterval;
+
+    // Function to check if element is visible in container
+    const isElementVisible = (element) => {
+      const containerTop = scrollContainer.scrollTop;
+      const containerHeight = scrollContainer.offsetHeight;
+      const elementTop = element.offsetTop;
+      const elementHeight = element.offsetHeight;
+
+      const isVisible =
+        elementTop >= containerTop &&
+        elementTop + elementHeight <= containerTop + containerHeight;
+
+      return isVisible;
+    };
+
+    // Function to find the current active heading based on scroll position
+    const findCurrentActiveHeading = () => {
+      const headings = document.querySelectorAll(
+        "h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]"
+      );
+      const scrollY = window.scrollY;
+      const offset = 100; // Offset to trigger activation
+
+      let currentHeading = null;
+
+      // Find the heading that's currently at the top of the viewport
+      for (let i = 0; i < headings.length; i++) {
+        const heading = headings[i];
+        const headingTop = heading.offsetTop;
+
+        if (headingTop <= scrollY + offset) {
+          currentHeading = heading;
+        } else {
+          break;
+        }
+      }
+
+      return currentHeading;
+    };
+
+    // Function to find the TOC element that corresponds to a heading
+    const findTocElementForHeading = (heading) => {
+      if (!heading || !heading.id) return null;
+
+      const tocLinks = document.querySelectorAll("nav.toc a");
+      for (const link of tocLinks) {
+        if (link.getAttribute("href") === `#${heading.id}`) {
+          return link.closest("li");
+        }
+      }
+      return null;
+    };
+
+    // Function to scroll TOC to show active element
+    const scrollTocToActive = () => {
+      // Don't auto-scroll if user is manually scrolling or auto-scroll is disabled
+      if (isUserScrolling || !autoScrollEnabled) {
+        return;
+      }
+
+      // Always use scroll position to find the current heading
+      const currentHeading = findCurrentActiveHeading();
+      if (!currentHeading) {
+        return;
+      }
+
+      const activeElement = findTocElementForHeading(currentHeading);
+      if (!activeElement) {
+        return;
+      }
+
+      // Check if active element is visible
+      if (!isElementVisible(activeElement)) {
+        // Get the current scroll position and container dimensions
+        const currentScrollTop = scrollContainer.scrollTop;
+        const containerHeight = scrollContainer.offsetHeight;
+        const elementTop = activeElement.offsetTop;
+        const elementHeight = activeElement.offsetHeight;
+
+        // Calculate the position to center the active element in the visible area
+        const targetScrollTop =
+          elementTop - containerHeight / 2 + elementHeight / 2;
+
+        // Ensure we don't scroll beyond the bounds
+        const maxScrollTop = scrollContainer.scrollHeight - containerHeight;
+        const finalScrollTop = Math.max(
+          0,
+          Math.min(targetScrollTop, maxScrollTop)
+        );
+
+        // Scroll to the target position
+        scrollContainer.scrollTo({
+          top: finalScrollTop,
+          behavior: "smooth",
+        });
+      }
+    };
+
+    // Function to enable auto-scroll
+    const enableAutoScroll = () => {
+      if (!autoScrollEnabled) {
+        autoScrollEnabled = true;
+        // Resume periodic checks
+        startPeriodicCheck();
+      }
+    };
+
+    // Function to disable auto-scroll
+    const disableAutoScroll = () => {
+      if (autoScrollEnabled) {
+        autoScrollEnabled = false;
+        // Stop periodic checks
+        if (periodicCheckInterval) {
+          clearInterval(periodicCheckInterval);
+          periodicCheckInterval = null;
+        }
+      }
+    };
+
+    // Function to start periodic check
+    const startPeriodicCheck = () => {
+      if (!periodicCheckInterval) {
+        periodicCheckInterval = setInterval(() => {
+          scrollTocToActive();
+        }, 5000); // Increased interval to 5 seconds
+      }
+    };
+
+    // Handle TOC scrolling
+    scrollContainer.addEventListener("scroll", () => {
+      isUserScrolling = true;
+      disableAutoScroll(); // Disable auto-scroll when user scrolls TOC
+
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+
+      scrollTimeout = setTimeout(() => {
+        isUserScrolling = false;
+        // Don't automatically re-enable auto-scroll here
+        // It will be re-enabled when user interacts with main page
+      }, 500);
+    });
+
+    // Handle page scrolling
+    window.addEventListener("scroll", () => {
+      enableAutoScroll(); // Re-enable auto-scroll when user scrolls main page
+
+      if (pageScrollTimeout) {
+        clearTimeout(pageScrollTimeout);
+      }
+
+      pageScrollTimeout = setTimeout(() => {
+        scrollTocToActive();
+      }, 100);
+    });
+
+    // Handle clicks on main page content
+    document.addEventListener("click", (event) => {
+      // Only enable auto-scroll if click is not on TOC
+      if (!sidebarNav.contains(event.target)) {
+        enableAutoScroll();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener("keydown", () => {
+      enableAutoScroll();
+    });
+
+    // Initial scroll to active element
+    setTimeout(() => {
+      scrollTocToActive();
+    }, 1000);
+
+    // Start periodic check
+    startPeriodicCheck();
+  });
+</script>
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://ambersuncreates.com/" itemprop="url">Shawn Hsu</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>For it isn’t by size that you win or fail</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">Taipei, Taiwan</span>
+        </li>
+      
+
+      
+        
+          
+        
+          
+        
+          
+        
+          
+            <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+        
+          
+            <li><a href="https://www.linkedin.com/in/ambersun1234" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span></a></li>
+          
+        
+      
+
+      
+
+      
+        <li>
+          <a href="mailto:ambersun1019.shawn@gmail.com" rel="me" class="u-email">
+            <meta itemprop="email" content="ambersun1019.shawn@gmail.com">
+            <i class="fas fa-fw fa-envelope-square" aria-hidden="true"></i><span class="label">Email</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer me">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page h-entry" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="使用 Postfix 來測試 Email 寄送功能">
+    <meta itemprop="description" content="How Email WorksEmail 在我們生活中大概還扮演著相對重要的角色啦至少我是很常用的">
+    <meta itemprop="datePublished" content="2026-09-28T00:00:00+08:00">
+    <meta itemprop="dateModified" content="2026-09-28T21:08:22+08:00">
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="https://ambersuncreates.com/random/postfix/" class="u-url" itemprop="url">使用 Postfix 來測試 Email 寄送功能
+</a>
+          </h1>
+          
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-09-28">2026-09-28</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-28">
+            2026-09-28
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/postfix/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/postfix/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/postfix/").innerHTML = text;
+      }
+    })
+</script>
+
+        </header>
+      
+
+      <section class="page__content e-content" itemprop="text" style="margin-top: 2em">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title">
+<i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+<li><a href="#how-email-works">How Email Works</a></li>
+<li>
+<a href="#mta-mda-and-mra">MTA, MDA and MRA</a><ul>
+<li>
+<a href="#mta">MTA</a><ul>
+<li><a href="#smtp">SMTP</a></li>
+<li><a href="#smtp-envelop">SMTP Envelop</a></li>
+<li><a href="#bounced-email">Bounced Email</a></li>
+</ul>
+</li>
+<li><a href="#mda">MDA</a></li>
+<li>
+<a href="#mra">MRA</a><ul><li><a href="#imap-and-pop3">IMAP and POP3</a></li></ul>
+</li>
+</ul>
+</li>
+<li>
+<a href="#validate-an-email">Validate an Email</a><ul>
+<li>
+<a href="#sender-policy-frameworkspf">Sender Policy Framework(SPF)</a><ul><li><a href="#dns-hijacking">DNS Hijacking</a></li></ul>
+</li>
+<li><a href="#domainkeys-identified-maildkim">DomainKeys Identified Mail(DKIM)</a></li>
+<li><a href="#dmarc">DMARC</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+</li>
+<li>
+<a href="#what-is-a-relay">What is a Relay</a><ul><li><a href="#open-relay">Open Relay</a></li></ul>
+</li>
+<li>
+<a href="#postfix">Postfix</a><ul>
+<li><a href="#prerequisite">Prerequisite</a></li>
+<li>
+<a href="#experiment">Experiment</a><ul>
+<li><a href="#send-an-email">Send an Email</a></li>
+<li><a href="#bounced-email-1">Bounced Email</a></li>
+<li><a href="#bcc-and-cc">BCC and CC</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#references">References</a></li>
+</ul>
+
+            </nav>
+
+            <br>
+
+            <div class="sidebar__top_down" style="display: flex;">
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#site-nav"> <i class="fas fa-angle-double-up fa-2x"></i></a>
+                </nav>
+              </div>
+
+              <div>
+                <nav style="padding: 0 0.5em;">
+                  <a href="#footer"> <i class="fas fa-angle-double-down fa-2x"></i></a>
+                </nav>
+              </div>
+            </div>
+
+            
+          </aside>
+        
+        <h1 id="how-email-works">How Email Works</h1>
+<p><code class="language-plaintext highlighter-rouge">Email</code> 在我們生活中大概還扮演著相對重要的角色啦<br>
+至少我是很常用的</p>
+
+<p>平常跟公家單位對接，亦或著是面試公司回覆郵件等等我都是信手捻來<br>
+CC, BCC 等等觀念也很熟悉<br>
+不過這是站在使用者的角度</p>
+
+<p>對於實際上要怎麼收發信<br>
+雖然接觸過，但終究沒有仔細深究過</p>
+
+<h1 id="mta-mda-and-mra">MTA, MDA and MRA</h1>
+<p>在電子郵件系統中會分成所謂的 <a href="#mta">MTA</a>, <a href="#mda">MDA</a> 以及 <a href="#mra">MRA</a></p>
+
+<h2 id="mta">MTA</h2>
+<p><code class="language-plaintext highlighter-rouge">Mail Transfer Agent(MTA)</code> 是 <em>郵件傳輸代理</em><br>
+他是負責寄送以及轉送郵件</p>
+
+<h3 id="smtp">SMTP</h3>
+<p>傳輸這件事，當然要定義一個傳輸協定，所以 <code class="language-plaintext highlighter-rouge">SMTP</code> 這種技術標準就是為此而生</p>
+
+<blockquote>
+  <p>要注意到 SMTP 是郵件傳輸通訊協定<br>
+白話文說就是，寄信用的協定是一套，收信用的協定是另一套</p>
+</blockquote>
+
+<p><code class="language-plaintext highlighter-rouge">SMTP</code> 是基於 TCP 的協定，定義於 <a href="https://www.rfc-editor.org/info/rfc5321/">RFC 5321</a> 與 <a href="https://www.rfc-editor.org/info/rfc3207/">RFC 3207</a></p>
+
+<p>傳輸的過程滿簡單的，就是</p>
+<ol>
+  <li>建立 TCP 連線(port <code class="language-plaintext highlighter-rouge">25</code> or <code class="language-plaintext highlighter-rouge">587</code>)</li>
+  <li>傳送 <em>HELO</em> 或是 <em>EHLO</em> 命令開始電子郵件傳輸(可參考 <a href="#smtp-envelop">SMTP Envelop</a>)</li>
+  <li>然後等傳輸完成就關閉連線</li>
+</ol>
+
+<h3 id="smtp-envelop">SMTP Envelop</h3>
+<p>要傳去哪路要怎麼走，實際上是放在 <code class="language-plaintext highlighter-rouge">SMTP Envelop</code> 裡面<br>
+他跟信件內容本身是獨立的</p>
+
+<p><code class="language-plaintext highlighter-rouge">Envelop</code> 裡面，實際上是一系列的 “指令”<br>
+過程會是這樣子的</p>
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">HELO/EHLO</code>: 你好，我要開始建立 SMTP 連線了</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">MAIL FROM</code>: 這封郵件是從 xxx 來的</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">RCPT TO</code>: 這封郵件是要給 yyy/zzz 的</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">DATA</code>: 宣告郵件內容是以下這些</li>
+</ol>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre></td>
+<td class="rouge-code"><pre>DATA
+Date: Mon, 4 April 2022
+From: Alice alice@example.com
+Subject: Eggs benedict casserole
+To: Bob bob@example.com
+
+Hi Bob,
+I will bring the eggs benedict casserole recipe on Friday.
+-Alice
+。
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<ol>
+  <li>
+<code class="language-plaintext highlighter-rouge">REST</code> or <code class="language-plaintext highlighter-rouge">QUIT</code>: 關閉連線(或是清空所有東西然後再關閉連線)</li>
+</ol>
+
+<hr>
+
+<p>SMTP 的運作方式是採一問一答<br>
+我逐條的宣告我要傳到哪，我是誰，我要傳的內容是啥<br>
+但不知道你看到這有沒有一些疑問</p>
+
+<p>為什麼 <code class="language-plaintext highlighter-rouge">FROM/TO</code> 出現在 SMTP Envelop 與 Data 這兩個地方?</p>
+
+<h3 id="bounced-email">Bounced Email</h3>
+<p>這跟 “退信” 有很大的關係</p>
+
+<p>被退信有多種可能，比方說</p>
+<ol>
+  <li>你寄到錯的地址，查無此人</li>
+  <li>對方的信箱已經滿了，被退信</li>
+  <li>被當垃圾信拒收</li>
+</ol>
+
+<p>被退信之後會發生什麼事情<br>
+你的信件會原路返回到你的收件匣</p>
+
+<p>那這跟 <code class="language-plaintext highlighter-rouge">FROM/TO</code> 在兩個地方出現有什麼關係<br>
+信件在發送過程中，看的是 <a href="#smtp-envelop">SMTP Envelop</a> 裡面的寄件資訊<br>
+但是你信裡面要寫 <em>我是誰</em> 那是你自己決定的<br>
+也就是說兩個 FROM 可以長不一樣</p>
+
+<p>如果被退信，我看的當然是 <a href="#smtp-envelop">SMTP Envelop</a> 裡面的寄件資訊<br>
+他從哪來就該從哪回去<br>
+至於說你裡面宣稱你是誰，你開心就好</p>
+
+<blockquote>
+  <p>聰明的你是不是以為你可以冒充任何人呢？<br>
+當然不行，我們會在 <a href="#validate-an-email">Validate an Email</a> 有更多討論</p>
+</blockquote>
+
+<p><img src="/assets/img/posts/smtp-bounced-email.png" alt=""></p>
+
+<p>跑起來大概長這樣<br>
+我原本以為跑失敗，結果他花了滿久的時間才退信回來<br>
+等會的實驗我們會去看，不同 FROM 他會不會退回正確位置，可參考 <a href="#experiment">Experiment</a></p>
+
+<h2 id="mda">MDA</h2>
+<p><code class="language-plaintext highlighter-rouge">Mail Delivery Agent(MDA)</code> 是 <em>郵件投遞代理</em><br>
+當信件抵達電子郵件系統當中，他需要找到正確的位置放進去<br>
+就是要到對的郵箱當中，一個電子郵件系統上面可以有很多個收件匣<br>
+所以 <code class="language-plaintext highlighter-rouge">MDA</code> 的功能是將郵件放到正確的收件匣</p>
+
+<h2 id="mra">MRA</h2>
+<p><code class="language-plaintext highlighter-rouge">Mail Retrieval Agent(MRA)</code> 是 <em>郵件檢索代理</em><br>
+想不到吧，你想看 Email 還要有一個代理負責幫你把信件拿出來給你看</p>
+
+<p>為什麼？ 我要看個 Email 為什麼要有一個代理幫我拿信<br>
+因為郵件伺服器 <strong><em>不直接與使用者互動</em></strong></p>
+
+<h3 id="imap-and-pop3">IMAP and POP3</h3>
+<p>如同 <a href="#mta">MTA</a> 利用 <a href="#smtp">SMTP</a> 來寄信<br>
+<a href="#mra">MRA</a> 也需要利用 <code class="language-plaintext highlighter-rouge">IMAP</code> 或 <code class="language-plaintext highlighter-rouge">POP3</code> 之類的協議來讀取信件</p>
+
+<p><code class="language-plaintext highlighter-rouge">IMAP</code> 協議 <strong><em>並不會下載 Email 到客戶端</em></strong><br>
+他允許直接從客戶端 <strong><em>讀取</em></strong> 他們的 Email</p>
+
+<p>相反 <code class="language-plaintext highlighter-rouge">POP3</code> 協議就是下載到本地了<br>
+但是這個下載之後，伺服器上面的資料就會消失</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center"><a href="#imap-and-pop3">IMAP</a></th>
+      <th style="text-align: center"><a href="#imap-and-pop3">POP3</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">存取</td>
+      <td style="text-align: center">不同裝置</td>
+      <td style="text-align: center">只能同裝置</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">收信模式</td>
+      <td style="text-align: center">線上</td>
+      <td style="text-align: center">本地</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">儲存地</td>
+      <td style="text-align: center">伺服器</td>
+      <td style="text-align: center">伺服器 or 本地(下載)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">網路</td>
+      <td style="text-align: center"><img class="emoji" title=":heavy_check_mark:" alt=":heavy_check_mark:" src="https://github.githubassets.com/images/icons/emoji/unicode/2714.png" height="20" width="20"></td>
+      <td style="text-align: center"><img class="emoji" title=":x:" alt=":x:" src="https://github.githubassets.com/images/icons/emoji/unicode/274c.png" height="20" width="20"></td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="validate-an-email">Validate an Email</h1>
+<p>如果你能夠存取 <code class="language-plaintext highlighter-rouge">SMTP Server</code>，就像我們在 <a href="#bounced-email">Bounced Email</a> 裡面提到的<br>
+你可以冒充任何人，顯然這是不合理的<br>
+所以開發者想出了幾種對策，<a href="#sender-policy-frameworkspf">Sender Policy Framework(SPF)</a>, <a href="#domainkeys-identified-maildkim">DomainKeys Identified Mail(DKIM)</a> 以及 <a href="#dmarc">DMARC</a></p>
+
+<h2 id="sender-policy-frameworkspf">Sender Policy Framework(SPF)</h2>
+<p>其中一種冒充方式是，我在惡意 <code class="language-plaintext highlighter-rouge">SMTP Server</code> 上假冒我是 <a href="https://mail.google.com">gmail.com</a> 發 Email<br>
+最簡單的驗證是，<code class="language-plaintext highlighter-rouge">SMTP Server</code> 是不是隸屬於 <a href="https://mail.google.com">gmail.com</a></p>
+
+<p>domain name 與 ip 的對應關係可以依靠 <em>DNS Server</em> 上面的 DNS Record 反查<br>
+所以 SPF 的核心就是，看送信的伺服器有沒有在白名單裡面</p>
+
+<blockquote>
+  <p>有關 DNS 可以參考 <a href="../../network/network-basics">重新認識網路 - 從基礎開始 | Shawn Hsu</a></p>
+</blockquote>
+
+<p><img src="https://support.taguchi.com.au/images/spf-diagram.jpg" alt=""></p>
+<blockquote>
+  <p>ref: <a href="https://support.taguchi.com.au/knowledge-base/tracking-and-reporting/deliverability/what-are-spf-dkim-dmarc-bimi.html">What are SPF, DKIM, DMARC &amp; BIMI?</a></p>
+</blockquote>
+
+<p>SPF 的核心防護是很薄弱的，比如說我用個簡單的 <a href="#dns-hijacking">DNS Hijacking</a> 就可以輕鬆處理了</p>
+
+<h3 id="dns-hijacking">DNS Hijacking</h3>
+<p>DNS 本質上就是個 Server<br>
+那攻擊者劫持 DNS 之後，把你導向到錯誤的地方就可以了</p>
+
+<blockquote>
+  <p>有關 DNS 可以參考 <a href="../../network/network-basics">重新認識網路 - 從基礎開始 | Shawn Hsu</a></p>
+</blockquote>
+
+<p>那具體要怎麼劫持勒？ 你可以</p>
+<ul>
+  <li>直接透過釣魚信之類的方式把 Domain 偷過來，然後把它指到惡意 ip 地址</li>
+  <li>打 DNS，可能透過尚未修復的漏洞之類的</li>
+</ul>
+
+<h2 id="domainkeys-identified-maildkim">DomainKeys Identified Mail(DKIM)</h2>
+<p>所以你知道了，<a href="#sender-policy-frameworkspf">Sender Policy Framework(SPF)</a> 其實沒到很安全<br>
+除了上述提到，<a href="#dns-hijacking">DNS Hijacking</a> 就能夠攻破<br>
+另外他還有一個問題是，如果 SMTP 是扮演著 <a href="#what-is-a-relay">Relay</a> 的角色，那不就對不上？</p>
+
+<p>另外一種我們能想到的就是用密碼學的方式去驗證你是你<br>
+我第一個想到的是公鑰私鑰的機制</p>
+
+<p>所以就是</p>
+<ol>
+  <li>Domain 有私鑰</li>
+  <li>公鑰就放在網路上</li>
+  <li>發 Email 的時候用私鑰簽</li>
+  <li>收到的人拿公鑰去驗證是不是該 Domain 簽發的</li>
+</ol>
+
+<p>那我就好奇了<br>
+還不是 DNS，如果又被劫持放假公鑰，那還不是會錯<br>
+所以 <a href="#domainkeys-identified-maildkim">DomainKeys Identified Mail(DKIM)</a> 解決的是資料沒有被篡改的問題</p>
+
+<h2 id="dmarc">DMARC</h2>
+<p><a href="#dmarc">DMARC</a> 在做的事就很簡單了，他決定如果 <a href="#sender-policy-frameworkspf">Sender Policy Framework(SPF)</a> 或 <a href="#domainkeys-identified-maildkim">DomainKeys Identified Mail(DKIM)</a> 失敗了該怎麼辦</p>
+
+<p>你要讓他通行？ 讓他丟到垃圾郵件？<br>
+這些機制就是由 <a href="#dmarc">DMARC</a> 所決定的</p>
+
+<h2 id="summary">Summary</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center"><a href="#sender-policy-frameworkspf">Sender Policy Framework(SPF)</a></th>
+      <th style="text-align: center"><a href="#domainkeys-identified-maildkim">DomainKeys Identified Mail(DKIM)</a></th>
+      <th style="text-align: center"><a href="#dmarc">DMARC</a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">目的</td>
+      <td style="text-align: center">驗證 Email 是否來自該網域</td>
+      <td style="text-align: center">驗證 Email 是否來自該網域</td>
+      <td style="text-align: center">決定發生錯誤的時候怎麼做</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">方法</td>
+      <td style="text-align: center">純 DNS 驗證</td>
+      <td style="text-align: center">密碼學驗證</td>
+      <td style="text-align: center">-</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">儲存位置</td>
+      <td style="text-align: center">DNS</td>
+      <td style="text-align: center">DNS</td>
+      <td style="text-align: center">DNS</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>有關 DNS 可以參考 <a href="../../network/network-basics">重新認識網路 - 從基礎開始 | Shawn Hsu</a></p>
+</blockquote>
+
+<h1 id="what-is-a-relay">What is a Relay</h1>
+<p>所謂的 <code class="language-plaintext highlighter-rouge">Relay</code> 就是中繼站的概念，郵件從出生到收到信中間可能會跑過非常多不同的地方<br>
+當然實務上你可以在你的 Golang app 直接寄 email 到比如說 <a href="https://mail.google.com">gmail.com</a> 這種<br>
+不過通常人們不會這樣做</p>
+
+<p>出於滿多種原因的，比如說</p>
+<ul>
+  <li>集中控管防護，一家公司每個部門都要獨立送信，你會沒辦法管，透過 relay 當作是企業對外發信出口</li>
+  <li>資安控管，透過 relay，你可以把不同職責分開。app 負責信件內容，relay 處理憑證那些</li>
+  <li>架構解耦，relay 有 Queue，你不需要管對方 SMTP 有沒開著，就丟到 relay 上面，他會自己重試</li>
+</ul>
+
+<p>一封 Email 可能會經過多層 relay 最後才會到你手上</p>
+
+<h2 id="open-relay">Open Relay</h2>
+<p>轉發這件事情你如果沒設定好，就會變成所謂的 <code class="language-plaintext highlighter-rouge">Open Relay</code><br>
+意思是，任何寄到你這裡的 Email 你都無條件幫他進行轉送</p>
+
+<p>這有很大的問題，你就會變成 <strong>垃圾郵件幫凶</strong><br>
+只要惡意人士發現，他就會利用你的伺服器發送各種釣魚信件、詐騙信件以及病毒信件<br>
+然後你的伺服器會被瞬間黑名單，封鎖你的 ip</p>
+
+<p>好加在，現在的 SMTP 預設都會是關閉的，別人無法利用此等漏洞了</p>
+
+<h1 id="postfix">Postfix</h1>
+<p><a href="https://www.postfix.org/">Postfix</a> 是一款 <a href="#mta">MTA</a> 軟體<br>
+注意到他不包含其他兩種，也就是說，他只能夠發信，轉信等等<br>
+你沒辦法在 <a href="#postfix">Postfix</a> 收信(i.e. <a href="#mda">MDA</a>)，也不能在 <a href="#postfix">Postfix</a> 讀信(i.e. <a href="#mra">MRA</a>)</p>
+
+<p>講了那麼多還是得跑起來看看才有感覺對吧</p>
+
+<h2 id="prerequisite">Prerequisite</h2>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>docker <span class="nt">--version</span>
+Docker version 29.4.0, build 9d7ad9f
+
+<span class="nv">$ </span><span class="nb">uname</span> <span class="nt">-a</span>
+Darwin workstation 25.6.0 Darwin Kernel Version 25.6.0: Fri Jul 31 19:16:36 PDT 2026<span class="p">;</span> root:xnu-12377.161.14~5/RELEASE_ARM64_T6030 arm64
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<h2 id="experiment">Experiment</h2>
+<p>把 container 跑起來</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td>
+<td class="rouge-code"><pre><span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-d</span> <span class="nt">--rm</span> <span class="se">\</span>
+  <span class="nt">-p</span> 2525:25 <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">POSTFIX_myhostname</span><span class="o">=</span>ambersuncreates.com <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">POSTFIX_mydomain</span><span class="o">=</span>ambersuncreates.com <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">POSTFIX_always_add_missing_headers</span><span class="o">=</span><span class="nb">yes</span> <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">POSTFIX_relayhost</span><span class="o">=</span>host.docker.internal:1025 <span class="se">\</span>
+  <span class="nt">-e</span> <span class="nv">ALLOWED_SENDER_DOMAINS</span><span class="o">=</span>ambersuncreates.com <span class="se">\</span>
+  boky/postfix:latest
+
+<span class="nv">$ </span>docker run <span class="nt">-it</span> <span class="nt">-d</span> <span class="nt">--rm</span> <span class="se">\</span>
+  <span class="nt">-p</span> 1025:1025 <span class="nt">-p</span> 8025:8025 <span class="se">\</span>
+  axllent/mailpit
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<h3 id="send-an-email">Send an Email</h3>
+<p>根據 <a href="#smtp-envelop">SMTP Envelop</a> 我們可以很輕易的手打 Email 如下</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr>
+<td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre></td>
+<td class="rouge-code"><pre>EHLO localhost
+MAIL FROM:&lt;noreply@ambersuncreates.com&gt;
+RCPT TO:&lt;ambersun1019.shawn+123@gmail.com&gt;
+DATA
+Subject: Test email
+From: hello@ambersuncreates.com
+To: ambersun1019.shawn+789@gmail.com
+
+This is a test email
+.
+QUIT
+</pre></td>
+</tr></tbody></table></code></pre></div></div>
+
+<p>結果就會長這樣</p>
+
+<p><img src="/assets/img/posts/smtp-telnet.png" alt=""></p>
+
+<p>但是他卻顯示</p>
+
+<p><img src="/assets/img/posts/smtp-google.png" alt=""></p>
+
+<p>其實也滿合理的，我自己的網域完全沒設定過 <a href="#sender-policy-frameworkspf">Sender Policy Framework(SPF)</a> 與 <a href="#domainkeys-identified-maildkim">DomainKeys Identified Mail(DKIM)</a><br>
+那也難怪，所以 Google 就把我的 Email 給擋下了</p>
+
+<hr>
+
+<p>那要怎麼測試他能夠真正寄出？<br>
+本地額外再起一個 <a href="https://mailpit.axllent.org/">mailpit</a><br>
+再送一次</p>
+
+<p><img src="/assets/img/posts/smtp-mailpit.png" alt=""></p>
+
+<p>就能夠正確的收到了</p>
+
+<h3 id="bounced-email-1">Bounced Email</h3>
+<p><img src="/assets/img/posts/smtp-mailpit.png" alt=""></p>
+
+<p>這邊你就可以看到，<code class="language-plaintext highlighter-rouge">From</code> 以及 <code class="language-plaintext highlighter-rouge">Return Path</code> 是長得不一樣<br>
+對應到我們為什麼在發 email 的時候是寫兩個 From</p>
+
+<p><a href="#smtp-envelop">SMTP Envelop</a> 這邊寫的 From，如果退信就是回到這個位置<br>
+也就是 <code class="language-plaintext highlighter-rouge">noreply@ambersuncreates.com</code></p>
+
+<h3 id="bcc-and-cc">BCC and CC</h3>
+<p><img src="/assets/img/posts/smtp-mailpit.png" alt=""></p>
+
+<p>我在這看到為什麼會有 BCC?<br>
+<code class="language-plaintext highlighter-rouge">+123</code> 那個我是寫在 <a href="#smtp-envelop">SMTP Envelop</a> 裡面的，因為他是不可見的所以是 BCC?<br>
+那我就好奇了，是不是</p>
+
+<ul>
+  <li>有多個 <code class="language-plaintext highlighter-rouge">RCPT TO</code> 就等於 BCC</li>
+  <li>有多個 <code class="language-plaintext highlighter-rouge">To</code> 就等於 CC</li>
+</ul>
+
+<p><img src="/assets/img/posts/smtp-telnet2.png" alt=""></p>
+
+<p><img src="/assets/img/posts/smtp-mailpit2.png" alt=""></p>
+
+<p>顯然不是，不過可以確定 BCC 就是用 <code class="language-plaintext highlighter-rouge">RCPT TO</code> 去做的<br>
+CC 這個其實滿簡單的，就是 <code class="language-plaintext highlighter-rouge">Cc</code> 這樣<br>
+所以做起來是</p>
+
+<p><img src="/assets/img/posts/smtp-telnet3.png" alt=""></p>
+
+<p><img src="/assets/img/posts/smtp-mailpit3.png" alt=""></p>
+
+<h1 id="references">References</h1>
+<ul>
+  <li><a href="https://www.cloudflare.com/zh-tw/learning/email-security/what-is-smtp/">什麼是簡易郵件傳輸通訊協定 (SMTP)？</a></li>
+  <li><a href="https://www.cloudflare.com/zh-tw/learning/email-security/what-is-imap/">什麼是 IMAP？</a></li>
+  <li><a href="https://www.cloudflare.com/zh-tw/learning/email-security/dmarc-dkim-spf/">什麼是 DMARC、DKIM 和 SPF？</a></li>
+  <li><a href="http://old.linux.vbird.org/linux_server/0380mail.php#postfix">第二十二章、郵件伺服器： Postfix</a></li>
+</ul>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#bounced-email" class="page__taxonomy-item p-category" rel="tag">bounced email</a><span class="sep">, </span>
+    
+      <a href="/tags/#dkim" class="page__taxonomy-item p-category" rel="tag">dkim</a><span class="sep">, </span>
+    
+      <a href="/tags/#dmarc" class="page__taxonomy-item p-category" rel="tag">dmarc</a><span class="sep">, </span>
+    
+      <a href="/tags/#dns" class="page__taxonomy-item p-category" rel="tag">dns</a><span class="sep">, </span>
+    
+      <a href="/tags/#dns-hijacking" class="page__taxonomy-item p-category" rel="tag">dns hijacking</a><span class="sep">, </span>
+    
+      <a href="/tags/#email" class="page__taxonomy-item p-category" rel="tag">email</a><span class="sep">, </span>
+    
+      <a href="/tags/#gmail" class="page__taxonomy-item p-category" rel="tag">gmail</a><span class="sep">, </span>
+    
+      <a href="/tags/#imap" class="page__taxonomy-item p-category" rel="tag">imap</a><span class="sep">, </span>
+    
+      <a href="/tags/#mailpit" class="page__taxonomy-item p-category" rel="tag">mailpit</a><span class="sep">, </span>
+    
+      <a href="/tags/#mda" class="page__taxonomy-item p-category" rel="tag">mda</a><span class="sep">, </span>
+    
+      <a href="/tags/#mra" class="page__taxonomy-item p-category" rel="tag">mra</a><span class="sep">, </span>
+    
+      <a href="/tags/#mta" class="page__taxonomy-item p-category" rel="tag">mta</a><span class="sep">, </span>
+    
+      <a href="/tags/#open-relay" class="page__taxonomy-item p-category" rel="tag">open relay</a><span class="sep">, </span>
+    
+      <a href="/tags/#pop" class="page__taxonomy-item p-category" rel="tag">pop</a><span class="sep">, </span>
+    
+      <a href="/tags/#pop3" class="page__taxonomy-item p-category" rel="tag">pop3</a><span class="sep">, </span>
+    
+      <a href="/tags/#postfix" class="page__taxonomy-item p-category" rel="tag">postfix</a><span class="sep">, </span>
+    
+      <a href="/tags/#private-key" class="page__taxonomy-item p-category" rel="tag">private key</a><span class="sep">, </span>
+    
+      <a href="/tags/#public-key" class="page__taxonomy-item p-category" rel="tag">public key</a><span class="sep">, </span>
+    
+      <a href="/tags/#relay" class="page__taxonomy-item p-category" rel="tag">relay</a><span class="sep">, </span>
+    
+      <a href="/tags/#return-path" class="page__taxonomy-item p-category" rel="tag">return path</a><span class="sep">, </span>
+    
+      <a href="/tags/#rfc-3207" class="page__taxonomy-item p-category" rel="tag">rfc 3207</a><span class="sep">, </span>
+    
+      <a href="/tags/#rfc-5321" class="page__taxonomy-item p-category" rel="tag">rfc 5321</a><span class="sep">, </span>
+    
+      <a href="/tags/#smtp" class="page__taxonomy-item p-category" rel="tag">smtp</a><span class="sep">, </span>
+    
+      <a href="/tags/#smtp-envelop" class="page__taxonomy-item p-category" rel="tag">smtp envelop</a><span class="sep">, </span>
+    
+      <a href="/tags/#spf" class="page__taxonomy-item p-category" rel="tag">spf</a><span class="sep">, </span>
+    
+      <a href="/tags/#tcp" class="page__taxonomy-item p-category" rel="tag">tcp</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#random" class="page__taxonomy-item p-category" rel="tag">random</a>
+    
+    </span>
+  </p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=%E4%BD%BF%E7%94%A8+Postfix+%E4%BE%86%E6%B8%AC%E8%A9%A6+Email+%E5%AF%84%E9%80%81%E5%8A%9F%E8%83%BD%20https%3A%2F%2Fambersuncreates.com%2Frandom%2Fpostfix%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fambersuncreates.com%2Frandom%2Fpostfix%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fambersuncreates.com%2Frandom%2Fpostfix%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/devops/devops-gta/" class="pagination--pager" title="DevOps - 利用 gta 加速你的 Integration Test
+">Previous</a>
+    
+    
+      <a href="/random/blog-mcp/" class="pagination--pager" title="你的部落格，其實可以變成你的 AI 第二大腦
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Leave a comment</h4>
+      <section id="disqus_thread"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h2 class="page__related-title">You may also enjoy</h2>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/blog-mcp/" rel="permalink">你的部落格，其實可以變成你的 AI 第二大腦
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-10-07">2026-10-07</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-28">
+            2026-09-28
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/blog-mcp/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/blog-mcp/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/blog-mcp/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">RAG(Retrieval-Augmented Generation)
+大語言模型裝了全世界的知識，不過有些私人的知識是不會放上網路的
+這時候要怎麼讓他能夠擁有 你的知識 是很重要的，所以 RAG 本身就是在做這件事情
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/devops/devops-gta/" rel="permalink">DevOps - 利用 gta 加速你的 Integration Test
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-09-19">2026-09-19</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-28">
+            2026-09-28
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/devops/devops-gta/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/devops/devops-gta/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/devops/devops-gta/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">How You Write, How it Runs
+在我待過的所有公司裡，我都致力於導入自動化測試
+讓原本不穩定的系統不再那麼常出錯
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/random/gpg-subkey/" rel="permalink">你的 AI Agent 擁有的 SSH 權力太大了！ 趕快收回以免一切都晚了
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-09-15">2026-09-15</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-28">
+            2026-09-28
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/random/gpg-subkey/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/random/gpg-subkey/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/random/gpg-subkey/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">What is GPG Subkey?
+在 GPG 與 YubiKey 的相遇之旅 | Shawn Hsu 裡面，我們在產私鑰的時候
+將 ECSA 四種不同用途的 key 分開產生，最後得到一把 Primary Key 以及 兩把 Subkey
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/database/database-deferred-join/" rel="permalink">資料庫 - 可以跳頁的分頁機制？ Deferred Join 是你需要的
+</a>
+      
+    </h2>
+    
+
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          2 minute read
+        
+      </span>
+
+         
+
+      <span class="page__meta-readtime">
+        <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Posted on:
+        <time class="dt-published" datetime="2026-09-13">2026-09-13</time>
+      </span>
+
+      
+           
+        
+        <span class="page__meta-readtime">
+          <i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i>Updated on:
+          <time class="dt-published" datetime="2026-09-28">
+            2026-09-28
+          </time>
+        </span>
+
+           
+
+        <span>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          Views: <span id="view-field-/database/database-deferred-join/"> Loading...</span>
+        </span>
+      
+    
+  </p>
+
+
+<script>
+  fetch(`https://api.ambersuncreates.com/views?url=/database/database-deferred-join/`)
+    .then(async (response) => {
+      if (response.ok) {
+        data = await response.json();
+
+        let text = "-";
+        if (data.views > 100) {
+          text = Intl.NumberFormat('en', { notation: 'compact' }).format(data.views);
+        }
+        document.getElementById("view-field-/database/database-deferred-join/").innerHTML = text;
+      }
+    })
+</script>
+
+    <p class="archive__item-excerpt" itemprop="description">Deferred Join
+儘管 Cursor Based Pagination 可以帶來很好的效能表現
+但是也有一些事情是它做不到的
+好比如說它沒辦法跳轉到指定的頁面
+它只可以根據當前的 cursor 往前或往後
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+<script type="text/javascript">
+  let viewHeight = window. innerHeight;
+  let codeblocks = document.getElementsByClassName("highlight");
+
+  Array.from(codeblocks).forEach(value => {
+      if (value.scrollHeight > viewHeight) {
+          value.setAttribute("style", "height:100vh;overflow-y:auto;");
+      }
+  })
+</script>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap">
+<form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term...">
+  </form>
+  <div id="results" class="results"></div>
+</div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+      
+        
+      
+        
+          <li><a href="https://github.com/ambersun1234" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+        
+      
+        
+      
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">© 2026 Shawn Hsu. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9EYCKB89S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q9EYCKB89S', { 'anonymize_ip': false});
+</script>
+
+
+
+
+
+
+    
+  <script>
+    var disqus_config = function () {
+      this.page.url = "https://ambersuncreates.com/random/postfix/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/random/postfix"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+    };
+    (function() { /* DON'T EDIT BELOW THIS LINE */
+      var d = document, s = d.createElement('script');
+      s.src = 'https://https-ambersun1234-github-io.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  </script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+</noscript>
+
+
+  
+
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      inlineMath: [['$','$'], ['\\(','\\)']],
+    processEscapes: true
+    },
+    "HTML-CSS": {
+      scale: 80
+    }
+  });
+</script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script> 
+
+
+
+
+  </body>
+</html>
