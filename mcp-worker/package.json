@@ -1,0 +1,19 @@
+{
+  "name": "mcp-worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@poppanator/http-constants": "^3.0.0",
+    "workers-mcp": "^0.0.13"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260822.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.125.0"
+  }
+}
