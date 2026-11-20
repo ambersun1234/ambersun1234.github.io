@@ -1,10 +1,12 @@
 ---
-title: Container 技術 - 理解 Docker Container
+title: 虛擬化技術 - 理解 Docker Container
 date: 2021-09-20
 description: 你已經使用 Docker 一段時間了，但是你真的了解他嗎？本文將會探討 Docker 的運作原理
-categories: [container]
+categories: [virtualization]
 tags: [docker, linux, container, distroless image, network]
 math: true
+redirect_from:
+    - /container/container-docker/
 ---
 
 # Virtualization
@@ -24,6 +26,7 @@ Docker 擁有更快的啟動速度、對系統資源的極低要求以及輕量�
 > ref: [Containers and VMs Together](https://www.docker.com/blog/containers-and-vms-together/)
 
 <hr>
+
 在這裡做一個小小的表格比較一下
 
 ||container|virtual machine|

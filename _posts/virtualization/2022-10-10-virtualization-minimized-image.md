@@ -1,10 +1,12 @@
 ---
-title: Container 技術 - 最小化 Docker Image
+title: 虛擬化技術 - 最小化 Docker Image
 date: 2022-12-04
 description: Image 的大小對開發本身來說有很大的影響嗎？ 我想答案是肯定的。本文將會探討如何最小化 Docker Image，包含最佳實踐以及一些技巧
-categories: [container]
+categories: [virtualization]
 tags: [docker, linux]
 math: true
+redirect_from:
+    - /container/container-minimized-image/
 ---
 
 # Why Do we Need to Minimize Image
@@ -98,7 +100,7 @@ Docker 是由多層 layer 所組成\
 因此，試著減少 layer 層數，也有助於縮小 image size
 
 有關 docker container layer 的部份，我把它獨立出來一篇\
-詳細可以參考 [Container 技術 - 理解 Docker Container \| Shawn Hsu](../../container/container-docker)
+詳細可以參考 [虛擬化技術 - 理解 Docker Container \| Shawn Hsu](../../virtualization/virtualization-docker)
 
 ## Multi-stage Build
 multi stage build 是終極大招，它很好的解決了上述 multiple layer 以及 application binary 的問題\

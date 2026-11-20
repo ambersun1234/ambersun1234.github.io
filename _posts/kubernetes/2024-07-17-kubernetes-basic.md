@@ -32,7 +32,7 @@ math: true
     + 較為人詬病的問題點是，由於 virtual machine 先天上的設計，他是從底層虛擬化上去的(亦即每個 vm 都擁有自己獨立的作業系統)，所以在效能上會是一大問題
 
 + Container Deployment
-    + 相比 virtual machine, container 解決了效能問題，主要是透過了 `share operating system` 的方式，詳細可以參考 [Container 技術 - 理解 Docker Container \| Shawn Hsu](../../container/container-docker)
+    + 相比 virtual machine, container 解決了效能問題，主要是透過了 `share operating system` 的方式，詳細可以參考 [虛擬化技術 - 理解 Docker Container \| Shawn Hsu](../../virtualization/virtualization-docker)
 
 # Introduction to Kubernetes
 container 的興起，加上逐漸從 monolithic 轉到 microservices 的趨勢\
@@ -220,7 +220,7 @@ data:
 而 Kubernetes 不只是為了 docker 而生，為了要兼容其他的 container runtime\
 它做了一層抽象層，稱之為 `Pod`
 
-> 這部份可參考 [Container 技術 - runC, containerd 傻傻分不清 \| Shawn Hsu](../../container/container-runc)
+> 這部份可參考 [虛擬化技術 - runC, containerd 傻傻分不清 \| Shawn Hsu](../../virtualization/virtualization-runc)
 
 Pod 本身是一層抽象層，亦即你沒辦法真正的去操作它\
 而 Pod 是由 `Deployment` 的設定檔撰寫而成\
@@ -361,7 +361,7 @@ node 包含了以下的組成元件
     + 如此一來，即使後端的 pod 由於 scheduler 排程的關係移動到其他 node 上，對於前端來說仍然沒有影響！
 + `container runtime`
     + 注意到一件事情，k8s 不單單只支援 docker, 事實上，它支援許多種的 container runtime 
-    + 為了支援各項平台，k8s 有自己的一套 [Kubernetes CRI (Container Runtime Interface)](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md) 界面，用以支援各種不同的 runtime(有關 container runtime 的介紹可以參考 [Container 技術 - runC, containerd 傻傻分不清 \| Shawn Hsu](../../container/container-runc))
+    + 為了支援各項平台，k8s 有自己的一套 [Kubernetes CRI (Container Runtime Interface)](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md) 界面，用以支援各種不同的 runtime(有關 container runtime 的介紹可以參考 [虛擬化技術 - runC, containerd 傻傻分不清 \| Shawn Hsu](../../virtualization/virtualization-runc))
 
 
 ### Pod
